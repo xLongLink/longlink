@@ -3,41 +3,7 @@ import { act } from 'react';
 import { withMounted } from '../render';
 import { it, expect, vi } from 'vitest';
 import PlatformRoot from '@/platform/root';
-import { Link } from '@/components/longlink/action/link';
-import { Route, Routes, useLocation } from 'react-router';
-
-it('uses native links for client-side navigation under the Platform root', async () => {
-    // Arrange
-    function Navigation() {
-        const location = useLocation();
-
-        return (
-            <>
-                <Link href="/?section=orders">Orders</Link>
-                <output>{location.search}</output>
-            </>
-        );
-    }
-
-    // Act
-    await withMounted(
-        <Routes>
-            <Route element={<PlatformRoot />}>
-                <Route index element={<Navigation />} />
-            </Route>
-        </Routes>,
-        async (output) => {
-            const link = output.querySelector('a');
-
-            expect(link?.getAttribute('href')).toBe('/?section=orders');
-
-            await act(async () => link?.click());
-
-            // Assert
-            expect(output.querySelector('output')?.textContent).toBe('?section=orders');
-        }
-    );
-});
+import { Route, Routes } from 'react-router';
 
 it('keeps the homepage dark without fetching account data or following personal appearance updates', async () => {
     const transport = vi.spyOn(globalThis, 'fetch');

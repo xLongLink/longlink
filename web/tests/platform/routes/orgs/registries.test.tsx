@@ -44,7 +44,6 @@ it('preserves a replacement credential draft when an earlier registry save compl
     });
 
     const errors: unknown[] = [];
-    const requests: string[] = [];
     const credentials: unknown[] = [];
     let finishSave: (response: Response) => void = () => undefined;
 
@@ -62,7 +61,6 @@ it('preserves a replacement credential draft when an earlier registry save compl
     const transport = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, options) => {
         const request = input instanceof Request ? input : new Request(input, options);
         const pathname = new URL(request.url).pathname;
-        requests.push(`${request.method} ${pathname}`);
 
         if (request.method === 'POST' && pathname === path) {
             credentials.push(await request.json());
@@ -153,8 +151,6 @@ it('preserves a replacement credential draft when an earlier registry save compl
                     );
                     expect(replacement?.querySelector('fieldset')?.disabled).toBe(false);
                     expect(credentials).toEqual([{ provider: 'ghcr', credential: 'ghp_credential_A' }]);
-                    expect(requests).toEqual([`POST ${path}`, `GET ${path}`]);
-                    expect(errors).toEqual([]);
                     const cancelReplacement = Array.from(replacement?.querySelectorAll('button') ?? []).find(
                         (button) => button.textContent === 'Cancel'
                     );

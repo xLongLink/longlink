@@ -12,7 +12,8 @@ import {
 
 it('copies source including final newlines independently of the bounded surface and line numbers', async () => {
     // Presentation controls must not enter the clipboard payload.
-    const code = 'first\n\n<script>not executable</script>\n';
+    const html = '<script>not executable</script><img src=x onerror="alert(2)">';
+    const code = `first\n\n${html}\n`;
     await withMounted(
         <CodeBlock code={code} language="html" showLineNumbers highlightedLines={[3]} maxLines={2}>
             <CodeBlockHeader>
@@ -33,8 +34,12 @@ it('copies source including final newlines independently of the bounded surface 
             expect(copy.getAttribute('aria-label')).toBe('Copied');
             await act(async () => expand.click());
             expect(expand.getAttribute('aria-expanded')).toBe('true');
-            expect(output.querySelector('[data-highlighted]')?.getAttribute('data-code-line')).toBe('3');
-            expect(output.querySelector('script')).toBeNull();
+            await vi.waitFor(() => {
+                const highlighted = output.querySelector('[data-highlighted][data-code-line="3"]');
+                expect(highlighted?.querySelector('[style*="--cb-c"]')).toBeTruthy();
+                expect(highlighted?.textContent).toBe(html);
+            });
+            expect(output.querySelector('script, img')).toBeNull();
         }
     );
 });
@@ -71,16 +76,6 @@ it('announces a denied clipboard write and permits a successful retry', async ()
             }
         }
     );
-});
-
-it('keeps highlighted untrusted code as text', async () => {
-    // Exercise the real tokenizer-to-React path, not just its plain-text fallback.
-    const code = '<script>alert(1)</script><img src=x onerror="alert(2)">';
-    await withMounted(<CodeBlock code={code} language="html" />, async (output) => {
-        await vi.waitFor(() => expect(output.querySelector('code [style*="--cb-c"]')).not.toBeNull());
-        expect(output.querySelector('code')?.textContent).toBe(code);
-        expect(output.querySelector('script, img')).toBeNull();
-    });
 });
 
 it('replaces highlighted content with readable plain text without tokenizing a large source', async () => {

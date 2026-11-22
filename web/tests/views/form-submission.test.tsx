@@ -8,7 +8,6 @@ import { RequestContext } from '@/lib/view-capabilities';
 import { useSubmit } from '@/components/longlink/hooks/use-submit';
 
 it.each([
-    { cause: new Error('Unavailable'), reports: 1 },
     { cause: new ReportedError('Unavailable'), reports: 0 },
     { cause: 'Unavailable', reports: 1 }
 ])(

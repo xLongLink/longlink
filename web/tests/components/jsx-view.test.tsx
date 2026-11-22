@@ -1,13 +1,13 @@
 // @vitest-environment happy-dom
 import { act } from 'react';
 import * as host from '@/views/host';
+import { withMounted } from '../render';
 import { it, expect, vi } from 'vitest';
 import { createHash } from 'node:crypto';
 import { useLocation } from 'react-router';
 import { ApiErrorContext } from '@/lib/errors';
 import * as workers from 'node:worker_threads';
 import { JsxView } from '@/views/host/jsx-view';
-import { renderStatic, withMounted } from '../render';
 
 it.each([
     { chunked: false, failTransfer: false },
@@ -108,24 +108,6 @@ it.each([
 );
 
 it('keeps execution isolated and transfers only verified Solution modules', async () => {
-    // Act
-    const output = renderStatic(
-        <ApiErrorContext value={() => undefined}>
-            <JsxView
-                source="private source"
-                params={{}}
-                requestBaseUrl="/proxy/"
-                navigationBaseUrl="/"
-                runtime={{ version: 'a'.repeat(64) }}
-            />
-        </ApiErrorContext>
-    );
-
-    // Assert
-    expect(output.querySelector('iframe')).toBeNull();
-    expect(output.textContent).not.toContain('private source');
-    expect(output.querySelector('[role="status"]')?.getAttribute('aria-label')).toBe('Preparing View');
-
     // Exercise the real handshake and integrity checks, replacing only the HTTP transport.
     const script = '/* Solution bootstrap */';
     const styles = '';

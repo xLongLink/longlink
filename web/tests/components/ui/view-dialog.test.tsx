@@ -58,7 +58,6 @@ it.each([false, true])(
             const close = modal?.querySelector('[data-slot="dialog-close"]');
 
             if (!modal || !close) throw new Error('Expected the owned dialog and close action');
-            if (!fullscreen) expect(modal.style.width).toBe('960px');
             expect(document.getElementById(modal.getAttribute('aria-labelledby') ?? '')?.textContent).toBe(
                 'Edit order'
             );

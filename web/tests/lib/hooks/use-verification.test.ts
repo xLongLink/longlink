@@ -1,23 +1,25 @@
-import { it, expect } from 'vitest';
 // @vitest-environment happy-dom
+import { it, expect } from 'vitest';
 import { withMounted } from '../../render';
 import { createRoot } from 'react-dom/client';
 import { ErrorBoundary } from 'react-error-boundary';
 import { act, createElement, StrictMode, useState } from 'react';
 import { useVerification, type VerificationRequest } from '@/lib/hooks/use-verification';
 
-it.each(['resolve', 'reject'])('ignores canceled exchanges that %s after replay or replacement', async (settlement) => {
+it('ignores late successes and failures from canceled verification attempts', async () => {
     // Arrange
     const attempts: { request: VerificationRequest; resolve: (value: string) => void }[] = [];
 
     /** Settle canceled work even when its underlying operation ignores cancellation. */
     function verify(request: VerificationRequest): Promise<string> {
+        const replay = attempts.length === 0;
+
         return new Promise((resolve, reject) => {
             attempts.push({ request, resolve });
             request.signal.addEventListener(
                 'abort',
                 () => {
-                    if (settlement === 'resolve') resolve('stale');
+                    if (replay) resolve('stale');
                     else reject(new Error('Canceled exchange failed'));
                 },
                 { once: true }
@@ -39,7 +41,6 @@ it.each(['resolve', 'reject'])('ignores canceled exchanges that %s after replay 
         );
     }
 
-    // Act
     await withMounted(createElement('section'), async (output) => {
         const container = output.querySelector('section');
         if (!container) throw new Error('Missing mount container');

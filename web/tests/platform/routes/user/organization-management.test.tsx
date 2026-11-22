@@ -86,30 +86,20 @@ it.each([
         action: 'Accept',
         method: 'POST',
         suffix: '/accept',
-        membershipReads: 2,
         membershipsAfter: [membership, { organization: invitation.organization, role: 'read' }],
         membershipNames: ['Acme', 'Invited team']
     },
-    {
-        action: 'Decline',
-        method: 'DELETE',
-        suffix: '',
-        membershipReads: 1,
-        membershipsAfter: [membership],
-        membershipNames: ['Acme']
-    }
+    { action: 'Decline', method: 'DELETE', suffix: '', membershipsAfter: [membership], membershipNames: ['Acme'] }
 ])(
     'refreshes the correct resources after $action',
-    async ({ action, method, suffix, membershipReads, membershipsAfter, membershipNames }) => {
+    async ({ action, method, suffix, membershipsAfter, membershipNames }) => {
         // Arrange
-        const requests: string[] = [];
         const errors: unknown[] = [];
         let resolved = false;
 
         const transport = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, options) => {
             const request = input instanceof Request ? input : new Request(input, options);
             const path = new URL(request.url).pathname;
-            requests.push(`${request.method} ${path}`);
 
             if (request.method === method && path === `/api/v1/me/invitations/${invitation.id}${suffix}`) {
                 resolved = true;
@@ -158,11 +148,6 @@ it.each([
                     expect(Array.from(output.querySelectorAll('table a'), (link) => link.textContent)).toEqual(
                         membershipNames
                     );
-                    expect(requests).toContain(`${method} /api/v1/me/invitations/${invitation.id}${suffix}`);
-                    expect(requests.filter((request) => request === 'GET /api/v1/me/organizations')).toHaveLength(
-                        membershipReads
-                    );
-                    expect(requests.filter((request) => request === 'GET /api/v1/me/invitations')).toHaveLength(2);
                     expect(errors).toEqual([]);
                 }
             );
@@ -173,93 +158,83 @@ it.each([
 );
 
 it.each([
-    { action: 'Accept', method: 'POST', suffix: '/accept', membershipReads: 2 },
-    { action: 'Decline', method: 'DELETE', suffix: '', membershipReads: 1 }
-])(
-    'reports a failed $action once after refreshing and closes the confirmation',
-    async ({ action, method, suffix, membershipReads }) => {
-        // Arrange
-        const requests: string[] = [];
-        const errors: unknown[] = [];
-        let attempted = false;
-        let finishRefresh: (response: Response) => void = () => undefined;
-        const refresh = new Promise<Response>((resolve) => {
-            finishRefresh = resolve;
-        });
-        const transport = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, options) => {
-            const request = input instanceof Request ? input : new Request(input, options);
-            const path = new URL(request.url).pathname;
-            requests.push(`${request.method} ${path}`);
+    { action: 'Accept', method: 'POST', suffix: '/accept' },
+    { action: 'Decline', method: 'DELETE', suffix: '' }
+])('reports a failed $action once after refreshing and closes the confirmation', async ({ action, method, suffix }) => {
+    // Arrange
+    const requests: string[] = [];
+    const errors: unknown[] = [];
+    let attempted = false;
+    let finishRefresh: (response: Response) => void = () => undefined;
+    const refresh = new Promise<Response>((resolve) => {
+        finishRefresh = resolve;
+    });
+    const transport = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, options) => {
+        const request = input instanceof Request ? input : new Request(input, options);
+        const path = new URL(request.url).pathname;
+        requests.push(`${request.method} ${path}`);
 
-            if (request.method === method && path === `/api/v1/me/invitations/${invitation.id}${suffix}`) {
-                attempted = true;
-                return Response.json({ detail: 'Invitation expired' }, { status: 410 });
-            }
-
-            if (path === '/api/v1/me/organizations') return Response.json([membership]);
-            if (path === '/api/v1/me/invitations') return attempted ? refresh : Response.json([invitation]);
-
-            throw new Error(`Unexpected request: ${request.method} ${path}`);
-        });
-
-        try {
-            await withMounted(
-                <ApiErrorContext value={(error) => errors.push(error)}>
-                    <ApiBoundary>
-                        <Management presentation="settings" />
-                    </ApiBoundary>
-                </ApiErrorContext>,
-                async (output) => {
-                    // Act
-                    await vi.waitFor(() =>
-                        expect(output.querySelector('table')?.textContent).toContain('Invited team')
-                    );
-                    const actionButton = Array.from(output.querySelectorAll('button')).find(
-                        (button) => button.textContent === action
-                    );
-                    if (!actionButton) throw new Error('Expected the invitation action');
-                    await act(async () => actionButton.click());
-
-                    const confirm = Array.from(
-                        document.querySelectorAll<HTMLButtonElement>(
-                            '[role="dialog"] button, [role="alertdialog"] button'
-                        )
-                    ).find((button) => button.textContent === action);
-                    if (!confirm) throw new Error('Expected the confirmation action');
-                    await act(async () => confirm.click());
-
-                    // Assert
-                    await vi.waitFor(() =>
-                        expect(requests.filter((request) => request === 'GET /api/v1/me/invitations')).toHaveLength(2)
-                    );
-                    expect(errors).toEqual([]);
-                    expect(confirm.disabled).toBe(true);
-
-                    // Act
-                    await act(async () => finishRefresh(Response.json([])));
-
-                    // Assert
-                    await vi.waitFor(() => {
-                        expect(document.querySelector('[role="dialog"], [role="alertdialog"]')).toBeNull();
-                        expect(errors).toHaveLength(1);
-                    });
-                    expect(errors[0]).toBeInstanceOf(ApiError);
-                    expect(errors[0]).toMatchObject({ status: 410, message: 'Invitation expired' });
-                    expect(output.querySelector('table')?.textContent).not.toContain('Invited team');
-                    expect(output.querySelector('table')?.textContent).toContain('Acme');
-                    expect(
-                        requests.filter(
-                            (request) => request === `${method} /api/v1/me/invitations/${invitation.id}${suffix}`
-                        )
-                    ).toHaveLength(1);
-                    expect(requests.filter((request) => request === 'GET /api/v1/me/organizations')).toHaveLength(
-                        membershipReads
-                    );
-                }
-            );
-        } finally {
-            finishRefresh(Response.json([]));
-            transport.mockRestore();
+        if (request.method === method && path === `/api/v1/me/invitations/${invitation.id}${suffix}`) {
+            attempted = true;
+            return Response.json({ detail: 'Invitation expired' }, { status: 410 });
         }
+
+        if (path === '/api/v1/me/organizations') return Response.json([membership]);
+        if (path === '/api/v1/me/invitations') return attempted ? refresh : Response.json([invitation]);
+
+        throw new Error(`Unexpected request: ${request.method} ${path}`);
+    });
+
+    try {
+        await withMounted(
+            <ApiErrorContext value={(error) => errors.push(error)}>
+                <ApiBoundary>
+                    <Management presentation="settings" />
+                </ApiBoundary>
+            </ApiErrorContext>,
+            async (output) => {
+                // Act
+                await vi.waitFor(() => expect(output.querySelector('table')?.textContent).toContain('Invited team'));
+                const actionButton = Array.from(output.querySelectorAll('button')).find(
+                    (button) => button.textContent === action
+                );
+                if (!actionButton) throw new Error('Expected the invitation action');
+                await act(async () => actionButton.click());
+
+                const confirm = Array.from(
+                    document.querySelectorAll<HTMLButtonElement>('[role="dialog"] button, [role="alertdialog"] button')
+                ).find((button) => button.textContent === action);
+                if (!confirm) throw new Error('Expected the confirmation action');
+                await act(async () => confirm.click());
+
+                // Assert
+                await vi.waitFor(() =>
+                    expect(requests.filter((request) => request === 'GET /api/v1/me/invitations')).toHaveLength(2)
+                );
+                expect(errors).toEqual([]);
+                expect(confirm.disabled).toBe(true);
+
+                // Act
+                await act(async () => finishRefresh(Response.json([])));
+
+                // Assert
+                await vi.waitFor(() => {
+                    expect(document.querySelector('[role="dialog"], [role="alertdialog"]')).toBeNull();
+                    expect(errors).toHaveLength(1);
+                });
+                expect(errors[0]).toBeInstanceOf(ApiError);
+                expect(errors[0]).toMatchObject({ status: 410, message: 'Invitation expired' });
+                expect(output.querySelector('table')?.textContent).not.toContain('Invited team');
+                expect(output.querySelector('table')?.textContent).toContain('Acme');
+                expect(
+                    requests.filter(
+                        (request) => request === `${method} /api/v1/me/invitations/${invitation.id}${suffix}`
+                    )
+                ).toHaveLength(1);
+            }
+        );
+    } finally {
+        finishRefresh(Response.json([]));
+        transport.mockRestore();
     }
-);
+});

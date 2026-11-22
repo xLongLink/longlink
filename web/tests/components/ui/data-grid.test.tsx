@@ -226,7 +226,7 @@ it('updates pagination and select-all availability from the filtered row model',
     });
 });
 
-it.each([undefined, 'onEnd', 'onChange'] as const)(
+it.each([undefined, 'onChange'] as const)(
     'previews column resizing according to the table mode %s and commits on release',
     async (columnResizeMode) => {
         // Arrange

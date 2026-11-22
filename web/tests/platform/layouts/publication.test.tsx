@@ -3,8 +3,11 @@ import { act, useState } from 'react';
 import type { Window } from 'happy-dom';
 import { BookOpen } from 'lucide-react';
 import { withMounted } from '../../render';
+import Legal from '@/platform/layouts/legal';
 import { it, expect, afterEach } from 'vitest';
+import Terms from '@/platform/routes/legal/terms';
 import userEvent from '@testing-library/user-event';
+import Privacy from '@/platform/routes/legal/privacy';
 import Publication from '@/platform/layouts/publication';
 import { Route, Routes, useLocation } from 'react-router';
 import { PublicationNavigation } from '@/platform/layouts/publication-navigation';
@@ -31,6 +34,8 @@ function ArticleDraft() {
 
 /** Supplies the same native navigation as documentation callers. */
 function PublicationRoutes() {
+    const { pathname } = useLocation();
+
     return (
         <Routes>
             <Route
@@ -39,7 +44,7 @@ function PublicationRoutes() {
                         sideNav={
                             <PublicationNavigation
                                 label="Article navigation"
-                                currentPath="/docs/first"
+                                currentPath={pathname.replace(/\/+$/, '')}
                                 sections={[
                                     {
                                         title: 'More guides',
@@ -88,12 +93,21 @@ it('preserves the routed draft and its focus across the exact desktop breakpoint
     );
 });
 
-it('keeps supplied sidebar sections interactive and dismisses the mobile dialog after real routing', async () => {
+it('dismisses mobile sidebar navigation after keyboard activation and marks the routed page on reopen', async () => {
     viewport.setViewport({ width: 1024 });
 
     await withMounted(
-        <PublicationRoutes />,
+        <Routes>
+            <Route element={<Legal />}>
+                <Route path="/privacy/" element={<Privacy />} />
+                <Route path="/terms/" element={<Terms />} />
+            </Route>
+        </Routes>,
         async (output) => {
+            const user = userEvent.setup();
+
+            expect(output.querySelector('nav[aria-label="On this page"] a[href="#your-rights"]')).not.toBeNull();
+            expect(output.querySelector('h2#your-rights')).not.toBeNull();
             await act(async () => viewport.setViewport({ width: 390 }));
             const trigger = output.querySelector<HTMLButtonElement>('[aria-label="Open section navigation"]');
 
@@ -105,30 +119,41 @@ it('keeps supplied sidebar sections interactive and dismisses the mobile dialog 
             if (!dialog) throw new Error('Missing mobile navigation');
             expect(dialog.hidden).toBe(false);
 
-            const section = Array.from(dialog.querySelectorAll('section')).find(
-                (section) => section.querySelector('h2')?.textContent === 'More guides'
-            );
+            const navigation = dialog.querySelector('nav[aria-label="Legal and branding navigation"]');
+            const privacy = navigation?.querySelector('a[href="/privacy/"]');
+            const link = navigation?.querySelector<HTMLAnchorElement>('a[href="/terms/"]');
 
-            const link = section?.querySelector<HTMLAnchorElement>('a[href="/docs/second/"]');
+            if (!privacy || !link) throw new Error('Missing legal navigation');
+            expect(privacy.getAttribute('aria-current')).toBe('page');
+            const modified = new MouseEvent('click', { bubbles: true, cancelable: true, ctrlKey: true });
+            await act(async () => link.dispatchEvent(modified));
+            expect(modified.defaultPrevented).toBe(false);
+            expect(trigger.getAttribute('aria-expanded')).toBe('true');
+            expect(output.querySelector('h2#your-rights')).not.toBeNull();
 
-            if (!link) throw new Error('Missing supplied section link');
-
-            await act(async () => link.click());
-            expect(output.querySelector('[aria-label="Current article"]')?.textContent).toBe('/docs/second/');
+            await act(async () => {
+                link.focus();
+                await user.keyboard('{Enter}');
+            });
+            expect(output.querySelector('h1')?.textContent).toContain('Terms');
+            expect(output.querySelector('h2#your-rights')).toBeNull();
             expect(trigger.getAttribute('aria-expanded')).toBe('false');
 
             await act(async () => trigger.click());
             expect(trigger.getAttribute('aria-expanded')).toBe('true');
+            const reopened = document.querySelector('[role="dialog"][aria-label="Section navigation"]');
+            expect(reopened?.querySelector('a[href="/terms/"]')?.getAttribute('aria-current')).toBe('page');
+            expect(reopened?.querySelector('a[href="/privacy/"]')?.hasAttribute('aria-current')).toBe(false);
             await act(async () => viewport.setViewport({ width: 1024 }));
             expect(output.querySelector('[aria-label="Open section navigation"]')).toBeNull();
-            expect(output.querySelector('aside [aria-label="Article navigation"]')).not.toBeNull();
+            expect(output.querySelector('aside [aria-label="Legal and branding navigation"]')).not.toBeNull();
             expect(document.querySelector('[role="dialog"][aria-label="Section navigation"]')).toBeNull();
             await act(async () => viewport.setViewport({ width: 390 }));
             expect(output.querySelector('[aria-label="Open section navigation"]')?.getAttribute('aria-expanded')).toBe(
                 'false'
             );
         },
-        '/docs/first'
+        '/privacy/'
     );
 });
 

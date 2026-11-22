@@ -110,45 +110,6 @@ async function chooseMemberAction(output: HTMLElement, name: string, label: stri
     await act(async () => action.click());
 }
 
-it('falls back to General for unknown sections and loads registries only after navigation', async () => {
-    // Arrange
-    const requests: string[] = [];
-    const transport = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
-        const path = new URL(input instanceof Request ? input.url : String(input)).pathname;
-        requests.push(path);
-
-        if (path === `${base}/registries`) return Response.json([]);
-        throw new Error(`Unexpected request: ${path}`);
-    });
-
-    try {
-        await withOrganizationSettings(
-            membership,
-            members,
-            async (output) => {
-                const general = output.querySelector<HTMLAnchorElement>('a[href$="#general"]');
-                const registries = output.querySelector<HTMLAnchorElement>('a[href$="#private-registries"]');
-                if (!general || !registries) throw new Error('Expected settings navigation');
-
-                expect(general.getAttribute('aria-current')).toBe('location');
-                expect(output.querySelector('h2')?.textContent).toBe('General');
-                expect(requests).toEqual([]);
-
-                // Act
-                await act(async () => registries.click());
-
-                // Assert
-                await vi.waitFor(() => expect(output.querySelector('h2')?.textContent).toBe('Private registries'));
-                expect(registries.getAttribute('aria-current')).toBe('location');
-                expect(requests).toEqual([`${base}/registries`]);
-            },
-            'unknown'
-        );
-    } finally {
-        transport.mockRestore();
-    }
-});
-
 it('refreshes current membership and account permissions after self-demotion', async () => {
     // Arrange
     const access = { ...membership, role: 'admin' } satisfies UserOrganizationMembership;
@@ -292,62 +253,64 @@ it('keeps a replacement member confirmation open when an older action completes'
     }
 });
 
-it.each([
-    { fragment: 'general', group: 'Organization' },
-    { fragment: 'members', group: 'People' }
-])('keeps $fragment accessible through keyboard collapse and navigation', async ({ fragment, group }) => {
-    // Act
-    await withOrganizationSettings(
-        membership,
-        members,
-        async (output, client) => {
-            // Keep the destination resource cached until keyboard navigation mounts its section.
-            client.setQueryDefaults(['api', `${base}/invitations`], { gcTime: Infinity });
-            client.setQueryData(['api', `${base}/invitations`], []);
-            const events = userEvent.setup();
+it('falls back to General and loads the destination only after keyboard navigation', async () => {
+    const requests: string[] = [];
+    const transport = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
+        const path = new URL(input instanceof Request ? input.url : String(input)).pathname;
+        requests.push(path);
 
-            const disclosure = Array.from(output.querySelectorAll<HTMLButtonElement>('nav button')).find(
-                (button) => button.textContent === group
-            );
+        if (path === `${base}/registries`) return Response.json([]);
+        throw new Error(`Unexpected request: ${path}`);
+    });
 
-            if (!disclosure) throw new Error(`Expected the ${group} navigation group`);
+    try {
+        await withOrganizationSettings(
+            membership,
+            members,
+            async (output) => {
+                const events = userEvent.setup();
+                const disclosure = Array.from(output.querySelectorAll<HTMLButtonElement>('nav button')).find(
+                    (button) => button.textContent === 'Organization'
+                );
+                const selected = output.querySelector('a[href$="#general"][aria-current="location"]');
 
-            const selected = output.querySelector(`a[href$="#${fragment}"][aria-current="location"]`);
+                if (!disclosure || !selected) throw new Error('Expected the selected General section');
+                expect(output.querySelector('h2')?.textContent).toBe('General');
+                expect(disclosure.getAttribute('aria-expanded')).toBe('true');
+                expect(selected.closest('[inert], [hidden]')).toBeNull();
 
-            // Assert
-            expect(disclosure.getAttribute('aria-expanded')).toBe('true');
-            expect(selected).not.toBeNull();
-            expect(selected?.closest('[inert], [hidden]')).toBeNull();
+                await act(async () => {
+                    disclosure.focus();
+                    await events.keyboard('{Enter}');
+                });
+                expect(disclosure.getAttribute('aria-expanded')).toBe('false');
+                const panel = document.getElementById(disclosure.getAttribute('aria-controls') ?? '');
+                expect(panel === null || panel.hidden).toBe(true);
 
-            // Collapse and reopen with the keyboard before navigating to another section.
-            await act(async () => {
-                disclosure.focus();
-                await events.keyboard('{Enter}');
-            });
-            expect(disclosure.getAttribute('aria-expanded')).toBe('false');
-            const panel = document.getElementById(disclosure.getAttribute('aria-controls') ?? '');
-            expect(panel === null || panel.hidden).toBe(true);
+                await act(async () => events.keyboard(' '));
+                expect(disclosure.getAttribute('aria-expanded')).toBe('true');
 
-            await act(async () => events.keyboard(' '));
-            expect(disclosure.getAttribute('aria-expanded')).toBe('true');
+                const registries = output.querySelector<HTMLAnchorElement>('nav a[href$="#private-registries"]');
 
-            const invitations = output.querySelector<HTMLAnchorElement>('nav a[href$="#invitations"]');
-
-            if (!invitations) throw new Error('Expected the invitations settings link');
-            expect(invitations.getAttribute('href')).toBe(
-                `/orgs/${membership.organization.id}/settings?source=directory#invitations`
-            );
-            await act(async () => {
-                invitations.focus();
-                await events.keyboard('{Enter}');
-            });
-            expect(invitations.getAttribute('aria-current')).toBe('location');
-            await vi.waitFor(() => expect(output.querySelector('h2')?.textContent).toBe('Invitations'));
-            expect(output.querySelectorAll('nav a[aria-current="location"]')).toHaveLength(1);
-        },
-        fragment,
-        '?source=directory'
-    );
+                if (!registries) throw new Error('Expected the private registries link');
+                expect(registries.getAttribute('href')).toBe(
+                    `/orgs/${membership.organization.id}/settings?source=directory#private-registries`
+                );
+                expect(requests).toEqual([]);
+                await act(async () => {
+                    registries.focus();
+                    await events.keyboard('{Enter}');
+                });
+                await vi.waitFor(() => expect(output.querySelector('h2')?.textContent).toBe('Private registries'));
+                expect(requests).toEqual([`${base}/registries`]);
+                expect([...output.querySelectorAll('nav a[aria-current="location"]')]).toEqual([registries]);
+            },
+            'unknown',
+            '?source=directory'
+        );
+    } finally {
+        transport.mockRestore();
+    }
 });
 
 it.each(['admin', 'owner'] as const)('leaves revoked organization access after self-removal as %s', async (role) => {
@@ -519,7 +482,7 @@ it('retains a failed invitation draft, refreshes saved invitations, and retries 
     const invitation = schemas.zOrganizationInvitationResponse.parse({
         id: '00000000-0000-4000-8000-000000000005',
         email: 'first@example.com',
-        role: 'write',
+        role: 'admin',
         created_at: '2026-10-02T00:00:00Z'
     });
 
@@ -566,11 +529,19 @@ it('retains a failed invitation draft, refreshes saved invitations, and retries 
                 // Act
                 await act(async () => events.click(open));
                 const email = document.querySelector<HTMLInputElement>('[role="dialog"] input[name="email"]');
+                const role = document.getElementById('invite-role');
                 const submit = document.querySelector<HTMLButtonElement>('[role="dialog"] button[type="submit"]');
 
-                if (!email || !submit) throw new Error('Expected the invitation form');
+                if (!email || !role || !submit) throw new Error('Expected the invitation form');
 
                 await act(async () => events.type(email, invitation.email));
+                await act(async () => events.click(role));
+                const admin = [...document.querySelectorAll<HTMLElement>('[role="option"]')].find(
+                    (option) => option.textContent === 'admin'
+                );
+
+                if (!admin) throw new Error('Expected an owner to be able to invite an admin');
+                await act(async () => events.click(admin));
                 await act(async () => events.click(submit));
 
                 // Assert

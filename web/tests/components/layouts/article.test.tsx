@@ -228,24 +228,6 @@ it('releases the document shortcut listener when the footer unmounts', async () 
     expect(event.defaultPrevented).toBe(false);
 });
 
-it('keeps modified collection links native while ordinary clicks use the router', async () => {
-    await withMounted(
-        <ArticleNavigation />,
-        async (output) => {
-            const next = output.querySelector<HTMLAnchorElement>('a[aria-keyshortcuts="ArrowRight"]');
-            const event = new MouseEvent('click', { bubbles: true, cancelable: true, metaKey: true });
-            await act(async () => next?.dispatchEvent(event));
-
-            expect(event.defaultPrevented).toBe(false);
-            expect(output.querySelector('output')?.textContent).toBe('/docs/middle/');
-
-            await act(async () => next?.click());
-            await vi.waitFor(() => expect(output.querySelector('output')?.textContent).toBe('/docs/last/'));
-        },
-        '/docs/middle/'
-    );
-});
-
 it('renders UTC modification dates and only offers an external source link when supplied', () => {
     const withoutEdit = renderStatic(<ArticleFooter lastUpdated="2026-10-16T23:30:00-03:00" />);
     expect(withoutEdit.querySelector('time')?.textContent).toBe('Oct 17, 2026');

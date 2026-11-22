@@ -105,6 +105,10 @@ it('allows account credential entry only after the email proof exchange succeeds
 it('retains pending proof when verification is canceled by unmounting', async () => {
     // Arrange a delayed exchange with proof recovered from storage.
     const storageKey = 'longlink.registration.token';
+    const originalUrl = window.location.href;
+    const originalState: unknown = window.history.state;
+    const path = '/auth/verify-email?keep=1#section';
+    const url = new URL(path, originalUrl).href;
     sessionStorage.setItem(storageKey, 'pending-proof');
     let resolveVerification: (response: Response) => void = () => undefined;
     let verificationRequest: Request | undefined;
@@ -126,6 +130,7 @@ it('retains pending proof when verification is canceled by unmounting', async ()
     });
 
     try {
+        window.history.replaceState(null, '', url);
         await withMounted(
             <ApiErrorContext value={() => undefined}>
                 <AccountProvider>
@@ -136,10 +141,16 @@ it('retains pending proof when verification is canceled by unmounting', async ()
             </ApiErrorContext>,
             async (output) => {
                 await vi.waitFor(() => expect(verificationRequest).toBeDefined());
+                const request = verificationRequest;
+                if (!request) throw new Error('Expected a verification request');
+                expect(request.method).toBe('POST');
+                expect(new URL(request.url).pathname).toBe('/api/v1/auth/verify');
+                expect(await request.clone().json()).toEqual({ token: 'pending-proof' });
+                expect(window.location.href).toBe(url);
                 expect(sessionStorage.getItem(storageKey)).toBe('pending-proof');
                 expect(output.querySelector('input[name="password"]')).toBeNull();
             },
-            '/auth/verify-email'
+            path
         );
 
         // A late success cannot discard the canceled attempt's retry credential.
@@ -149,6 +160,7 @@ it('retains pending proof when verification is canceled by unmounting', async ()
     } finally {
         resolveVerification(Response.json({ email: 'new@example.com' }));
         transport.mockRestore();
+        window.history.replaceState(originalState, '', originalUrl);
         sessionStorage.removeItem(storageKey);
     }
 });

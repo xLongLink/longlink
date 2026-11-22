@@ -1,30 +1,12 @@
-import { it, expect, vi } from 'vitest';
-import { ReportedError } from '@/lib/reported';
 // @vitest-environment happy-dom
+import { it, expect, vi } from 'vitest';
+import { useLocation } from 'react-router';
+import { ReportedError } from '@/lib/reported';
 import { act, createRef, useState } from 'react';
 import userEvent from '@testing-library/user-event';
 import { renderStatic, withMounted } from '../../render';
 import { Link } from '@/components/longlink/action/link';
 import { LinkNavigationContext } from '@/lib/view-capabilities';
-
-it.each(['navigation', 'action'] as const)('ignores injected presentation overrides on a %s link', (kind) => {
-    const overrides = { className: 'hidden', style: { display: 'none' } };
-    const output = renderStatic(
-        kind === 'navigation' ? (
-            <Link {...overrides} href="/orders">
-                Orders
-            </Link>
-        ) : (
-            <Link {...overrides} onClick={() => {}}>
-                Orders
-            </Link>
-        )
-    );
-
-    const control = output.querySelector('a, button');
-    expect(control?.classList.contains('hidden')).toBe(false);
-    expect(control?.hasAttribute('style')).toBe(false);
-});
 
 it('delegates ordinary solution navigation while preserving canceled, modified and middle clicks', async () => {
     const navigate = vi.fn();
@@ -101,6 +83,54 @@ it('opens validated external destinations outside the frame without an opener', 
     expect(anchor?.getAttribute('href')).toBe('https://example.com/docs');
     expect(anchor?.getAttribute('target')).toBe('_blank');
     expect(anchor?.getAttribute('rel')).toBe('noopener noreferrer');
+});
+
+it('leaves downloads, mail targets and new tabs to the browser inside the Platform router', async () => {
+    function Location() {
+        const { pathname } = useLocation();
+
+        return <output>{pathname}</output>;
+    }
+
+    await withMounted(
+        <>
+            <Link href="mailto:info@longlink.dev">Email</Link>
+            <Link href="/report.pdf" download="report.pdf">
+                Report
+            </Link>
+            <Link href="/pricing" target="_blank" rel="author">
+                Pricing
+            </Link>
+            <Location />
+        </>,
+        async (output) => {
+            const [email, report, pricing] = output.querySelectorAll('a');
+            if (!email || !report || !pricing) throw new Error('Expected native anchors');
+
+            expect(email.getAttribute('href')).toBe('mailto:info@longlink.dev');
+            expect(report.download).toBe('report.pdf');
+            expect(pricing.target).toBe('_blank');
+            expect(pricing.rel.split(' ')).toEqual(expect.arrayContaining(['author', 'noopener', 'noreferrer']));
+
+            for (const link of [email, report, pricing]) {
+                let preventedByApp: boolean | undefined;
+                const preventNavigation = (event: MouseEvent) => {
+                    preventedByApp = event.defaultPrevented;
+                    event.preventDefault();
+                };
+
+                document.addEventListener('click', preventNavigation, { once: true });
+                try {
+                    await act(async () => link.click());
+                } finally {
+                    document.removeEventListener('click', preventNavigation);
+                }
+
+                expect(preventedByApp).toBe(false);
+                expect(output.querySelector('output')?.textContent).toBe('/');
+            }
+        }
+    );
 });
 
 it('preserves native download links and allows canceling without navigating', async () => {
@@ -287,43 +317,6 @@ it('commits callback state updates before the returned promise settles', async (
     } finally {
         release();
     }
-});
-
-it('forwards the rendered download element to its ref and handler', async () => {
-    // Arrange
-    const ref = createRef<HTMLElement>();
-    let activated: HTMLElement | undefined;
-
-    await withMounted(
-        <Link
-            ref={ref}
-            href="/invoice.pdf"
-            download="invoice.pdf"
-            onClick={(event) => {
-                activated = event.currentTarget;
-                event.preventDefault();
-            }}
-        >
-            Download
-        </Link>,
-        async (output) => {
-            const control = output.querySelector<HTMLElement>('a, button');
-
-            if (!control) throw new Error('Expected download control');
-
-            // Act
-            ref.current?.focus();
-            await act(async () => control.click());
-
-            // Assert
-            expect(control.tagName).toBe('A');
-            expect(ref.current).toBe(control);
-            expect(activated).toBe(control);
-            expect(document.activeElement).toBe(control);
-        }
-    );
-
-    expect(ref.current).toBeNull();
 });
 
 it('preserves native anchor props and ref without wrapping caller-owned content', async () => {

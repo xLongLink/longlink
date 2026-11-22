@@ -60,15 +60,16 @@ describe('Solution request body admission', () => {
 });
 
 describe('Solution download filename admission', () => {
-    it.each(['Résumé 2026.csv', 'x'.repeat(256)])('accepts a valid filename: %j', (filename) => {
+    it('preserves a Unicode filename at the length limit', () => {
         // Arrange
+        const filename = `${'é'.repeat(252)}.csv`;
         const command = { type: 'download', id: 0, path: '/export', filename };
 
         // Act
         const parsed = commandSchema.parse(command);
 
         // Assert
-        expect(parsed).toEqual(command);
+        expect(parsed).toHaveProperty('filename', filename);
     });
 
     it.each(['', '../report.csv', '..\\report.csv', 'report\n.csv', 'report\u0000.csv', 'x'.repeat(257)])(

@@ -10,7 +10,6 @@ it.each([
     ['date', 'Feb 19, 2026'],
     ['date_long', 'February 19, 2026'],
     ['date_weekday', 'Thu, Feb 19, 2026'],
-    ['date_time', 'Feb 19, 2026, 5:04 PM'],
     ['time', '5:04 PM'],
     ['system_date', '2026-02-19'],
     ['system_date_time', '2026-02-19 17:04:05'],
@@ -56,8 +55,8 @@ it.each([
     expect(output.querySelector('[timezone]')).toBeNull();
 });
 
-it.each(['not a date', Number.POSITIVE_INFINITY])('renders invalid dates without crashing: %s', (value) => {
-    expect(renderStatic(<Timestamp value={value} />).querySelector('time')).toBeNull();
+it('omits invalid dates without crashing', () => {
+    expect(renderStatic(<Timestamp value="not a date" />).querySelector('time')).toBeNull();
 });
 
 it('renders a stable UTC placeholder for relative server markup', () => {

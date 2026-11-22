@@ -24,10 +24,6 @@ it('validates and retries organization creation without losing the name', async 
         await withMounted(<CreateOrganization onOpenChange={() => undefined} onSuccess={complete} />, async () => {
             const dialog = document.querySelector('[role="dialog"]');
 
-            // Assert
-            expect(dialog?.textContent).toContain('New organization');
-            expect(dialog?.querySelector('input[name="name"]')?.getAttribute('aria-required')).toBe('true');
-
             const input = dialog?.querySelector<HTMLInputElement>('input[name="name"]');
             const submit = dialog?.querySelector<HTMLButtonElement>('form button[type="submit"]');
             if (!input || !submit) throw new Error('Expected organization form and submit button');

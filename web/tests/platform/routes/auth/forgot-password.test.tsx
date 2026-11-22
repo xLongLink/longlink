@@ -52,10 +52,24 @@ it.each([204, 503])('only confirms a reset email after a successful response, st
 
                 if (!email || !submit) throw new Error('Missing password-reset request form');
 
+                const label = output.querySelector('label');
+                expect(label?.textContent).toBe('Email');
+                expect(document.getElementById(email.getAttribute('aria-labelledby') ?? '')).toBe(label);
+                expect(email.getAttribute('aria-required')).toBe('true');
+
+                await act(async () => user.click(submit));
+                expect(email.getAttribute('aria-invalid')).toBe('true');
+                expect(document.getElementById(email.getAttribute('aria-describedby') ?? '')?.textContent).toBe(
+                    'Email is required'
+                );
+                expect(payloads).toEqual([]);
+
                 await act(async () => {
                     await user.type(email, 'unknown@example.com');
                     await user.click(submit);
                 });
+                expect(email.getAttribute('aria-invalid')).not.toBe('true');
+                expect(email.hasAttribute('aria-describedby')).toBe(false);
                 expect(payloads).toEqual([{ email: 'unknown@example.com' }]);
                 expect(output.textContent).not.toContain('instructions are on the way');
 

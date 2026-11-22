@@ -3,6 +3,8 @@ import { act } from 'react';
 import { withMounted } from '../render';
 import { Navbar } from '@/components/ui/navbar';
 import userEvent from '@testing-library/user-event';
+import NotFound from '@/components/layouts/not-found';
+import Publication from '@/platform/layouts/publication';
 import { Route, Routes, useNavigate } from 'react-router';
 import { it, expect, vi, beforeEach, afterEach } from 'vitest';
 
@@ -37,21 +39,28 @@ afterEach(() => {
     window.scrollTo(initialScroll);
 });
 
-it.each([
-    { href: '/docs/', label: 'Documentation' },
-    { href: '/login/', label: 'Sign In' }
-])('closes the drawer when $label navigates to $href', async ({ href, label }) => {
+it('navigates away from a missing publication and keeps the drawer closed on router back', async () => {
     // Arrange
     await withMounted(
         <>
-            <Navbar />
             <Back />
             <Routes>
-                <Route path="/" element={<h1>Home</h1>} />
-                <Route path={href} element={<h1>{label}</h1>} />
+                <Route element={<Publication />}>
+                    <Route path="/docs/" element={<h1>Documentation</h1>} />
+                    <Route path="/docs/*" element={<NotFound />} />
+                </Route>
             </Routes>
         </>,
         async (output) => {
+            expect(document.head.querySelector('meta[name="robots"]')?.getAttribute('content')).toBe(
+                'noindex, nofollow'
+            );
+            const externalLinks = output.querySelectorAll<HTMLAnchorElement>('footer a[target="_blank"]');
+            expect(externalLinks.length).toBeGreaterThan(0);
+            for (const link of externalLinks) {
+                expect(link.rel.split(' ')).toEqual(expect.arrayContaining(['noopener', 'noreferrer']));
+            }
+
             const open = output.querySelector<HTMLButtonElement>('button[aria-label="Open navigation"]');
 
             if (!open) throw new Error('Expected the navigation toggle');
@@ -59,15 +68,16 @@ it.each([
             await act(async () => open.click());
             expect(open.getAttribute('aria-expanded')).toBe('true');
 
-            const link = document.querySelector<HTMLAnchorElement>(`[role="dialog"] a[href="${href}"]`);
+            const link = document.querySelector<HTMLAnchorElement>('[role="dialog"] a[href="/docs/"]');
 
-            if (!link) throw new Error(`Expected the mobile ${label} link`);
+            if (!link) throw new Error('Expected the mobile documentation link');
 
             // Act
             await act(async () => link.click());
 
             // Assert
-            expect(output.querySelector('h1')?.textContent).toBe(label);
+            expect(output.querySelector('h1')?.textContent).toBe('Documentation');
+            expect(document.head.querySelector('meta[name="robots"]')).toBeNull();
             expect(open.getAttribute('aria-expanded')).toBe('false');
             await vi.waitFor(() => expect(document.querySelector('[role="dialog"]')).toBeNull());
 
@@ -76,9 +86,13 @@ it.each([
 
             if (!back) throw new Error('Expected history control');
             await act(async () => back.click());
-            expect(output.querySelector('h1')?.textContent).toBe('Home');
+            expect(output.querySelector('h1')?.textContent).toBe("We can't find that page");
+            expect(document.head.querySelector('meta[name="robots"]')?.getAttribute('content')).toBe(
+                'noindex, nofollow'
+            );
             expect(open.getAttribute('aria-expanded')).toBe('false');
-        }
+        },
+        '/docs/missing/'
     );
 });
 
@@ -102,7 +116,7 @@ it('dismisses with Escape and restores focus so keyboard users can reopen naviga
     });
 });
 
-it.each(['/docs/', '/login/'])('leaves modified %s gestures to the browser while closing the drawer', async (href) => {
+it('leaves modified link gestures to the browser while closing the drawer', async () => {
     await withMounted(
         <>
             <Navbar />
@@ -116,7 +130,7 @@ it.each(['/docs/', '/login/'])('leaves modified %s gestures to the browser while
 
             if (!open) throw new Error('Expected navigation toggle');
             await act(async () => open.click());
-            const link = document.querySelector<HTMLAnchorElement>(`[role="dialog"] a[href="${href}"]`);
+            const link = document.querySelector<HTMLAnchorElement>('[role="dialog"] a[href="/docs/"]');
 
             if (!link) throw new Error('Expected documentation link');
             expect(link.getAttribute('role')).toBeNull();
@@ -168,7 +182,7 @@ it('closes the mobile drawer at the desktop breakpoint and keeps it closed on re
     });
 });
 
-it('expands landing navigation only at the top, including an initially scrolled page', async () => {
+it('expands landing navigation only at the top and stops tracking scroll after unmount', async () => {
     // Arrange
     window.scrollTo(0, 100);
 
@@ -194,6 +208,10 @@ it('expands landing navigation only at the top, including an initially scrolled 
         });
         expect(content.style.maxWidth).toBe('1120px');
     });
+
+    const scrollPosition = vi.spyOn(window, 'scrollY', 'get');
+    window.dispatchEvent(new Event('scroll'));
+    expect(scrollPosition).not.toHaveBeenCalled();
 });
 
 it('keeps non-landing navigation constrained without reading the scroll position', async () => {
@@ -222,29 +240,4 @@ it('keeps non-landing navigation constrained without reading the scroll position
         },
         '/docs/'
     );
-});
-
-it('stops reading the scroll position after landing navigation unmounts', async () => {
-    // Arrange
-    const scrollPosition = vi.spyOn(window, 'scrollY', 'get');
-
-    await withMounted(<Navbar expandOnTop />, async () => {
-        scrollPosition.mockClear();
-
-        // Act
-        await act(async () => {
-            window.scrollTo(0, 100);
-            window.dispatchEvent(new Event('scroll'));
-        });
-
-        // Assert
-        expect(scrollPosition).toHaveBeenCalled();
-    });
-
-    // Act
-    scrollPosition.mockClear();
-    window.dispatchEvent(new Event('scroll'));
-
-    // Assert
-    expect(scrollPosition).not.toHaveBeenCalled();
 });

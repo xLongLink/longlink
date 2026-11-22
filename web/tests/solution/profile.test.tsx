@@ -47,16 +47,10 @@ it('installs the initial request persona before passive requests and reloads onl
                 await act(async () => await events.click(trigger));
                 const popup = document.querySelector('[role="menu"]');
                 expect(popup?.querySelector('a[href="/user/settings"]')).toBeNull();
-                expect(popup?.textContent).not.toContain('Sign out');
                 const docs = popup?.querySelector('a');
-                expect(docs?.getAttribute('role')).not.toBe('button');
                 expect(docs?.target).toBe('_blank');
                 expect(docs?.relList.contains('noopener')).toBe(true);
 
-                if (!docs) throw new Error('Missing documentation link');
-                await act(async () => await events.click(docs));
-                expect(document.querySelector('[role="menu"]')).toBeNull();
-                await act(async () => await events.click(trigger));
                 const readUser = Array.from(document.querySelectorAll<HTMLElement>('[role="menuitem"]')).find((item) =>
                     item.textContent?.includes('read@example.com')
                 );

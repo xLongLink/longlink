@@ -34,13 +34,24 @@ for (const { name, Page, item } of [
     { name: 'organizations', Page: Organizations, item: organization },
     { name: 'solutions', Page: Solutions, item: solution }
 ]) {
-    it(`forgets missing ${name} metadata but retains a captured deletion identity`, async () => {
+    it(`forgets missing ${name} metadata but retries deletion using the captured identity`, async () => {
         const actor = userEvent.setup();
+        const deletions: string[] = [];
         let present = true;
 
         const transport = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, options) => {
             const request = input instanceof Request ? input : new Request(input, options);
-            expect(new URL(request.url).pathname).toBe(`/api/v1/${name}`);
+            const path = new URL(request.url).pathname;
+
+            if (request.method === 'DELETE') {
+                deletions.push(path);
+                if (deletions.length === 1) return Response.json({ detail: 'Deletion unavailable' }, { status: 503 });
+                present = false;
+
+                return new Response(null, { status: 204 });
+            }
+
+            expect(path).toBe(`/api/v1/${name}`);
 
             return Response.json({ items: present ? [item] : [], total: present ? 1 : 0 });
         });
@@ -57,6 +68,9 @@ for (const { name, Page, item } of [
                 </ApiProvider>,
                 async (output) => {
                     await vi.waitFor(() => expect(output.querySelector('tbody')?.textContent).toContain(item.name));
+                    if (name === 'organizations') {
+                        expect(output.querySelector(`a[href="/orgs/${item.id}"]`)?.textContent).toBe(item.name);
+                    }
                     const metadata = [...output.querySelectorAll('button')].find(
                         (button) => button.textContent === 'Metadata'
                     );
@@ -102,87 +116,28 @@ for (const { name, Page, item } of [
                     present = false;
                     await act(async () => actor.click(refresh));
                     await vi.waitFor(() => expect(output.querySelector('tbody')?.textContent).not.toContain(item.name));
-                    expect(document.querySelector('[role="alertdialog"]')?.textContent).toContain(item.name);
-                },
-                `/admin/${name}`
-            );
-        } finally {
-            transport.mockRestore();
-        }
-    });
-
-    it(`recovers from a failed ${name} deletion without losing the resource or reporting false success`, async () => {
-        const actor = userEvent.setup();
-        const deletions: string[] = [];
-        let present = true;
-
-        const transport = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, options) => {
-            const request = input instanceof Request ? input : new Request(input, options);
-            const path = new URL(request.url).pathname;
-
-            if (request.method === 'DELETE') {
-                deletions.push(path);
-                if (deletions.length === 1) return Response.json({ detail: 'Deletion unavailable' }, { status: 503 });
-                present = false;
-
-                return new Response(null, { status: 204 });
-            }
-
-            expect(path).toBe(`/api/v1/${name}`);
-
-            return Response.json({ items: present ? [item] : [], total: present ? 1 : 0 });
-        });
-
-        try {
-            await withMounted(
-                <ApiProvider platformSession>
-                    <TestAccountProvider account={{ ...user, administrator: true }}>
-                        <ApiBoundary>
-                            <Page />
-                        </ApiBoundary>
-                    </TestAccountProvider>
-                </ApiProvider>,
-                async (output) => {
-                    // Arrange
-                    await vi.waitFor(() => expect(output.querySelector('tbody')?.textContent).toContain(item.name));
-                    const metadata = [...output.querySelectorAll('button')].find(
-                        (button) => button.textContent === 'Metadata'
-                    );
-
-                    if (!metadata) throw new Error('Expected metadata action');
-                    await act(async () => actor.click(metadata));
-                    const begin = [...document.querySelectorAll<HTMLButtonElement>('[role="dialog"] button')].find(
-                        (button) => button.textContent === 'Delete'
-                    );
-
-                    if (!begin) throw new Error('Expected metadata deletion action');
-                    await act(async () => actor.click(begin));
                     const dialog = document.querySelector('[role="alertdialog"]');
                     const confirm = [...(dialog?.querySelectorAll<HTMLButtonElement>('button') ?? [])].find(
                         (button) => button.textContent === 'Delete'
                     );
 
                     if (!confirm) throw new Error('Expected deletion confirmation');
+                    expect(dialog?.textContent).toContain(item.name);
 
-                    // Act
                     await act(async () => actor.click(confirm));
-
-                    // Assert
                     await vi.waitFor(() =>
                         expect(dialog?.querySelector('[role="alert"]')?.textContent).toContain('Deletion unavailable')
                     );
                     expect(document.querySelector('[role="alertdialog"]')).toBe(dialog);
-                    expect(dialog?.textContent).toContain(item.name);
-                    expect(output.querySelector('tbody')?.textContent).toContain(item.name);
-                    expect(present).toBe(true);
+                    expect(deletions).toEqual([`/api/v1/${name}/${item.id}`]);
 
-                    // Act
+                    present = true;
+                    await act(async () => actor.click(refresh));
+                    await vi.waitFor(() => expect(output.querySelector('tbody')?.textContent).toContain(item.name));
                     await act(async () => actor.click(confirm));
 
-                    // Assert
                     await vi.waitFor(() => expect(output.querySelector('tbody')?.textContent).not.toContain(item.name));
                     await vi.waitFor(() => expect(document.querySelector('[role="alertdialog"]')).toBeNull());
-                    expect(present).toBe(false);
                     expect(deletions).toEqual([`/api/v1/${name}/${item.id}`, `/api/v1/${name}/${item.id}`]);
                 },
                 `/admin/${name}`

@@ -1,18 +1,19 @@
 // @vitest-environment happy-dom
-// @vitest-environment-options {"url":"http://localhost"}
+// @vitest-environment-options {"url":"http://localhost","settings":{"navigation":{"disableChildPageNavigation":true}}}
 import { act } from 'react';
 import { user } from '../../render';
 import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../../render';
-import { ApiBoundary } from '@/components/api';
 import { ApiErrorContext } from '@/lib/errors';
 import Page from '@/platform/routes/auth/login';
 import BrandLayout from '@/platform/layouts/brand';
 import userEvent from '@testing-library/user-event';
 import { AccountProvider } from '@/platform/account';
 import AccountLayout from '@/platform/layouts/account';
+import Register from '@/platform/routes/auth/register';
 import McpAuthorization from '@/platform/routes/auth/mcp';
 import { Route, Routes, useLocation } from 'react-router';
+import { ApiBoundary, ApiProvider } from '@/components/api';
 import AuthenticatedLayout from '@/platform/layouts/authenticated';
 
 /** Exposes the actual router destination without replacing navigation. */
@@ -118,7 +119,23 @@ it.each([
                     expect(document.activeElement).toBe(email);
                     expect(attempts).toEqual([]);
 
+                    await act(async () => events.click(submit));
+                    expect(document.getElementById(password.getAttribute('aria-describedby') ?? '')?.textContent).toBe(
+                        'Password is required'
+                    );
+
                     await act(async () => {
+                        await events.click(password);
+                        await events.paste('x'.repeat(1025));
+                        await events.click(submit);
+                    });
+                    expect(document.getElementById(password.getAttribute('aria-describedby') ?? '')?.textContent).toBe(
+                        'Password cannot exceed 1024 characters'
+                    );
+                    expect(attempts).toEqual([]);
+
+                    await act(async () => {
+                        await events.clear(password);
                         await events.type(password, 'Wrong-password-123');
                     });
 
@@ -162,7 +179,7 @@ it.each([
                     // Retry with a corrected password and reach the signed-in destination.
                     await act(async () => {
                         await events.clear(password);
-                        await events.type(password, 'Correct-password-123');
+                        await events.type(password, ' Correct-password-123 ');
                         await events.click(submit);
                     });
                     await vi.waitFor(() => expect(output.textContent).toContain(content));
@@ -175,11 +192,11 @@ it.each([
                     expect(identityReads).toBeGreaterThan(anonymousReads);
                     expect(attempts).toEqual([
                         { email: 'owner@example.com', password: 'Wrong-password-123' },
-                        { email: 'owner@example.com', password: 'Correct-password-123' }
+                        { email: 'owner@example.com', password: ' Correct-password-123 ' }
                     ]);
                     expect(errors).toHaveLength(1);
                 },
-                `/login?${new URLSearchParams({ email: 'owner@example.com', return_to: returnTo })}`
+                `/login?${new URLSearchParams({ email: ' owner@example.com ', return_to: returnTo })}`
             );
         } finally {
             transport.mockRestore();
@@ -229,8 +246,9 @@ it('retains the complete MCP approval query when the persistent identity is alre
     }
 });
 
-it('carries the trimmed live email draft through SPA registration navigation', async () => {
-    // Serve anonymous identity and provider availability through the application transport.
+it('keeps the email through the registration handoff, retries a rejected request, and returns to sign in', async () => {
+    const registrations: unknown[] = [];
+
     const transport = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, options) => {
         const request = input instanceof Request ? input : new Request(input, options);
         const path = new URL(request.url).pathname;
@@ -239,22 +257,31 @@ it('carries the trimmed live email draft through SPA registration navigation', a
 
         if (path === '/api/v1/auth/oauth') return Response.json({ google: false, github: false });
 
+        if (request.method === 'POST' && path === '/api/v1/auth/register') {
+            registrations.push(await request.json());
+
+            return registrations.length === 1
+                ? Response.json({ detail: 'Registration temporarily unavailable' }, { status: 503 })
+                : new Response(null, { status: 204 });
+        }
+
         throw new Error(`Unexpected request: ${request.method} ${path}`);
     });
 
     try {
         await withMounted(
-            <ApiErrorContext value={() => undefined}>
+            <ApiProvider platformSession>
                 <AccountProvider>
                     <ApiBoundary>
                         <Routes>
-                            <Route path="/login" element={<Page />} />
-                            <Route path="/auth/register" element={<p>Registration destination</p>} />
-                            <Route path="/auth/forgot-password" element={<p>Recovery destination</p>} />
+                            <Route element={<BrandLayout />}>
+                                <Route path="/login" element={<Page />} />
+                                <Route path="/auth/register" element={<Register />} />
+                            </Route>
                         </Routes>
                     </ApiBoundary>
                 </AccountProvider>
-            </ApiErrorContext>,
+            </ApiProvider>,
             async (output) => {
                 // Editing email updates only the registration handoff, without submitting credentials.
                 const events = userEvent.setup();
@@ -264,20 +291,60 @@ it('carries the trimmed live email draft through SPA registration navigation', a
 
                 await act(async () => events.type(email, '  next+draft@example.com  '));
                 const register = output.querySelector<HTMLAnchorElement>('a[href^="/auth/register"]');
-                const recovery = output.querySelector<HTMLAnchorElement>('a[href="/auth/forgot-password"]');
+                const docs = output.querySelector<HTMLAnchorElement>('a[href="/docs/"]');
 
-                if (!register || !recovery) throw new Error('Expected account flow links');
+                if (!register || !docs) throw new Error('Expected registration and documentation links');
+                expect(document.querySelector('meta[name="robots"]')?.getAttribute('content')).toBe(
+                    'noindex, nofollow'
+                );
+                expect(document.querySelector('link[rel="canonical"]')).toBeNull();
+                expect(docs.target).toBe('_blank');
+                expect(docs.rel.split(' ')).toEqual(expect.arrayContaining(['noopener', 'noreferrer']));
+                const click = new MouseEvent('click', { bubbles: true, cancelable: true });
+                await act(async () => docs.dispatchEvent(click));
+                expect(click.defaultPrevented).toBe(false);
+                expect(output.querySelector('input[name="email"]')).toBe(email);
 
                 expect(register.getAttribute('href')).toBe('/auth/register?email=next%2Bdraft%40example.com');
                 expect(email.value).toBe('next+draft@example.com');
                 await act(async () => events.click(register));
-                expect(output.textContent).toContain('Registration destination');
-                expect(output.querySelector('form')).toBeNull();
+                const registrationEmail = output.querySelector<HTMLInputElement>('input[name="email"]');
+                const submit = output.querySelector<HTMLButtonElement>('button[type="submit"]');
+                const signIn = output.querySelector<HTMLAnchorElement>('a[href^="/login?email="]');
+
+                if (!registrationEmail || !submit || !signIn)
+                    throw new Error('Expected registration form and return link');
+                expect(registrationEmail.value).toBe(email.value);
+                expect(registrations).toEqual([]);
+
+                await act(async () => events.click(submit));
+                await vi.waitFor(() => {
+                    expect(document.body.textContent).toContain('Registration temporarily unavailable');
+                });
+                expect(document.body.textContent).not.toContain('Check your inbox for the registration link.');
+                expect(registrationEmail.value).toBe('next+draft@example.com');
+
+                await act(async () => events.click(submit));
+                await vi.waitFor(() => {
+                    const confirmation = [...document.querySelectorAll('[data-sonner-toast]')].find((notification) =>
+                        notification.textContent?.includes('Check your inbox for the registration link.')
+                    );
+                    expect(confirmation?.closest('[aria-live]')?.getAttribute('aria-live')).toBe('polite');
+                    expect(confirmation?.closest('[aria-hidden="true"], [inert]')).toBeNull();
+                });
+                expect(registrations).toEqual([{ email: email.value }, { email: email.value }]);
+
+                await act(async () => events.click(signIn));
+                expect(output.querySelector('input[name="password"]')).not.toBeNull();
+                expect(output.querySelector<HTMLInputElement>('input[name="email"]')?.value).toBe(
+                    'next+draft@example.com'
+                );
             },
             '/login'
         );
     } finally {
         transport.mockRestore();
+        localStorage.removeItem('longlink:appearance');
     }
 });
 

@@ -1,12 +1,29 @@
 // @vitest-environment happy-dom
 import { it, expect } from 'vitest';
 import { act, useState } from 'react';
-import { withMounted } from '../../render';
 import Content from '@/components/layouts/content';
 import userEvent from '@testing-library/user-event';
 import { Box } from '@/components/longlink/layout/box';
+import { renderStatic, withMounted } from '../../render';
 import { Grid } from '@/components/longlink/layout/grid';
+import { Heading } from '@/components/longlink/display/heading';
 import { Stack, StackItem } from '@/components/longlink/layout/stack';
+
+it('keeps heading levels independent of text size', () => {
+    // Act
+    const output = renderStatic(
+        <>
+            <Heading size={4}>Orders</Heading>
+            <Heading level={3} size={1}>
+                Open orders
+            </Heading>
+        </>
+    );
+
+    // Assert
+    expect(output.querySelector('h2')?.textContent).toBe('Orders');
+    expect(output.querySelector('h3')?.textContent).toBe('Open orders');
+});
 
 it.each([Box, Grid])('updates padding overrides without remounting an editable child', async (Layout) => {
     // Arrange

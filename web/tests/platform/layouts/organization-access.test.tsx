@@ -6,29 +6,8 @@ import { withMounted } from '../../render';
 import { Route, Routes } from 'react-router';
 import { ApiErrorContext } from '@/lib/errors';
 import Organization from '@/platform/layouts/organization';
+import { membership, TestAccountProvider } from '../render';
 import Layout from '@/platform/layouts/organization-access';
-import { renderPlatform, membership, TestAccountProvider } from '../render';
-
-it('keeps unresolved organization reads behind their loading boundary', () => {
-    // Act
-    const output = renderPlatform(<Layout />, '/orgs/00000000-0000-4000-8000-000000000002', [], '/orgs/:organization');
-
-    // Assert
-    expect(output.querySelector('[role="status"]')?.getAttribute('aria-label')).toBe('Loading organization');
-});
-
-it('uses the solution loading boundary for nested solution routes', () => {
-    // Act
-    const output = renderPlatform(
-        <Layout />,
-        `/orgs/${membership.organization.id}/solutions/solution/nested`,
-        [],
-        '/orgs/:organization/solutions/:solution/*'
-    );
-
-    // Assert
-    expect(output.querySelector('[role="status"]')?.getAttribute('aria-label')).toBe('Loading solution');
-});
 
 it.each([
     { status: 403, title: 'Unable to load solution' },

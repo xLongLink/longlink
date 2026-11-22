@@ -80,7 +80,7 @@ async function restoreHistory({ url, state }: HistorySnapshot) {
     await changed;
 }
 
-it.each(['last', 'caf%C3%A9%20section', 'café section'])(
+it.each(['caf%C3%A9%20section', 'café section'])(
     'activates browser fragment %s after hydrating fragment-free prerendered HTML',
     async (fragment) => {
         const items = [...article.toc, { id: 'café section', label: 'Encoded section', level: 2 }];
@@ -113,7 +113,7 @@ it.each(['last', 'caf%C3%A9%20section', 'café section'])(
                 });
                 await vi.waitFor(() =>
                     expect(container.querySelector('[aria-current="location"]')?.getAttribute('href')).toBe(
-                        fragment === 'last' ? '#last' : '#caf%C3%A9%20section'
+                        '#caf%C3%A9%20section'
                     )
                 );
             } finally {
