@@ -58,5 +58,5 @@ async def receive_webhook(session: auth.Session, request: Request) -> None:
     ):
         async with stripe.client() as connection:
             hosted = await connection.v1.checkout.sessions.retrieve_async(organization.stripe_checkout_id)
-            await payments.save_card(session, organization, hosted, connection)
+            await payments.save_card(organization, hosted, connection)
     await session.commit()

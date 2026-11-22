@@ -3,6 +3,7 @@ from uuid import UUID, uuid4
 from fastapi import HTTPException
 from datetime import UTC, datetime
 from src.utils import dates
+from src.models import pricing
 from src.environments import env
 from src.models.roles import OrganizationRoles
 from src.database.services import organizations
@@ -10,9 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.organizations import Organization
 
 
-async def save_card(
-    session: AsyncSession, organization: Organization, hosted: stripe.checkout.Session, connection: stripe.StripeClient
-) -> None:
+async def save_card(organization: Organization, hosted: stripe.checkout.Session, connection: stripe.StripeClient) -> None:
     """Save the verified invoice payment method directly on its Organization."""
 
     # A delayed or unrelated Checkout cannot replace this Organization's default card.
@@ -28,12 +27,10 @@ async def save_card(
 
     # Verify the completed setup intent before retaining its payment method.
     intent = await connection.v1.setup_intents.retrieve_async(hosted.setup_intent)
-    await save_setup_intent(session, organization, intent, connection)
+    await save_setup_intent(organization, intent, connection)
 
 
-async def save_setup_intent(
-    _session: AsyncSession, organization: Organization, intent: stripe.SetupIntent, connection: stripe.StripeClient
-) -> None:
+async def save_setup_intent(organization: Organization, intent: stripe.SetupIntent, connection: stripe.StripeClient) -> None:
     """Apply a completed card setup to its Organization's billing authorization."""
 
     # Only a successful setup for this customer authorizes future invoice payments.
@@ -97,7 +94,7 @@ async def checkout(session: AsyncSession, organization_id: UUID, user_id: UUID, 
             if existing.url is None:
                 raise HTTPException(status_code=503, detail="Checkout URL unavailable")
             return existing.url
-        await save_card(session, organization, existing, connection)
+        await save_card(organization, existing, connection)
 
         # Closed checkout attempts no longer own the next registration request.
         organization.stripe_checkout_id = None
@@ -134,8 +131,9 @@ async def checkout(session: AsyncSession, organization_id: UUID, user_id: UUID, 
                 "submit": {
                     # Hosted checkout records consent to usage-based monthly charges.
                     "message": "By saving your card, you authorize LongLink to charge it monthly for your organization's "
-                    "month-end application and database CPU at CHF 10/vCPU, RAM at CHF 5/GiB, "
-                    "and file storage plus database disk at CHF 0.01/GiB. "
+                    f"month-end application and database CPU at CHF {pricing.CPU_MONTHLY_PRICE / 100:f}/vCPU, "
+                    f"RAM at CHF {pricing.RAM_GIB_MONTHLY_PRICE / 100:f}/GiB, "
+                    f"and file storage plus database disk at CHF {pricing.STORAGE_GIB_MONTHLY_PRICE / 100:f}/GiB. "
                     "No payment is taken now."
                 }
             },
@@ -149,7 +147,7 @@ async def checkout(session: AsyncSession, organization_id: UUID, user_id: UUID, 
 
     # Recovered remote attempts may already be complete or expired.
     if hosted.status != "open":
-        await save_card(session, organization, hosted, connection)
+        await save_card(organization, hosted, connection)
         return return_url
     if hosted.url is None:
         raise HTTPException(status_code=503, detail="Checkout URL unavailable")

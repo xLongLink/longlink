@@ -8,11 +8,13 @@ import secrets
 import pytest_asyncio
 from types import SimpleNamespace
 from httpx2 import AsyncClient
+from decimal import Decimal
 from conftest import reject_provider_construction
 from datetime import UTC, datetime
 from factories import add_member, fetch_operations, create_organization, assert_no_new_operations
 from src.utils import stripe as stripe_provider
 from contextlib import asynccontextmanager
+from src.models import pricing
 from unittest.mock import AsyncMock, MagicMock
 from collections.abc import AsyncGenerator
 from src.environments import env
@@ -226,12 +228,27 @@ async def assert_card_registration_unchanged(organization: Organization) -> None
 
 
 @pytest.mark.usefixtures("configured_stripe")
+@pytest.mark.parametrize(
+    ("monthly_prices", "expected_rates"),
+    [
+        pytest.param(None, ("10", "5", "0.01"), id="published-rates"),
+        pytest.param((Decimal("1234"), Decimal("567"), Decimal("2.5")), ("12.34", "5.67", "0.025"), id="changed-rates"),
+    ],
+)
 async def test_new_checkout_obtains_allocation_billing_consent(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient], card_organization: Organization, monkeypatch: pytest.MonkeyPatch
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    card_organization: Organization,
+    monkeypatch: pytest.MonkeyPatch,
+    monthly_prices: tuple[Decimal, Decimal, Decimal] | None,
+    expected_rates: tuple[str, str, str],
 ) -> None:
     """New checkout authorizes allocation billing rather than the obsolete excess-usage terms."""
 
     # Arrange
+    if monthly_prices is not None:
+        monkeypatch.setattr(pricing, "CPU_MONTHLY_PRICE", monthly_prices[0])
+        monkeypatch.setattr(pricing, "RAM_GIB_MONTHLY_PRICE", monthly_prices[1])
+        monkeypatch.setattr(pricing, "STORAGE_GIB_MONTHLY_PRICE", monthly_prices[2])
     async with session_scope() as session:
         organization = await session.get(Organization, card_organization.id)
         assert organization is not None
@@ -255,11 +272,12 @@ async def test_new_checkout_obtains_allocation_billing_consent(
     assert response.json() == {"url": "https://stripe.example/allocations"}
     parameters = connection.v1.checkout.sessions.create_async.await_args.args[0]
     consent = parameters["custom_text"]["submit"]["message"]
-    assert "month-end application and database CPU at CHF 10/vCPU" in consent
-    assert "RAM at CHF 5/GiB" in consent
-    assert "file storage plus database disk at CHF 0.01/GiB" in consent
-    assert "above the free allowances" not in consent
-    assert "No payment is taken now." in consent
+    assert consent == (
+        "By saving your card, you authorize LongLink to charge it monthly for your organization's "
+        f"month-end application and database CPU at CHF {expected_rates[0]}/vCPU, RAM at CHF {expected_rates[1]}/GiB, "
+        f"and file storage plus database disk at CHF {expected_rates[2]}/GiB. "
+        "No payment is taken now."
+    )
     async with session_scope() as session:
         organization = await session.get(Organization, card_organization.id)
         assert organization is not None

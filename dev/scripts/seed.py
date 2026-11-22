@@ -325,7 +325,7 @@ async def register_card(organization_id: UUID) -> None:
             # Repeated seeds reuse the same provider setup attempt.
             options={"idempotency_key": f"seed-card:v3:{organization.id}"},
         )
-        await payments.save_setup_intent(database, organization, intent, connection)
+        await payments.save_setup_intent(organization, intent, connection)
         await database.commit()
 
     print("Stripe test Visa ending in 4242 registered for ACME Ink.")

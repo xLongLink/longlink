@@ -61,6 +61,11 @@ type CapacityField = keyof z.output<typeof schemas.zOrganizationUsageUpdate>;
 
 const capacityFormatter = new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 });
 
+function capacityMinimum(field: CapacityField, units: number, scale: number) {
+    const schema = schemas.zOrganizationUsageUpdate.shape[field];
+    return Math.max(1, Math.ceil((schema.minValue ?? 0) / (scale / units))) / units;
+}
+
 /** Shows independently purchased compute, database, and file capacity. */
 export default function Usage({ base, canManage }: { base: string; canManage: boolean }) {
     const [usage, invalidate] = useApi(`${base}/usage`, schemas.zOrganizationUsage, {
@@ -102,7 +107,7 @@ function CapacityCards({
                     const field = fields[key];
                     if (!field) continue;
                     const schema = schemas.zOrganizationUsageUpdate.shape[field];
-                    const minimum = Math.max(1, Math.ceil((schema.minValue ?? 0) / (scale / units))) / units;
+                    const minimum = capacityMinimum(field, units, scale);
                     const value = values[key];
                     if (value < minimum) {
                         context.addIssue({ code: 'custom', path: [key], message: `Minimum ${minimum} ${unit}.` });
@@ -184,13 +189,11 @@ function CapacityCards({
                                             for (const { key, scale, units } of resources) {
                                                 const field = cardFields[key];
                                                 if (!field) continue;
-                                                const minimum = Math.max(
-                                                    scale / units,
-                                                    schemas.zOrganizationUsageUpdate.shape[field].minValue ?? 0
+                                                const minimum = capacityMinimum(field, units, scale);
+                                                draft[key] = Math.max(
+                                                    minimum,
+                                                    Math.ceil(usage[field] / (scale / units)) / units
                                                 );
-                                                draft[key] =
-                                                    Math.ceil(Math.max(usage[field], minimum) / (scale / units)) /
-                                                    units;
                                             }
                                             form.reset(draft);
                                             setEditor(section);
@@ -293,14 +296,7 @@ function CapacityCards({
                             {resources.map(({ key, label, unit, units, scale }) => {
                                 const field = fields[key];
                                 if (!field) return null;
-                                const minimum =
-                                    Math.max(
-                                        1,
-                                        Math.ceil(
-                                            (schemas.zOrganizationUsageUpdate.shape[field].minValue ?? 0) /
-                                                (scale / units)
-                                        )
-                                    ) / units;
+                                const minimum = capacityMinimum(field, units, scale);
                                 const name = `${editing}_${key}`;
                                 return (
                                     <Field key={name} data-invalid={Boolean(form.formState.errors[key])}>
