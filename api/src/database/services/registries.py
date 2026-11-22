@@ -1,7 +1,7 @@
 from uuid import UUID
 from fastapi import HTTPException
 from sqlmodel import col
-from src.utils import github, images
+from src.utils import images
 from sqlalchemy import select
 from src.models.roles import OrganizationRoles
 from src.models.types import Image
@@ -24,12 +24,8 @@ async def lock(session: AsyncSession, organization_id: UUID) -> None:
         raise HTTPException(status_code=409, detail="Organization is not available")
 
 
-async def create(session: AsyncSession, organization_id: UUID, payload: RegistryCreate, user_id: UUID) -> RegistryConnection:
+async def create(session: AsyncSession, organization_id: UUID, payload: RegistryCreate, user_id: UUID, username: str) -> RegistryConnection:
     """Authorize a registry connection and queue secret synchronization in the caller's final transaction."""
-
-    # Release the transaction before waiting for GitHub.
-    await session.commit()
-    username = await github.username(payload.credential)
 
     # Revalidate access after the external lookup and serialize creation with secret synchronization.
     await lock(session, organization_id)

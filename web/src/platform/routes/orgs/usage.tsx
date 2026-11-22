@@ -71,6 +71,9 @@ export default function Usage({ base, canManage }: { base: string; canManage: bo
     const [usage, invalidate] = useApi(`${base}/usage`, schemas.zOrganizationUsage, {
         refetchInterval: (query) => (query.state.data?.status === 'creating' ? 5000 : false)
     });
+    const [editor, setEditor] = useState<CapacitySection | null>(null);
+    const editing = canManage && (editor === 'database' || usage.has_payment_method) ? editor : null;
+
     return (
         <Stack gap={4}>
             <Stack gap={0} justify="end" className="min-h-8">
@@ -79,137 +82,117 @@ export default function Usage({ base, canManage }: { base: string; canManage: bo
                 </Heading>
             </Stack>
             <Separator />
-            <CapacityCards base={base} usage={usage} canManage={canManage} onSaved={invalidate} />
-        </Stack>
-    );
-}
-
-/** Edits one pool while preserving the exact capacities of the other pools. */
-function CapacityCards({
-    base,
-    usage,
-    canManage,
-    onSaved
-}: {
-    base: string;
-    usage: OrganizationUsage;
-    canManage: boolean;
-    onSaved: () => Promise<void>;
-}) {
-    const [editor, setEditor] = useState<CapacitySection | null>(null);
-    const editing = canManage && (editor === 'database' || usage.has_payment_method) ? editor : null;
-
-    return (
-        <Stack gap={4}>
-            {(['compute', 'database', 'storage'] as const).map((section) => {
-                const { title, color } = sections[section];
-                const cardFields: Partial<Record<keyof Capacity, CapacityField>> = sections[section].fields;
-                return (
-                    <Card key={section} className="pt-0">
-                        <CardHeader
-                            className={`flex flex-col items-stretch gap-2 border-b py-2 [.border-b]:pb-2 sm:flex-row sm:items-center sm:justify-between ${color}`}
-                        >
-                            <Heading level={3} size={4}>
-                                {title}
-                            </Heading>
-                            <Stack direction="horizontal" wrap="wrap" justify="end" gap={2} className="sm:ml-auto">
-                                {section === 'compute' && (
-                                    <Link variant="outline" size="sm" href="/pricing/" target="_blank">
-                                        See prices
-                                        <ExternalLink className="size-4" aria-hidden="true" />
-                                    </Link>
-                                )}
-                                {canManage && section !== 'database' && !usage.has_payment_method && (
-                                    <Link href="#payment-methods" variant="primary" size="sm">
-                                        Add Card
-                                    </Link>
-                                )}
-                                {canManage && (section === 'database' || usage.has_payment_method) && (
-                                    <Button
-                                        type="button"
-                                        variant="primary"
-                                        size="sm"
-                                        disabled={usage.status === 'creating'}
-                                        onClick={() => setEditor(section)}
-                                    >
-                                        Edit
-                                    </Button>
-                                )}
-                            </Stack>
-                        </CardHeader>
-                        <CardContent className="flex flex-col gap-4">
-                            {section === 'compute' && (
-                                <Progress
-                                    value={usage.solutions}
-                                    max={usage.max_solutions}
-                                    label="Solutions"
-                                    showValue
-                                    valueText={`${usage.solutions} / ${usage.max_solutions}`}
-                                />
-                            )}
-                            {resources.map(({ key, label, scale, unit }) => {
-                                const field = cardFields[key];
-                                if (!field || key === 'storage') return null;
-                                return (
-                                    <Progress
-                                        key={key}
-                                        label={label}
-                                        value={0}
-                                        max={usage[field]}
-                                        valueText={`- / ${capacityFormatter.format(usage[field] / scale)} ${unit}`}
-                                    />
-                                );
-                            })}
-                            {section !== 'compute' && (
-                                <ApiBoundary
-                                    fallback={
-                                        <Text as="p" size="sm" tone="muted">
-                                            Loading {title.toLowerCase()} usage…
-                                        </Text>
-                                    }
-                                    fallbackRender={({ resetErrorBoundary }) => (
-                                        <Stack direction="horizontal" gap={3} align="center" wrap="wrap">
-                                            <Text size="sm" tone="muted">
-                                                {title} usage unavailable.
-                                            </Text>
-                                            <Button
-                                                type="button"
-                                                variant="outline"
-                                                size="sm"
-                                                onClick={resetErrorBoundary}
-                                            >
-                                                Retry {title.toLowerCase()} usage
-                                            </Button>
-                                        </Stack>
+            <Stack gap={4}>
+                {(['compute', 'database', 'storage'] as const).map((section) => {
+                    const { title, color } = sections[section];
+                    const cardFields: Partial<Record<keyof Capacity, CapacityField>> = sections[section].fields;
+                    return (
+                        <Card key={section} className="pt-0">
+                            <CardHeader
+                                className={`flex flex-col items-stretch gap-2 border-b py-2 [.border-b]:pb-2 sm:flex-row sm:items-center sm:justify-between ${color}`}
+                            >
+                                <Heading level={3} size={4}>
+                                    {title}
+                                </Heading>
+                                <Stack direction="horizontal" wrap="wrap" justify="end" gap={2} className="sm:ml-auto">
+                                    {section === 'compute' && (
+                                        <Link variant="outline" size="sm" href="/pricing/" target="_blank">
+                                            See prices
+                                            <ExternalLink className="size-4" aria-hidden="true" />
+                                        </Link>
                                     )}
-                                >
-                                    <StorageUsage base={base} section={section} />
-                                </ApiBoundary>
-                            )}
-                        </CardContent>
-                    </Card>
-                );
-            })}
-            {usage.status === 'creating' && (
-                <Text as="p" role="status">
-                    Applying capacity changes…
-                </Text>
-            )}
-            {usage.status === 'failed' && (
-                <Text as="p" role="alert">
-                    Capacity update failed.
-                </Text>
-            )}
-            {editing && (
-                <CapacityEditor
-                    key={editing}
-                    base={base}
-                    usage={usage}
-                    section={editing}
-                    onSaved={onSaved}
-                    onClose={() => setEditor(null)}
-                />
-            )}
+                                    {canManage && section !== 'database' && !usage.has_payment_method && (
+                                        <Link href="#payment-methods" variant="primary" size="sm">
+                                            Add Card
+                                        </Link>
+                                    )}
+                                    {canManage && (section === 'database' || usage.has_payment_method) && (
+                                        <Button
+                                            type="button"
+                                            variant="primary"
+                                            size="sm"
+                                            disabled={usage.status === 'creating'}
+                                            onClick={() => setEditor(section)}
+                                        >
+                                            Edit
+                                        </Button>
+                                    )}
+                                </Stack>
+                            </CardHeader>
+                            <CardContent className="flex flex-col gap-4">
+                                {section === 'compute' && (
+                                    <Progress
+                                        value={usage.solutions}
+                                        max={usage.max_solutions}
+                                        label="Solutions"
+                                        showValue
+                                        valueText={`${usage.solutions} / ${usage.max_solutions}`}
+                                    />
+                                )}
+                                {resources.map(({ key, label, scale, unit }) => {
+                                    const field = cardFields[key];
+                                    if (!field || key === 'storage') return null;
+                                    return (
+                                        <Progress
+                                            key={key}
+                                            label={label}
+                                            value={0}
+                                            max={usage[field]}
+                                            valueText={`- / ${capacityFormatter.format(usage[field] / scale)} ${unit}`}
+                                        />
+                                    );
+                                })}
+                                {section !== 'compute' && (
+                                    <ApiBoundary
+                                        fallback={
+                                            <Text as="p" size="sm" tone="muted">
+                                                Loading {title.toLowerCase()} usage…
+                                            </Text>
+                                        }
+                                        fallbackRender={({ resetErrorBoundary }) => (
+                                            <Stack direction="horizontal" gap={3} align="center" wrap="wrap">
+                                                <Text size="sm" tone="muted">
+                                                    {title} usage unavailable.
+                                                </Text>
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={resetErrorBoundary}
+                                                >
+                                                    Retry {title.toLowerCase()} usage
+                                                </Button>
+                                            </Stack>
+                                        )}
+                                    >
+                                        <StorageUsage base={base} section={section} />
+                                    </ApiBoundary>
+                                )}
+                            </CardContent>
+                        </Card>
+                    );
+                })}
+                {usage.status === 'creating' && (
+                    <Text as="p" role="status">
+                        Applying capacity changes…
+                    </Text>
+                )}
+                {usage.status === 'failed' && (
+                    <Text as="p" role="alert">
+                        Capacity update failed.
+                    </Text>
+                )}
+                {editing && (
+                    <CapacityEditor
+                        key={editing}
+                        base={base}
+                        usage={usage}
+                        section={editing}
+                        onSaved={invalidate}
+                        onClose={() => setEditor(null)}
+                    />
+                )}
+            </Stack>
         </Stack>
     );
 }

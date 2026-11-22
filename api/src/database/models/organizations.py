@@ -77,12 +77,6 @@ class Organization(AuditTable, table=True):
 
         return (self.database_storage_bytes + 1024**2 - 1) // 1024**2
 
-    @property
-    def storage_quota_bytes(self) -> int:
-        """File storage capacity independent of the database allocation."""
-
-        return self.storage_bytes
-
 
 class OrganizationActivity(PlatformModel, table=True):
     """Persist one exclusive database transition lease per Organization."""

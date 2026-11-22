@@ -7,7 +7,6 @@ from sqlalchemy import or_, func, select, update
 from sqlalchemy.orm import defer, selectinload, contains_eager
 from collections.abc import Mapping, Sequence
 from src.models.roles import OrganizationRoles
-from src.models.types import Image
 from src.database.types import attr
 from src.models.metadata import LongLinkMetadata
 from src.models.solutions import SolutionCreate, validate_environment_variables
@@ -158,40 +157,6 @@ async def access(session: AsyncSession, solution_id: UUID, user_id: UUID, *, loc
     if not roles.atleast(role, OrganizationRoles.maintain):
         raise HTTPException(status_code=403, detail="Permission required")
     return solution
-
-
-async def inspect_update(
-    session: AsyncSession, solution: Solution, user_id: UUID, expected_revision_id: UUID | None = None
-) -> tuple[Revision, LongLinkMetadata]:
-    """Inspect the repository's latest image and revalidate the desired revision."""
-
-    # Reuse authorized Solution access without holding command locks across registry calls.
-    solution_id = solution.id
-    if expected_revision_id is not None and expected_revision_id != solution.desired_revision_id:
-        raise HTTPException(status_code=409, detail="Desired revision changed since review. Check again.")
-    revision = (
-        await session.get(Revision, solution.desired_revision_id, populate_existing=True)
-        if solution.desired_revision_id is not None
-        else None
-    )
-    if revision is None:
-        raise HTTPException(status_code=409, detail="Solution has no desired revision")
-
-    # Follow latest for updates, including Solutions created with a version tag or digest.
-    source = Image(revision.image)
-    source = Image(f"{source.registry}/{source.repository}:latest")
-    revision_id = revision.id
-    connection = await registries.resolve(session, solution.organization_id, revision.registry_connection_id, source)
-    await session.commit()
-    metadata = await images.required_metadata(source, connection)
-
-    # Revalidate permissions and the source after inspection before returning a candidate.
-    if revision.registry_connection_id is not None:
-        await registries.lock(session, solution.organization_id)
-    solution = await access(session, solution_id, user_id)
-    if solution.desired_revision_id != revision_id:
-        raise HTTPException(status_code=409, detail="Desired revision changed during inspection. Check again.")
-    return revision, metadata
 
 
 async def deploy(

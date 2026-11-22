@@ -104,7 +104,7 @@ class OrganizationQuotasResponse(BaseModel):
     database_instances: Literal[1] = 1
 
     # Storage
-    storage_quota_bytes: int
+    storage_quota_bytes: int = Field(validation_alias="storage_bytes")
 
 
 class OrganizationInvitationCreate(BaseModel):

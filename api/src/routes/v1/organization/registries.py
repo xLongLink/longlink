@@ -2,6 +2,7 @@ from src import auth
 from uuid import UUID
 from fastapi import APIRouter
 from sqlmodel import col
+from src.utils import github
 from sqlalchemy import select
 from sqlalchemy.orm import defer
 from collections.abc import Sequence
@@ -31,8 +32,12 @@ async def list_registries(session: auth.Session, membership: auth.OrganizationMe
 async def create_registry(session: auth.Session, payload: RegistryCreate, membership: auth.OrganizationMaintainer) -> RegistryConnection:
     """Create an organization-owned connection and queue secret synchronization."""
 
-    # The service revalidates access after GitHub I/O; the route commits the final command.
-    connection = await registries.create(session, membership.organization_id, payload, membership.user_id)
+    # Release the authorization transaction before waiting for GitHub.
+    await session.commit()
+    username = await github.username(payload.credential)
+
+    # Revalidate access and commit the connection and synchronization demand together.
+    connection = await registries.create(session, membership.organization_id, payload, membership.user_id, username)
     await session.commit()
     return connection
 
