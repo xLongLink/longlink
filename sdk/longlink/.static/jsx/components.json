@@ -1236,16 +1236,8 @@
             "guidance": "Use controlled state for local interaction. Effects should synchronize with external systems, not duplicate derived state.",
             "members": [
                 {
-                    "name": "useForm(options?)",
-                    "description": "Standard React Hook Form editing and validation state. Pass defaultValues and resolver: zodResolver(schema), then bind a native form with onSubmit={form.handleSubmit(save)}. Use register for native inputs and Controller for composite controls. Submission transport and success behavior belong in save. Drafts remain until explicitly reset."
-                },
-                {
-                    "name": "zodResolver(schema)",
-                    "description": "Connects a Zod schema to React Hook Form. Successful validation passes parsed schema output to the handleSubmit callback."
-                },
-                {
-                    "name": "useSubmit(path, options)",
-                    "description": "Returns an awaitable, duplicate-protected scoped endpoint write accepting FormData. Call it from a form.handleSubmit callback or a standalone action. Successful writes refresh cached View data before onSuccess. Unhandled failures reject."
+                    "name": "useForm(path, options?)",
+                    "description": "React Hook Form with scoped Solution submission. Options: schema (Zod), defaultValues, method (POST by default; also PUT, PATCH, DELETE), onSuccess, onError. Bind a native form with onSubmit={form.onSubmit}; use register for native inputs and Controller for composite controls. Existing React Hook Form APIs remain available. Await form.submit(values) or form.submit(formData) for direct actions; form.submit() submits current values or an empty payload when no fields are configured. A schema validates and supplies parsed values before submission. Invalid values reject submission and populate field errors. Submission failures reject unless onError handles them; omit onError when a confirmation must stay open on failure. Read pending state from formState.isSubmitting, field errors from formState.errors, and submission errors from formState.errors.root. Strings stay strings; numbers and booleans become strings; File and Blob remain binary. Arrays create repeated multipart entries, nullish values are omitted, and nested objects are unsupported. With a schema, FormData fields become scalars for single entries and arrays for repeated entries; submit an object to preserve single-item arrays. Successful writes refresh cached View data before onSuccess. Drafts remain until reset; validate and authorize again on the server."
                 },
                 {
                     "name": "useState(initial)",
@@ -1269,7 +1261,7 @@
                 },
                 {
                     "name": "useConfirm()",
-                    "description": "Returns show(options), hide(), isOpen, and element; render element once in JSX. Options require title, actionLabel, and onAction: () => void | Promise<void>. Optional description, cancelLabel (default Cancel), and actionVariant: default | destructive (default default). Cancel receives initial focus; Escape cancels and backdrop clicks do not dismiss. Async actions show loading, prevent duplicate submissions, and close only after success. Failure keeps the dialog open for retry; scoped request errors are reported by the host, other errors appear inside the dialog. While pending, Cancel, Escape, show(), and hide() are ignored. Example: const confirmation = useConfirm(); const submit = useSubmit('/api/variants'); confirmation.show({ title: 'Conferma variante A', cancelLabel: 'Annulla', actionLabel: 'Continua', onAction: async () => { const data = new FormData(); data.set('variant', 'A'); await submit(data); } }); Render {confirmation.element} beside the trigger Button."
+                    "description": "Returns show(options), hide(), isOpen, and element; render element once in JSX. Options require title, actionLabel, and onAction: () => void | Promise<void>. Optional description, cancelLabel (default Cancel), and actionVariant: default | destructive (default default). Cancel receives initial focus; Escape cancels and backdrop clicks do not dismiss. Async actions show loading, prevent duplicate submissions, and close only after success. Failure keeps the dialog open for retry; scoped request errors are reported by the host, other errors appear inside the dialog. While pending, Cancel, Escape, show(), and hide() are ignored. Example: const confirmation = useConfirm(); const form = useForm('/api/variants'); confirmation.show({ title: 'Conferma variante A', cancelLabel: 'Annulla', actionLabel: 'Continua', onAction: async () => { await form.submit({ variant: 'A' }); } }); Render {confirmation.element} beside the trigger Button."
                 }
             ],
             "source": "custom",
@@ -2051,7 +2043,7 @@
             "steps": [
                 "Call useConfirm() at the top level and render its element once beside the trigger Button.",
                 "Call show({ title, actionLabel, cancelLabel, onAction }) from the trigger. Description is optional; use translated labels when needed.",
-                "Create a submission with useSubmit(path) at the top level, then await submit(formData) inside onAction. Successful actions dismiss automatically; failures stay open for retry."
+                "Call useForm(path, options) at the top level, then await form.submit(values) inside onAction. Use form.submit() for an empty action or pass FormData directly. Successful actions dismiss automatically; failures stay open for retry."
             ]
         },
         {
@@ -2078,9 +2070,9 @@
             "keywords": ["edit form", "editing form", "create form", "form", "record editor"],
             "components": ["Controller", "Input", "Select", "Hooks"],
             "steps": [
-                "Use standard useForm with explicit defaultValues and resolver: zodResolver(schema); bind a native form with onSubmit={form.handleSubmit(save)}.",
+                "Call useForm(path, { schema, defaultValues, onSuccess }); bind a native form with onSubmit={form.onSubmit}.",
                 "Use register for native inputs and Controller for composite controls, choosing fields that match the server schema.",
-                "Submit to a Solution route that validates input and enforces authorization; display its documented success or error state."
+                "Read pending state from formState.isSubmitting and display formState.errors, including errors.root for submission failures. The Solution route must validate input and enforce authorization."
             ]
         },
         {

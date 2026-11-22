@@ -3,8 +3,8 @@ import { act } from 'react';
 import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../render';
 import { RequestContext } from '@/lib/view-capabilities';
-import { useSubmit } from '@/components/longlink/hooks/use-submit';
-import type { SubmitOptions } from '@/components/longlink/hooks/use-submit';
+import { useForm } from '@/components/longlink/hooks/use-form';
+import type { FormOptions } from '@/components/longlink/hooks/use-form';
 
 it.each(['POST', 'PUT', 'PATCH', 'DELETE'] as const)(
     'submits %s through the scoped bridge without flattening repeated names, uploads, or submitter values',
@@ -14,7 +14,7 @@ it.each(['POST', 'PUT', 'PATCH', 'DELETE'] as const)(
         let completed = false;
 
         function Example() {
-            const submit = useSubmit('/api/orders', {
+            const form = useForm('/api/orders', {
                 method,
                 onSuccess: () => {
                     completed = true;
@@ -27,7 +27,7 @@ it.each(['POST', 'PUT', 'PATCH', 'DELETE'] as const)(
                         event.preventDefault();
                         const data = new FormData(event.currentTarget, event.nativeEvent.submitter);
                         data.append('attachment', file);
-                        void submit(data);
+                        void form.submit(data);
                     }}
                 >
                     <input name="tag" defaultValue="red" />
@@ -90,7 +90,7 @@ it('keeps a scoped submission guarded until its success callback completes', asy
     let submit: ((data: FormData) => Promise<void>) | undefined;
 
     function Example() {
-        submit = useSubmit('/api/orders', { onSuccess });
+        submit = useForm('/api/orders', { onSuccess }).submit;
         return null;
     }
 
@@ -125,7 +125,7 @@ it('rejects unsupported runtime write methods before reaching scoped transport',
     let submit: ((data: FormData) => Promise<void>) | undefined;
 
     function Example() {
-        submit = useSubmit('/api/orders', { method: 'GET' as SubmitOptions['method'], onError });
+        submit = useForm('/api/orders', { method: 'GET' as FormOptions['method'], onError }).submit;
         return null;
     }
 
@@ -155,7 +155,7 @@ it('rejects callback endpoints without invoking them or reaching scoped transpor
 
     function Example() {
         // @ts-expect-error Callback submissions are not part of the public Views API.
-        submit = useSubmit(action, { onError });
+        submit = useForm(action, { onError }).submit;
         return null;
     }
 

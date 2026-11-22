@@ -5,7 +5,7 @@ import type { ContextType } from 'react';
 import { ApiErrorContext } from '@/lib/errors';
 import { ReportedError } from '@/lib/reported';
 import { RequestContext } from '@/lib/view-capabilities';
-import { useSubmit } from '@/components/longlink/hooks/use-submit';
+import { useForm } from '@/components/longlink/hooks/use-form';
 
 it.each([
     { cause: new Error('Unavailable'), reports: 1 },
@@ -27,7 +27,7 @@ it.each([
         let submit: ((data: FormData) => Promise<void>) | undefined;
 
         function Example() {
-            submit = useSubmit('/api/tasks', { onError });
+            submit = useForm('/api/tasks', { onError }).submit;
             return null;
         }
 
