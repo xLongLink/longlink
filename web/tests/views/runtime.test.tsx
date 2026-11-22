@@ -652,10 +652,10 @@ it('edits and resets native form fields through the authored View boundary', asy
 it('keeps navigation and attachment downloads on distinct scoped capabilities in authored Views', async () => {
     const runtime = await initializeRuntime(`export default function View() {
         return <>
-            <p role="status">{typeof request}</p>
+            <p role="status">{[typeof request, typeof download, typeof navigate].join(',')}</p>
             <Link href="/orders" aria-label="Orders"><span>Orders</span></Link>
-            <Button onClick={() => navigate('/items')}>Items</Button>
-            <Link onClick={() => download("/api/report", "reports/report.pdf")}>Download report</Link>
+            <Link href="/items">Items</Link>
+            <Link href="/api/report" download="reports/report.pdf">Download report</Link>
         </>;
     }`);
 
@@ -674,10 +674,12 @@ it('keeps navigation and attachment downloads on distinct scoped capabilities in
     };
 
     try {
-        await vi.waitFor(() => expect(runtime.mount.querySelector('[role="status"]')?.textContent).toBe('undefined'));
+        await vi.waitFor(() =>
+            expect(runtime.mount.querySelector('[role="status"]')?.textContent).toBe('undefined,undefined,undefined')
+        );
         const orders = runtime.mount.querySelector<HTMLAnchorElement>('a[aria-label="Orders"]');
 
-        const report = Array.from(runtime.mount.querySelectorAll('button')).find(
+        const report = Array.from(runtime.mount.querySelectorAll('a')).find(
             (anchor) => anchor.textContent === 'Download report'
         );
 
@@ -688,13 +690,11 @@ it('keeps navigation and attachment downloads on distinct scoped capabilities in
         await user.click(orders);
         await vi.waitFor(() => expect(navigation).toHaveBeenCalledExactlyOnceWith('/orders'));
         expect(downloads).not.toHaveBeenCalled();
-        expect(report.hasAttribute('download')).toBe(false);
+        expect(report.getAttribute('download')).toBe('reports/report.pdf');
         await user.click(report);
         await vi.waitFor(() => expect(downloads).toHaveBeenCalledExactlyOnceWith('/api/report', 'reports_report.pdf'));
         expect(navigation).toHaveBeenCalledTimes(1);
-        const items = Array.from(runtime.mount.querySelectorAll('button')).find(
-            (button) => button.textContent === 'Items'
-        );
+        const items = Array.from(runtime.mount.querySelectorAll('a')).find((button) => button.textContent === 'Items');
         if (!items) throw new Error('Expected the authored navigation button');
         await user.click(items);
         await vi.waitFor(() => expect(navigation).toHaveBeenLastCalledWith('/items'));

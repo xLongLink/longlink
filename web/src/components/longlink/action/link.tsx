@@ -49,6 +49,8 @@ type LinkProps = (NavigationProps | CallbackProps) &
 /** Renders navigation as an anchor and callback actions as link-styled buttons. */
 export function Link(props: LinkProps) {
     const navigationContext = useContext(LinkNavigationContext);
+    const downloadInFlight = useRef(false);
+    const [isPending, startTransition] = useTransition();
     const router = useInRouterContext();
     const {
         variant = 'link',
@@ -75,14 +77,27 @@ export function Link(props: LinkProps) {
         return <ActionLink {...link} ref={elementRef} className={className} />;
     }
 
-    const { disabled, onClick, children, href: suppliedHref, target: suppliedTarget, rel, download, ...anchor } = link;
-    const href = disabled ? undefined : suppliedHref;
+    const {
+        disabled,
+        onClick,
+        onAuxClick,
+        children,
+        href: suppliedHref,
+        target: suppliedTarget,
+        rel,
+        download,
+        ...anchor
+    } = link;
+    const blocked = disabled || isPending;
+    const href = blocked ? undefined : suppliedHref;
+    const isDownload = download !== undefined && download !== false;
     const target = isExternalLink ? '_blank' : suppliedTarget;
     const external = href !== undefined && /^(?:[a-z][a-z\d+.-]*:|\/\/)/i.test(href.trim());
     const internalHref = navigationContext && href ? resolveScopedNavigationUrl(navigationContext.baseUrl, href) : '';
     let destination = navigationContext ? internalHref || undefined : href;
 
-    if (navigationContext && href && !internalHref) destination = resolveExternalUrl(document.baseURI, href);
+    if (navigationContext && href && !internalHref && !isDownload)
+        destination = resolveExternalUrl(document.baseURI, href);
 
     const anchorProps = {
         ...anchor,
@@ -93,11 +108,16 @@ export function Link(props: LinkProps) {
             navigationContext || target === '_blank'
                 ? [...new Set(`${rel ?? ''} noopener noreferrer`.trim().split(/\s+/))].join(' ')
                 : rel,
-        'aria-disabled': disabled || undefined,
-        tabIndex: disabled ? 0 : anchor.tabIndex,
-        className,
+        'aria-disabled': blocked || undefined,
+        'aria-busy': isPending || undefined,
+        tabIndex: blocked ? 0 : anchor.tabIndex,
+        className: cn(className, 'gap-1.5'),
+        onAuxClick: (event: MouseEvent<HTMLAnchorElement>) => {
+            if (navigationContext && isDownload) event.preventDefault();
+            onAuxClick?.(event);
+        },
         onClick: (event: MouseEvent<HTMLAnchorElement>) => {
-            if (disabled) {
+            if (blocked || downloadInFlight.current) {
                 event.preventDefault();
                 event.stopPropagation();
 
@@ -114,11 +134,27 @@ export function Link(props: LinkProps) {
                 return;
             }
 
+            if (navigationContext && href && internalHref && isDownload) {
+                event.preventDefault();
+                downloadInFlight.current = true;
+                startTransition(async () => {
+                    try {
+                        await navigationContext.download(href, typeof download === 'string' ? download : 'attachment');
+                    } catch (error) {
+                        if (!(error instanceof ReportedError) && !isCanceledRequest(error)) throw error;
+                    } finally {
+                        downloadInFlight.current = false;
+                    }
+                });
+
+                return;
+            }
+
             if (
                 navigationContext &&
                 href &&
                 internalHref &&
-                download === undefined &&
+                !isDownload &&
                 (!target || target === '_self') &&
                 event.button === 0 &&
                 !event.altKey &&
@@ -132,6 +168,7 @@ export function Link(props: LinkProps) {
         },
         children: (
             <>
+                {isPending && <Spinner aria-label="Loading" className="motion-reduce:animate-none" />}
                 {children}
                 {isExternalLink && <ArrowUpRight aria-hidden="true" className="size-3.5 shrink-0" />}
                 {isExternalLink && <span className="sr-only">(opens in new tab)</span>}
@@ -139,7 +176,7 @@ export function Link(props: LinkProps) {
         )
     };
 
-    if (!navigationContext && router && href !== undefined && !external && download === undefined) {
+    if (!navigationContext && router && href !== undefined && !external && !isDownload) {
         return <RouterLink {...anchorProps} to={href} />;
     }
 

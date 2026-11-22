@@ -127,12 +127,6 @@ export default {
                     .replace(/[ \t]+$/gm, '')
                     .trim() + '\n';
             const globals = await readFile(path.join(import.meta.dirname, 'scripts/frontend.globals.d.ts'), 'utf8');
-            const capabilities = exports.find(({ name }) => name === 'ViewCapabilities');
-            if (!capabilities) throw new Error('Frontend capabilities could not be resolved.');
-            const scopedBindings = checker
-                .getPropertiesOfType(checker.getDeclaredTypeOfSymbol(checker.getAliasedSymbol(capabilities)))
-                .map(({ name }) => `declare const ${name}: NativeFrontend.ViewCapabilities['${name}'];`)
-                .join('\n');
             const aliases = exports
                 .map(({ name }) => name)
                 .filter((name) => !['Image', 'Text', 'Map', 'FrontendElement'].includes(name))
@@ -147,7 +141,7 @@ export default {
             await writeFile(path.join(declarationDirectory, 'frontend.native.d.ts'), native);
             await writeFile(
                 path.join(declarationDirectory, 'frontend.d.ts'),
-                `/// <reference path="./frontend.native.d.ts" />\n${globals.trimEnd()}\n\ntype IconName = ${icons};\n\n${aliases}\n\n${scopedBindings}\n`
+                `/// <reference path="./frontend.native.d.ts" />\n${globals.trimEnd()}\n\ntype IconName = ${icons};\n\n${aliases}\n`
             );
 
             await cp(path.join(import.meta.dirname, 'build/views'), path.join(clientDirectory, 'views'), {

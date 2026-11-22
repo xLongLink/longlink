@@ -92,7 +92,6 @@ export { zodResolver } from '@hookform/resolvers/zod';
 export { useApi } from './hooks/use-api';
 export { useSubmit, type SubmitOptions } from './hooks/use-submit';
 export { useConfirm, type ConfirmOptions } from './hooks/use-confirm';
-export type { ViewCapabilities } from './capabilities';
 export { Input } from './form/input';
 export { Textarea } from './form/textarea';
 export { Checkbox } from './form/checkbox';

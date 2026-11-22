@@ -1158,25 +1158,6 @@
             "reference": "https://ui.shadcn.com/docs/forms/react-hook-form"
         },
         {
-            "name": "Functions",
-            "category": "Runtime",
-            "introduction": "Scoped Solution downloads and navigation capabilities.",
-            "keywords": ["download", "navigation", "navigate", "attachment"],
-            "guidance": "Downloads and scoped navigation target the current Solution. External HTTP(S) navigation requires user activation. Server routes own authorization and business rules.",
-            "members": [
-                {
-                    "name": "navigate(path)",
-                    "description": "Navigates within the current Solution using a scoped path, or opens an HTTP(S) URL in a new tab. External URLs require user activation and open without an opener or referrer."
-                },
-                {
-                    "name": "download(path, filename)",
-                    "description": "Saves a scoped Solution attachment through the host using a sanitized filename."
-                }
-            ],
-            "source": "custom",
-            "justification": "Provides downloads and navigation scoped to the current Solution."
-        },
-        {
             "name": "Grid",
             "category": "Layouts",
             "introduction": "Arranges View content into equal-width columns with configurable responsive layouts.",
@@ -1341,7 +1322,7 @@
             "source": "custom",
             "justification": "Coordinates scoped navigation, file capabilities, and async actions while preserving native anchor or button semantics.",
             "introduction": "Link for navigation, downloads, and callback actions.",
-            "guidance": "Use href for navigation or omit href for an onClick action. Call download(path, filename) from onClick for scoped downloads. Open preview dialogs from onClick and render files separately with FileViewer. Callback actions render as buttons with async loading and duplicate-click protection. The download prop is a native anchor attribute, not a scoped file operation. Choose styling props instead of className or style.",
+            "guidance": "Use href for navigation within the current Solution, or href with download for a scoped attachment saved through the host. External HTTP(S) navigation opens in a new tab. Omit href for an onClick action. Open preview dialogs from onClick and render files separately with FileViewer. Callback actions and scoped downloads provide async loading and duplicate-click protection. Server routes own authorization and business rules. Choose styling props instead of className or style.",
             "properties": [
                 {
                     "name": "href",
@@ -1361,7 +1342,7 @@
                 {
                     "name": "download",
                     "type": "string | boolean",
-                    "description": "Native anchor download attribute. Use a filename string or boolean true. For scoped Solution downloads, call download(path, filename) from onClick instead."
+                    "description": "Saves the href attachment within the current Solution through the host using a sanitized filename. Use a filename string or true for the default attachment filename; false keeps navigation behavior. External download URLs are not supported."
                 },
                 { "name": "disabled", "type": "boolean", "description": "Disables navigation or the action." },
                 {
