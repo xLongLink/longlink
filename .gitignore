@@ -64,6 +64,8 @@ TEMP
 # Project-specific nested ignore rules consolidated at root
 /api/src/.static/web/
 /sdk/longlink/.static/web/
+/sdk/longlink/.static/jsx/frontend.d.ts
+/sdk/longlink/.static/jsx/frontend.native.d.ts
 /sdk/dev/
 /web/logs/
 /web/coverage/

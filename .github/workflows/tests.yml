@@ -191,7 +191,14 @@ jobs:
             - name: Smoke test SDK wheel
               if: matrix.python-version == '3.14.6'
               working-directory: sdk
-              run: uv run --isolated --no-project --with ./dist/*.whl python -I -c "from importlib.resources import files; assert files('longlink').joinpath('.static/web/index.html').is_file()"
+              run: |
+                  uv run --isolated --no-project --with ./dist/*.whl python -I - <<'PY'
+                  from importlib.resources import files
+
+                  assets = files("longlink").joinpath(".static")
+                  for path in ("web/index.html", "jsx/frontend.d.ts", "jsx/frontend.native.d.ts"):
+                      assert assets.joinpath(path).is_file(), path
+                  PY
 
             - name: Build scaffold image with SDK distribution
               if: matrix.python-version == '3.14.6'
