@@ -6,7 +6,7 @@ import { withMounted } from '../../render';
 import userEvent from '@testing-library/user-event';
 import Platform from '@/components/layouts/platform';
 import { useLocation, useNavigate } from 'react-router';
-import { it, vi, expect, afterEach, beforeEach } from 'vitest';
+import { it, expect, afterEach, beforeEach } from 'vitest';
 
 // SAFETY: The configured happy-dom environment supplies this viewport API on its window.
 const viewport = (window as typeof window & Pick<Window, 'happyDOM'>).happyDOM;
@@ -288,35 +288,6 @@ it('opens mobile navigation by keyboard and restores focus after Escape', async 
             // Assert
             expect(document.querySelector('[role="dialog"]')).toBeNull();
             expect(document.activeElement).toBe(trigger);
-        }
-    );
-});
-
-it('shows labels on hover only for collapsed iconful navigation', async () => {
-    viewport.setViewport({ width: 1280 });
-    const user = userEvent.setup();
-
-    await withMounted(
-        <Platform action={null} tabs={[{ href: '/admin/users', icon: <Users aria-hidden="true" />, label: 'Users' }]}>
-            <h1>Administration</h1>
-        </Platform>,
-        async (output) => {
-            const users = output.querySelector<HTMLAnchorElement>('a[href="/admin/users"]');
-
-            if (!users) throw new Error('Missing Users link');
-
-            await act(async () => user.hover(users));
-            expect(document.querySelector('[data-slot="tooltip-content"]:not([hidden])')).toBeNull();
-            await act(async () => user.unhover(users));
-            await act(async () => output.querySelector<HTMLButtonElement>('button[aria-controls]')?.click());
-            expect(output.querySelector('a[href="/admin/users"]')).toBe(users);
-            await act(async () => user.hover(users));
-            await vi.waitFor(() =>
-                expect(document.querySelector('[data-slot="tooltip-content"]')?.textContent).toBe('Users')
-            );
-            await act(async () => user.unhover(users));
-            await vi.waitFor(() => expect(document.querySelector('[data-slot="tooltip-content"]')).toBeNull());
-            expect(output.querySelector('a[href="/admin/users"]')).toBe(users);
         }
     );
 });

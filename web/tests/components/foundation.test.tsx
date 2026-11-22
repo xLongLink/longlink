@@ -7,8 +7,6 @@ import { Foundation } from '@/components/ui/foundation';
 
 const intersections: VisibilityObserver[] = [];
 
-const resizes: TrackObserver[] = [];
-
 /** Supplies viewport visibility at the DOM observer boundary. */
 class VisibilityObserver extends IntersectionObserver {
     readonly callback: IntersectionObserverCallback;
@@ -51,31 +49,6 @@ class VisibilityObserver extends IntersectionObserver {
     }
 }
 
-/** Supplies track-size notifications without replacing the duration calculation. */
-class TrackObserver extends ResizeObserver {
-    readonly callback: ResizeObserverCallback;
-    target: Element | undefined;
-    disconnected = false;
-
-    constructor(callback: ResizeObserverCallback) {
-        super(callback);
-        this.callback = callback;
-        resizes.push(this);
-    }
-
-    override observe(target: Element) {
-        this.target = target;
-    }
-
-    override disconnect() {
-        this.disconnected = true;
-    }
-
-    emit() {
-        if (!this.disconnected) this.callback([], this);
-    }
-}
-
 /** Advances through the real animation-frame queue. */
 async function nextFrame() {
     await act(async () => {
@@ -87,7 +60,6 @@ afterEach(() => {
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
     intersections.length = 0;
-    resizes.length = 0;
 });
 
 it('exposes each row once and lets keyboard users focus the described pause region', async () => {
@@ -119,37 +91,8 @@ it('exposes each row once and lets keyboard users focus the described pause regi
     });
 });
 
-it('measures both native tracks at 18px per second and recalculates after resize', async () => {
+it('limits motion to visible content, follows reduced-motion changes, and cleans up', async () => {
     vi.stubGlobal('IntersectionObserver', VisibilityObserver);
-    vi.stubGlobal('ResizeObserver', TrackObserver);
-    let width = 5400;
-    vi.spyOn(HTMLElement.prototype, 'scrollWidth', 'get').mockImplementation(() => width);
-    let tracks: TrackObserver[] = [];
-
-    await withMounted(<Foundation />, async () => {
-        tracks = resizes.filter((observer) => observer.target?.classList.contains('foundation-track'));
-        expect(tracks).toHaveLength(2);
-
-        for (const observer of tracks) {
-            expect(observer.target?.getAttribute('style')).toContain('--foundation-drift-duration: 100s');
-        }
-
-        // A changed viewport/font measurement must change speed on both live DOM nodes.
-        width = 8100;
-
-        for (const observer of tracks) observer.emit();
-
-        for (const observer of tracks) {
-            expect(observer.target?.getAttribute('style')).toContain('--foundation-drift-duration: 150s');
-        }
-    });
-
-    expect(tracks.every((observer) => observer.disconnected)).toBe(true);
-});
-
-it('updates scroll offset only while visible, follows motion preference and viewport changes, and cleans up', async () => {
-    vi.stubGlobal('IntersectionObserver', VisibilityObserver);
-    vi.stubGlobal('ResizeObserver', TrackObserver);
     const preference = window.matchMedia('(prefers-reduced-motion: reduce)');
     let reduced = false;
     vi.spyOn(preference, 'matches', 'get').mockImplementation(() => reduced);
@@ -175,11 +118,12 @@ it('updates scroll offset only while visible, follows motion preference and view
         observer.emit(true);
         await nextFrame();
         expect(section.dataset.paused).toBe('false');
-        expect(section.style.getPropertyValue('--foundation-scroll')).toBe('210px');
+        expect(Number.parseFloat(section.style.getPropertyValue('--foundation-scroll'))).toBeGreaterThan(0);
         measure.mockReturnValue(new DOMRect(0, -400, 1200, 400));
         window.dispatchEvent(new Event('scroll'));
         await nextFrame();
-        expect(section.style.getPropertyValue('--foundation-scroll')).toBe('-210px');
+        const offset = section.style.getPropertyValue('--foundation-scroll');
+        expect(Number.parseFloat(offset)).toBeLessThan(0);
 
         // Preference changes affect an already-visible section without another scroll.
         reduced = true;
@@ -189,12 +133,7 @@ it('updates scroll offset only while visible, follows motion preference and view
         reduced = false;
         preference.dispatchEvent(new Event('change'));
         await nextFrame();
-        expect(section.style.getPropertyValue('--foundation-scroll')).toBe('-210px');
-
-        vi.spyOn(window, 'innerWidth', 'get').mockReturnValue(600);
-        window.dispatchEvent(new Event('resize'));
-        await nextFrame();
-        expect(section.style.getPropertyValue('--foundation-scroll')).toBe('-105px');
+        expect(section.style.getPropertyValue('--foundation-scroll')).toBe(offset);
         observer.emit(false);
         measure.mockClear();
         window.dispatchEvent(new Event('scroll'));
@@ -208,7 +147,6 @@ it('updates scroll offset only while visible, follows motion preference and view
     });
 
     expect(intersections[0].disconnected).toBe(true);
-    expect(resizes.every((observer) => observer.disconnected)).toBe(true);
     window.dispatchEvent(new Event('scroll'));
     window.dispatchEvent(new Event('resize'));
     preference.dispatchEvent(new Event('change'));

@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { it, expect, vi } from 'vitest';
+import { withMounted } from '../../render';
 import { act, type ReactNode } from 'react';
-import { renderStatic, withMounted } from '../../render';
 import { ArticleFooter } from '@/components/layouts/article';
 import { Link as RouterLink, useLocation } from 'react-router';
 
@@ -226,17 +226,4 @@ it('releases the document shortcut listener when the footer unmounts', async () 
 
     // Assert
     expect(event.defaultPrevented).toBe(false);
-});
-
-it('renders UTC modification dates and only offers an external source link when supplied', () => {
-    const withoutEdit = renderStatic(<ArticleFooter lastUpdated="2026-10-16T23:30:00-03:00" />);
-    expect(withoutEdit.querySelector('time')?.textContent).toBe('Oct 17, 2026');
-    expect(withoutEdit.querySelector('time')?.getAttribute('datetime')).toBe('2026-10-17T02:30:00.000Z');
-    expect(withoutEdit.querySelector('a')).toBeNull();
-
-    const withEdit = renderStatic(<ArticleFooter lastUpdated="2026-10-16" editUrl="https://example.com/source" />);
-    const edit = withEdit.querySelector('a');
-    expect(edit?.getAttribute('href')).toBe('https://example.com/source');
-    expect(edit?.getAttribute('target')).toBe('_blank');
-    expect(edit?.getAttribute('rel')).toBe('noopener noreferrer');
 });

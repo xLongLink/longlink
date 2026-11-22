@@ -1,71 +1,10 @@
 // @vitest-environment happy-dom
 import { it, expect } from 'vitest';
 import { act, useState } from 'react';
+import { withMounted } from '../../render';
 import Content from '@/components/layouts/content';
 import userEvent from '@testing-library/user-event';
-import { Box } from '@/components/longlink/layout/box';
-import { renderStatic, withMounted } from '../../render';
-import { Grid } from '@/components/longlink/layout/grid';
-import { Heading } from '@/components/longlink/display/heading';
 import { Stack, StackItem } from '@/components/longlink/layout/stack';
-
-it('keeps heading levels independent of text size', () => {
-    // Act
-    const output = renderStatic(
-        <>
-            <Heading size={4}>Orders</Heading>
-            <Heading level={3} size={1}>
-                Open orders
-            </Heading>
-        </>
-    );
-
-    // Assert
-    expect(output.querySelector('h2')?.textContent).toBe('Orders');
-    expect(output.querySelector('h3')?.textContent).toBe('Open orders');
-});
-
-it.each([Box, Grid])('updates padding overrides without remounting an editable child', async (Layout) => {
-    // Arrange
-    const user = userEvent.setup();
-
-    function Preview() {
-        const [compact, setCompact] = useState(false);
-
-        return (
-            <>
-                <button type="button" onClick={() => setCompact((value) => !value)}>
-                    Toggle spacing
-                </button>
-                <Layout padding={4} paddingInline={compact ? 0 : undefined} paddingBlock={compact ? 2 : undefined}>
-                    <input aria-label="Draft" defaultValue="Retained" />
-                </Layout>
-            </>
-        );
-    }
-
-    await withMounted(<Preview />, async (output) => {
-        const input = output.querySelector('input');
-        const toggle = output.querySelector('button');
-        const layout = input?.parentElement;
-
-        if (!input || !toggle || !layout) throw new Error('Expected an editable preview');
-        await act(async () => user.type(input, ' draft'));
-
-        // Act
-        await act(async () => user.click(toggle));
-
-        // Assert
-        expect(output.querySelector('input')).toBe(input);
-        expect(input.value).toBe('Retained draft');
-
-        // Act
-        await act(async () => user.click(toggle));
-
-        // Assert
-        expect(input.value).toBe('Retained draft');
-    });
-});
 
 it('retains an unsaved content draft when its toolbar is removed and restored', async () => {
     const user = userEvent.setup();

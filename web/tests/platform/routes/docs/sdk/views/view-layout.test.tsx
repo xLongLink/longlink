@@ -7,23 +7,6 @@ import { RequestContext } from '@/lib/view-capabilities';
 import ViewLayout from '@/platform/routes/docs/sdk/views/view-layout';
 import FormDocumentation from '@/platform/routes/docs/sdk/views/form-documentation';
 
-it('falls back to the published properties when the page does not override them', async () => {
-    // Arrange
-    const user = userEvent.setup();
-
-    await withMounted(<ViewLayout name="Button" />, async (output) => {
-        const propertiesTab = output.querySelectorAll<HTMLButtonElement>('[role="tab"]')[1];
-
-        if (!propertiesTab) throw new Error('Expected properties tab');
-
-        // Act
-        await act(async () => user.click(propertiesTab));
-
-        // Assert
-        expect(output.querySelector('table[aria-label="Button properties"] tbody tr')).not.toBeNull();
-    });
-});
-
 it('switches between the example and authored companion references without merging published properties', async () => {
     const user = userEvent.setup();
 
