@@ -1,7 +1,5 @@
-import { useContext } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { Spinner } from '@/components/shadcn/spinner';
-import { RequestContext } from '@/lib/view-capabilities';
+import { useBinaryQuery } from '@/lib/hooks/use-binary-query';
 import { FilePreview } from '@/components/longlink/display/file-preview';
 
 /** Displays supported attachments inside the View using scoped file requests. */
@@ -14,21 +12,7 @@ export function FileViewer({
     /** Accessible name for the embedded file. */
     title: string;
 }) {
-    const request = useContext(RequestContext)?.request;
-    const { data, error, isError } = useQuery({
-        queryKey: ['files', src],
-        queryFn: async () => {
-            if (!request) throw new Error('File preview unavailable');
-            const body = await request(src, { binary: true });
-            if (!(body instanceof Blob)) throw new Error('File preview unavailable');
-            return body;
-        },
-        retry: false,
-        gcTime: 0,
-        staleTime: Infinity,
-        refetchOnWindowFocus: false,
-        refetchOnReconnect: false
-    });
+    const { data, error, isError } = useBinaryQuery(src);
 
     // Keep one bounded viewer region with no custom View or Download buttons.
     return (

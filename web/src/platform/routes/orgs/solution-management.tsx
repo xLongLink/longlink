@@ -1,10 +1,10 @@
 import { z } from 'zod';
 import { api } from '@/lib/api';
-import { useState } from 'react';
 import { useApi } from '@/lib/hooks/use-api';
 import * as permissions from '@/platform/permissions';
 import { SolutionOverview } from './solution-overview';
 import { Link } from '@/components/longlink/action/link';
+import { useSelection } from '@/lib/hooks/use-selection';
 import { Text } from '@/components/longlink/display/text';
 import { Separator } from '@/components/shadcn/separator';
 import { SolutionVisibility } from './solution-visibility';
@@ -51,8 +51,7 @@ export default function SolutionManagement({
     const canMaintain = permissions.canMaintain(role);
     const canAdminister = permissions.canAdminister(role);
 
-    // Own one dialog action; captured identity prevents old completions from closing its replacement.
-    const [selected, setSelected] = useState<SolutionAction | null>(null);
+    const [selected, setSelected, closeSelected] = useSelection<SolutionAction>();
     const confirmation = useConfirm();
     const base = `/api/v1/organizations/${organization.id}`;
 
@@ -61,12 +60,6 @@ export default function SolutionManagement({
     /** Opens creation without replacing an already active creation attempt. */
     function openCreate() {
         setSelected((current) => (current?.kind === 'create' ? current : { kind: 'create' }));
-    }
-
-    /** Closes only this selection, leaving a replacement dialog open after an older operation finishes. */
-    function closeSelected() {
-        // Each render captures the selection that owns its callbacks.
-        setSelected((current) => (current === selected ? null : current));
     }
 
     /** Refreshes Solutions before closing only the attempt that completed successfully. */

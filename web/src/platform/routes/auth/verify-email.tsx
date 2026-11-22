@@ -13,6 +13,7 @@ import { clearSessionQueries } from '@/lib/react-query';
 import { Link } from '@/components/longlink/action/link';
 import { Text } from '@/components/longlink/display/text';
 import { Separator } from '@/components/shadcn/separator';
+import { exchangeCredential } from './exchange-credential';
 import { Stack } from '@/components/longlink/layout/stack';
 import { useCurrentUser } from '@/platform/hooks/use-user';
 import { useFragmentToken } from '@/lib/hooks/use-fragment-token';
@@ -40,40 +41,23 @@ export default function VerifyEmail() {
         resolver: zodResolver(registrationCompleteSchema)
     });
 
-    /** Returns the signed email claim while preserving cancellation of credential side effects. */
-    async function verify({
-        signal,
-        token: registrationToken
-    }: VerificationRequest): Promise<
-        { status: 'verified'; data: z.output<typeof zEmailPayload> } | { status: 'error' } | undefined
-    > {
-        // Exchange the URL credential, or recover the server-owned registration setup.
-        const request = registrationToken
-            ? api('/api/v1/auth/verify', { json: { token: registrationToken }, method: 'POST', signal }).json(
-                  zEmailPayload
-              )
-            : api('/api/v1/auth/register/setup', { signal }).json(zEmailPayload);
+    /** Exchanges the email credential or recovers the server-owned registration setup. */
+    async function verify({ signal, token: registrationToken }: VerificationRequest) {
+        return await exchangeCredential(
+            async () => {
+                const data = registrationToken
+                    ? await api('/api/v1/auth/verify', {
+                          json: { token: registrationToken },
+                          method: 'POST',
+                          signal
+                      }).json(zEmailPayload)
+                    : await api('/api/v1/auth/register/setup', { signal }).json(zEmailPayload);
 
-        // Handle only transport failures as invalid credentials.
-        let data: z.output<typeof zEmailPayload>;
-
-        try {
-            data = await request;
-        } catch (cause: unknown) {
-            if (signal.aborted) return;
-
-            if (!(cause instanceof ApiError) || cause.status !== 400) throw cause;
-            sessionStorage.removeItem(REGISTRATION_TOKEN_KEY);
-
-            return { status: 'error' };
-        }
-
-        // Clear the stored credential only while verification is still active.
-        if (signal.aborted) return;
-
-        sessionStorage.removeItem(REGISTRATION_TOKEN_KEY);
-
-        return { status: 'verified', data };
+                return { status: 'verified', data };
+            },
+            signal,
+            REGISTRATION_TOKEN_KEY
+        );
     }
 
     const { verification, startVerification } = useVerification(token, verify);

@@ -1,10 +1,8 @@
-const wordmarkSizeClasses = { default: ' text-base', heading: ' text-2xl' };
-
-/** Renders the LongLink wordmark in the surrounding theme and text size. */
-export function Wordmark({ size = 'default', mode }: { size?: 'default' | 'heading'; mode?: 'light' | 'dark' }) {
+/** Renders the LongLink wordmark in the surrounding theme. */
+export function Wordmark({ mode }: { mode?: 'light' | 'dark' }) {
     // Size the tightly cropped asset relative to the existing wordmark typography.
     return (
-        <span className={`inline-flex align-middle leading-none${wordmarkSizeClasses[size]}`}>
+        <span className="inline-flex align-middle text-2xl leading-none">
             {(mode ? [mode] : ['light', 'dark']).map((imageMode) => (
                 <img
                     key={imageMode}

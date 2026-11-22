@@ -475,29 +475,32 @@ it.each(['https://example.com/invoice.pdf', '//example.com/invoice.pdf', '../inv
     }
 );
 
-it('recovers from an already-reported scoped download failure', async () => {
-    // Arrange
-    const download = vi.fn().mockRejectedValue(new ReportedError('Already reported'));
-    await withMounted(
-        <LinkNavigationContext value={{ baseUrl: '/solutions/orders', navigate: vi.fn(), download }}>
-            <Link href="/invoice.pdf" download="invoice.pdf">
-                Invoice
-            </Link>
-        </LinkNavigationContext>,
-        async (output) => {
-            const anchor = output.querySelector('a');
-            if (!anchor) throw new Error('Expected attachment link');
+it.each([new ReportedError('Already reported'), new DOMException('Canceled', 'AbortError')])(
+    'recovers from a handled scoped download failure: %s',
+    async (failure) => {
+        // Arrange
+        const download = vi.fn().mockRejectedValue(failure);
+        await withMounted(
+            <LinkNavigationContext value={{ baseUrl: '/solutions/orders', navigate: vi.fn(), download }}>
+                <Link href="/invoice.pdf" download="invoice.pdf">
+                    Invoice
+                </Link>
+            </LinkNavigationContext>,
+            async (output) => {
+                const anchor = output.querySelector('a');
+                if (!anchor) throw new Error('Expected attachment link');
 
-            // Act
-            await act(async () => anchor.click());
-            await act(async () => anchor.click());
+                // Act
+                await act(async () => anchor.click());
+                await act(async () => anchor.click());
 
-            // Assert
-            expect(download).toHaveBeenCalledTimes(2);
-            expect(anchor.hasAttribute('aria-busy')).toBe(false);
-        }
-    );
-});
+                // Assert
+                expect(download).toHaveBeenCalledTimes(2);
+                expect(anchor.hasAttribute('aria-busy')).toBe(false);
+            }
+        );
+    }
+);
 
 it.each([true, false, 'invoice.pdf'])('preserves native download semantics outside Views: %s', async (download) => {
     // Arrange

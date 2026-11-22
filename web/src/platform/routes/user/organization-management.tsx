@@ -1,8 +1,8 @@
 import { api } from '@/lib/api';
-import { useState } from 'react';
 import { ExternalLink, Plus } from 'lucide-react';
 import { apiQueryOptions } from '@/lib/react-query';
 import { Link } from '@/components/longlink/action/link';
+import { useSelection } from '@/lib/hooks/use-selection';
 import { Text } from '@/components/longlink/display/text';
 import { Separator } from '@/components/shadcn/separator';
 import { Stack } from '@/components/longlink/layout/stack';
@@ -23,9 +23,9 @@ const invitationsQuery = apiQueryOptions('/api/v1/me/invitations', schemas.zUser
 
 /** Owns membership loading, pending invitations, and organization creation for the overview and account settings. */
 export default function OrganizationManagement({ presentation }: { presentation: 'overview' | 'settings' }) {
-    const [selected, setSelected] = useState<
-        { type: 'create' } | { type: 'accept' | 'decline'; id: string; name: string } | null
-    >(null);
+    const [selected, setSelected, closeSelected] = useSelection<
+        { type: 'create' } | { type: 'accept' | 'decline'; id: string; name: string }
+    >();
 
     const client = useQueryClient();
 
@@ -43,12 +43,6 @@ export default function OrganizationManagement({ presentation }: { presentation:
         ...invitations.map((invitation) => ({ ...invitation, kind: 'invitation' as const })),
         ...memberships.map((membership) => ({ ...membership, kind: 'membership' as const }))
     ];
-
-    /** Closes only this attempt, leaving any replacement dialog open. */
-    function closeSelected() {
-        // Each render captures the attempt that owns its callbacks.
-        setSelected((current) => (current === selected ? null : current));
-    }
 
     // Keep overview onboarding and settings presentation around the same membership workflow.
     return (

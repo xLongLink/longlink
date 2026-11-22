@@ -9,6 +9,7 @@ import { useSubmit } from '@/lib/hooks/use-submit';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link } from '@/components/longlink/action/link';
 import { Separator } from '@/components/shadcn/separator';
+import { exchangeCredential } from './exchange-credential';
 import { Stack } from '@/components/longlink/layout/stack';
 import { Button } from '@/components/longlink/action/button';
 import { useFragmentToken } from '@/lib/hooks/use-fragment-token';
@@ -36,33 +37,25 @@ export default function ResetPassword() {
 
     const confirmation = 'Your password has been reset. You can now sign in.';
 
-    /** Returns the credential outcome while preserving cancellation of token-storage cleanup. */
-    async function verify({
-        signal,
-        token: resetToken
-    }: VerificationRequest): Promise<{ status: 'verified' } | { status: 'error' } | undefined> {
-        // Exchange the URL credential, or recover the already established setup cookie.
-        const request = resetToken
-            ? api('/api/v1/auth/reset-password/verify', { json: { token: resetToken }, method: 'POST', signal })
-            : api('/api/v1/auth/reset-password/setup', { signal });
+    /** Exchanges the reset credential or recovers the established setup cookie. */
+    async function verify({ signal, token: resetToken }: VerificationRequest) {
+        return await exchangeCredential(
+            async () => {
+                if (resetToken) {
+                    await api('/api/v1/auth/reset-password/verify', {
+                        json: { token: resetToken },
+                        method: 'POST',
+                        signal
+                    });
+                } else {
+                    await api('/api/v1/auth/reset-password/setup', { signal });
+                }
 
-        // Handle only transport failures as invalid credentials.
-        try {
-            await request;
-        } catch (cause: unknown) {
-            if (signal.aborted) return;
-
-            if (!isBadTokenError(cause)) throw cause;
-            sessionStorage.removeItem(PASSWORD_RESET_TOKEN_KEY);
-
-            return { status: 'error' };
-        }
-
-        // Clear the accepted credential only while verification is still active.
-        if (signal.aborted) return;
-        sessionStorage.removeItem(PASSWORD_RESET_TOKEN_KEY);
-
-        return { status: 'verified' };
+                return { status: 'verified' };
+            },
+            signal,
+            PASSWORD_RESET_TOKEN_KEY
+        );
     }
 
     const { verification } = useVerification(token, verify);

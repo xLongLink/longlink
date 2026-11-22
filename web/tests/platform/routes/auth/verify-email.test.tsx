@@ -102,7 +102,7 @@ it('allows account credential entry only after the email proof exchange succeeds
     }
 });
 
-it('retains pending proof when verification is canceled by unmounting', async () => {
+it.each([200, 400])('retains pending proof when canceled verification later returns %s', async (status) => {
     // Arrange a delayed exchange with proof recovered from storage.
     const storageKey = 'longlink.registration.token';
     const originalUrl = window.location.href;
@@ -153,9 +153,15 @@ it('retains pending proof when verification is canceled by unmounting', async ()
             path
         );
 
-        // A late success cannot discard the canceled attempt's retry credential.
+        // Neither late acceptance nor rejection can discard the canceled attempt's retry credential.
         expect(verificationRequest?.signal.aborted).toBe(true);
-        await act(async () => resolveVerification(Response.json({ email: 'new@example.com' })));
+        await act(async () =>
+            resolveVerification(
+                status === 200
+                    ? Response.json({ email: 'new@example.com' })
+                    : Response.json({ detail: 'Invalid registration token' }, { status })
+            )
+        );
         expect(sessionStorage.getItem(storageKey)).toBe('pending-proof');
     } finally {
         resolveVerification(Response.json({ email: 'new@example.com' }));

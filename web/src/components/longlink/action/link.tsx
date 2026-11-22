@@ -6,6 +6,7 @@ import { Spinner } from '@/components/shadcn/spinner';
 import { buttonVariants } from '@/components/shadcn/button';
 import type { VariantProps } from 'class-variance-authority';
 import { LinkNavigationContext } from '@/lib/view-capabilities';
+import { useConfirmAction } from '@/lib/hooks/use-confirm-action';
 import { Link as RouterLink, useInRouterContext } from 'react-router';
 import { resolveExternalUrl, resolveScopedNavigationUrl } from '@/lib/url';
 import {
@@ -49,8 +50,7 @@ type LinkProps = (NavigationProps | CallbackProps) &
 /** Renders navigation as an anchor and callback actions as link-styled buttons. */
 export function Link(props: LinkProps) {
     const navigationContext = useContext(LinkNavigationContext);
-    const downloadInFlight = useRef(false);
-    const [isPending, startTransition] = useTransition();
+    const { isPending, inFlight: downloadInFlight, run } = useConfirmAction();
     const router = useInRouterContext();
     const {
         variant = 'link',
@@ -136,14 +136,11 @@ export function Link(props: LinkProps) {
 
             if (navigationContext && href && internalHref && isDownload) {
                 event.preventDefault();
-                downloadInFlight.current = true;
-                startTransition(async () => {
+                run(async () => {
                     try {
                         await navigationContext.download(href, typeof download === 'string' ? download : 'attachment');
                     } catch (error) {
                         if (!(error instanceof ReportedError) && !isCanceledRequest(error)) throw error;
-                    } finally {
-                        downloadInFlight.current = false;
                     }
                 });
 

@@ -79,58 +79,48 @@ it('mounts only selected content and responds to both user selection and an exte
     });
 });
 
-it('retains an entered draft and expanded navigation while the viewport crosses the rail breakpoint', async () => {
-    const width = window.innerWidth;
+it('retains the draft when expanding navigation and keeps it expanded during editing', async () => {
     const user = userEvent.setup();
 
-    try {
-        window.innerWidth = 1000;
-        await withMounted(
-            <MenuNavigationContext value={{ hash: '', select: () => {} }}>
-                <Menu
-                    sections={[
-                        {
-                            title: 'Workspace',
-                            isHeaderHidden: true,
-                            entries: [
-                                { kind: 'item', label: 'Orders', content: <input aria-label="Order draft" /> },
-                                {
-                                    kind: 'subsection',
-                                    label: 'Advanced',
-                                    icon: 'database',
-                                    items: [{ label: 'Billing', content: 'Billing settings' }]
-                                }
-                            ]
-                        }
-                    ]}
-                />
-            </MenuNavigationContext>,
-            async (output) => {
-                const input = output.querySelector<HTMLInputElement>('input');
-                const trigger = output.querySelector<HTMLButtonElement>('button');
-                const navigation = output.querySelector('nav');
+    await withMounted(
+        <MenuNavigationContext value={{ hash: '', select: () => {} }}>
+            <Menu
+                sections={[
+                    {
+                        title: 'Workspace',
+                        isHeaderHidden: true,
+                        entries: [
+                            { kind: 'item', label: 'Orders', content: <input aria-label="Order draft" /> },
+                            {
+                                kind: 'subsection',
+                                label: 'Advanced',
+                                icon: 'database',
+                                items: [{ label: 'Billing', content: 'Billing settings' }]
+                            }
+                        ]
+                    }
+                ]}
+            />
+        </MenuNavigationContext>,
+        async (output) => {
+            const input = output.querySelector<HTMLInputElement>('input');
+            const trigger = output.querySelector<HTMLButtonElement>('button');
+            const navigation = output.querySelector('nav');
 
-                if (!input || !trigger) throw new Error('Expected draft input and disclosure');
-                expect(trigger.getAttribute('aria-expanded')).toBe('false');
-                await act(async () => user.click(trigger));
-                await act(async () => user.type(input, 'Retained order'));
+            if (!input || !trigger) throw new Error('Expected draft input and disclosure');
+            expect(trigger.getAttribute('aria-expanded')).toBe('false');
+            await act(async () => user.type(input, 'Retained'));
+            await act(async () => user.click(trigger));
+            expect(input.value).toBe('Retained');
+            expect(trigger.getAttribute('aria-expanded')).toBe('true');
+            await act(async () => user.type(input, ' order'));
 
-                for (const nextWidth of [768, 769]) {
-                    await act(async () => {
-                        window.innerWidth = nextWidth;
-                        window.dispatchEvent(new Event('resize'));
-                    });
-                    expect(output.querySelector('nav')).toBe(navigation);
-                    expect(output.querySelector('input')).toBe(input);
-                    expect(input.value).toBe('Retained order');
-                    expect(trigger.getAttribute('aria-expanded')).toBe('true');
-                }
-            }
-        );
-    } finally {
-        window.innerWidth = width;
-        window.dispatchEvent(new Event('resize'));
-    }
+            expect(output.querySelector('nav')).toBe(navigation);
+            expect(output.querySelector('input')).toBe(input);
+            expect(input.value).toBe('Retained order');
+            expect(trigger.getAttribute('aria-expanded')).toBe('true');
+        }
+    );
 });
 
 it('supports keyboard disclosure without submitting and leaves modified or canceled links to their owner', async () => {

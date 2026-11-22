@@ -152,7 +152,7 @@ it('rejects an unfinished authored submission with View closed on pagehide befor
     }
 }, 10_000);
 
-it('shares scoped image bytes without colliding with JSON and refreshes them only after successful writes', async () => {
+it('shares scoped image and file bytes without colliding with JSON and refreshes only after successful writes', async () => {
     // Arrange
     let version = 1;
     let writes = 0;
@@ -168,6 +168,7 @@ it('shares scoped image bytes without colliding with JSON and refreshes them onl
             <p>Version {data.version}</p>
             <Image src="/api/photo" alt="First" />
             <Image src="/api/photo" alt="Second" />
+            <FileViewer src="/api/photo" title="Attachment" />
             <Link onClick={async () => { await form.submit(); }}>Update</Link>
         </>;
     }`);
@@ -192,7 +193,7 @@ it('shares scoped image bytes without colliding with JSON and refreshes them onl
     };
 
     try {
-        await vi.waitFor(() => expect(runtime.mount.querySelectorAll('img')).toHaveLength(2));
+        await vi.waitFor(() => expect(runtime.mount.querySelectorAll('img')).toHaveLength(3));
         expect(images).toBe(1);
         expect(reads).toBe(1);
         const before = [...runtime.mount.querySelectorAll('img')].map((image) => image.getAttribute('src'));
@@ -217,12 +218,18 @@ it('shares scoped image bytes without colliding with JSON and refreshes them onl
             expect(images).toBe(2);
             expect(reads).toBe(2);
             expect(runtime.mount.textContent).toContain('Version 2');
-            expect(runtime.mount.querySelectorAll('img')).toHaveLength(2);
+            expect(runtime.mount.querySelectorAll('img')).toHaveLength(3);
             expect([...runtime.mount.querySelectorAll('img')].map((image) => image.getAttribute('src'))).not.toEqual(
                 before
             );
         });
         expect(revoke.mock.calls.map(([url]) => url)).toEqual(expect.arrayContaining(before));
+        expect(runtime.mount.querySelector('[aria-label="Attachment"] img')?.getAttribute('src')).not.toBe(before[2]);
+        window.dispatchEvent(new Event('pagehide'));
+        expect(revoke).toHaveBeenCalledTimes(create.mock.results.length);
+        expect(new Set(revoke.mock.calls.map(([url]) => url))).toEqual(
+            new Set(create.mock.results.map(({ value }) => value))
+        );
     } finally {
         runtime.close();
         create.mockRestore();

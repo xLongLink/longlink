@@ -4,6 +4,7 @@ import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../render';
 import userEvent from '@testing-library/user-event';
 import { RequestContext } from '@/lib/view-capabilities';
+import { Image } from '@/components/longlink/display/image';
 import { FileViewer } from '@/components/longlink/display/file-viewer';
 
 it.each(['missing', 'rejected'] as const)('reports a %s file capability without remaining pending', async (result) => {
@@ -141,8 +142,10 @@ it('displays active text documents as inert text without creating nested frames'
     try {
         for (const type of ['application/xml', 'text/html']) {
             const body = new Blob(['<script>active()</script>'], { type });
+            const request = vi.fn(async () => body);
             await withMounted(
-                <RequestContext value={{ request: async () => body }}>
+                <RequestContext value={{ request }}>
+                    <Image src="/api/report" alt="Report image" />
                     <FileViewer src="/api/report" title="Report" />
                 </RequestContext>,
                 async (output) => {
@@ -151,6 +154,9 @@ it('displays active text documents as inert text without creating nested frames'
                         expect(output.querySelector('pre')?.textContent).toBe('<script>active()</script>');
                     });
                     expect(output.querySelector('iframe, script, object, embed, button')).toBeNull();
+                    expect(output.querySelector('img')).toBeNull();
+                    expect(output.textContent).toContain('Photo unavailable');
+                    expect(request).toHaveBeenCalledTimes(1);
                     expect(create).not.toHaveBeenCalled();
                 }
             );
@@ -205,7 +211,7 @@ it('does not embed or interpret unsupported SVG files', async () => {
     }
 });
 
-it('shares a pending file request and reloads after all viewers close, releasing their URLs', async () => {
+it('shares a pending binary request across images and files and reloads after both close, releasing their URLs', async () => {
     // Arrange
     let finish: (body: Blob) => void = () => {};
     const pending = new Promise<Blob>((resolve) => {
@@ -232,7 +238,7 @@ it('shares a pending file request and reloads after all viewers close, releasing
                 </button>
                 {visible && (
                     <>
-                        <FileViewer src="/api/image" title="First" />
+                        <Image src="/api/image" alt="First" />
                         <FileViewer src="/api/image" title="Second" />
                     </>
                 )}
@@ -243,7 +249,7 @@ it('shares a pending file request and reloads after all viewers close, releasing
     try {
         await withMounted(<Example />, async (output) => {
             expect(request).toHaveBeenCalledTimes(1);
-            expect(output.querySelectorAll('[role="progressbar"]')).toHaveLength(2);
+            expect(output.querySelectorAll('[role="progressbar"]')).toHaveLength(1);
 
             // Act
             await act(async () => finish(new Blob(['image'], { type: 'image/png' })));
