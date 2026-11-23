@@ -54,7 +54,7 @@ it('edits independent pools atomically, validates steps, and preserves failed ed
             });
         }
         saved = { ...saved, ...json };
-        return Response.json(saved);
+        return new Response('not JSON', { headers: { 'Content-Type': 'application/json' } });
     });
     const events = userEvent.setup();
 
@@ -136,6 +136,7 @@ it('edits independent pools atomically, validates steps, and preserves failed ed
                 expect(save.disabled).toBe(true);
                 await act(async () => releaseRefresh?.(Response.json(saved)));
                 await vi.waitFor(() => expect(document.querySelector('[role="dialog"]')).toBeNull());
+                expect(compute?.textContent).toContain('- / 0.5 vCPU');
                 const computeUpdate = {
                     compute_cpu_millicores: 500,
                     compute_ram_bytes: 268435456,

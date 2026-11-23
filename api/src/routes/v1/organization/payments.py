@@ -8,7 +8,7 @@ from src.utils import stripe
 from sqlalchemy import select
 from src.environments import env
 from fastapi.responses import Response
-from src.models.payments import PaymentCard, PaymentInvoice, PaymentRedirect
+from src.models.payments import FINALIZED_INVOICE_STATUSES, PaymentCard, PaymentInvoice, PaymentRedirect
 from src.database.services import payments
 from src.database.models.organizations import Organization
 
@@ -83,7 +83,7 @@ async def get_invoices(session: auth.Session, membership: auth.OrganizationOwner
                 "hosted_invoice_url": invoice.hosted_invoice_url,
             }
             async for invoice in invoices.auto_paging_iter()
-            if invoice.status in {"open", "paid", "void", "uncollectible"}
+            if invoice.status in FINALIZED_INVOICE_STATUSES
         ]
 
 
@@ -110,7 +110,7 @@ async def get_invoice_pdf(invoice_id: str, session: auth.Session, membership: au
         invoice = await connection.v1.invoices.retrieve_async(invoice_id)
 
     # Only finalized invoices belonging to this customer may be downloaded.
-    if invoice.customer != customer_id or invoice.status not in {"open", "paid", "void", "uncollectible"} or not invoice.invoice_pdf:
+    if invoice.customer != customer_id or invoice.status not in FINALIZED_INVOICE_STATUSES or not invoice.invoice_pdf:
         raise HTTPException(status_code=404, detail="Invoice PDF unavailable")
 
     # Fetch only Stripe-provided invoice documents with bounded time and memory.

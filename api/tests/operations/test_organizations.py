@@ -134,6 +134,52 @@ async def test_reconcile_rolls_back_publication_when_storage_fails(users: tuple[
 
 
 @pytest.mark.usefixtures("database_runtime")
+async def test_reconcile_rechecks_lease_after_existing_database_readiness(
+    users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Reject capacity changes when ownership is lost while existing infrastructure becomes ready."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+    async with session_scope() as session:
+        persisted = await session.get(Organization, organization.id)
+        assert persisted is not None
+        persisted.status = Status.running
+        persisted.database_state = DatabaseState.available
+        await session.commit()
+    desired = OrganizationUsageUpdate.model_validate(organization, from_attributes=True)
+    desired.compute_cpu_millicores += 1000
+    await queue_operation(target_id=organization.id, allocation=desired.model_dump())
+    operation = await claim_operation()
+    assert operation is not None
+
+    async def wait_ready(_client: object, organization_id: UUID) -> None:
+        """Replace the transition lease during the external readiness wait."""
+
+        async with session_scope() as session:
+            activity = await session.get(OrganizationActivity, organization_id)
+            assert activity is not None
+            activity.expires_at += timedelta(minutes=5)
+            await session.commit()
+
+    monkeypatch.setattr(organization_operations, "Kubernetes", DatabaseKubernetes)
+    monkeypatch.setattr(organization_operations.database_resources, "wait_ready", wait_ready)
+    reject_provider_construction(monkeypatch, (organization_operations.organizations, "apply"), (organization_operations, "Storage"))
+
+    # Act
+    with pytest.raises(RuntimeError, match="Organization transition lease was lost"):
+        await organization_operations.reconcile(operation)
+
+    # Assert
+    async with session_scope() as session:
+        persisted = await session.get(Organization, organization.id)
+        assert persisted is not None
+        assert persisted.database_state == DatabaseState.available
+        assert persisted.compute_cpu_millicores == organization.compute_cpu_millicores
+        assert await session.get(OrganizationActivity, organization.id) is not None
+
+
+@pytest.mark.usefixtures("database_runtime")
 async def test_reconcile_does_not_publish_over_newer_desired_allocation(
     users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
 ) -> None:

@@ -1,6 +1,8 @@
 from datetime import datetime
 from pydantic import Field, HttpUrl, BaseModel
 
+FINALIZED_INVOICE_STATUSES = frozenset({"open", "paid", "void", "uncollectible"})
+
 
 class PaymentRedirect(BaseModel):
     """Return a hosted Stripe card-registration URL."""

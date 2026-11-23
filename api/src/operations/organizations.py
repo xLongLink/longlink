@@ -58,7 +58,6 @@ async def reconcile(operation: Operation) -> None:
 
         # Reconcile independent pools using only the frozen desired snapshot.
         await lease.check()
-        await database_resources.wait_ready(cluster, organization.id)
         await organizations.apply(
             cluster, organization.id, cpu_millicores=desired.compute_cpu_millicores, ram_bytes=desired.compute_ram_bytes
         )

@@ -8,7 +8,7 @@ from datetime import UTC, datetime
 from sqlmodel import col
 from src.utils import dates, stripe
 from sqlalchemy import select, update
-from src.models import pricing
+from src.models import pricing, payments
 from src.environments import env
 from src.database.session import session_scope
 from src.database.services import organizations
@@ -106,7 +106,7 @@ async def issue(session: AsyncSession, invoice_id: UUID) -> None:
             raise HTTPException(status_code=409, detail="Stripe invoice customer or currency does not match")
 
         # Unexpected provider states require review instead of automatic issuance.
-        if remote.status not in {"draft", "open", "paid", "void", "uncollectible"}:
+        if remote.status != "draft" and remote.status not in payments.FINALIZED_INVOICE_STATUSES:
             raise HTTPException(status_code=409, detail="Stripe invoice state requires administrator review")
 
         # Already finalized invoices remain Stripe's responsibility; never create a replacement charge.

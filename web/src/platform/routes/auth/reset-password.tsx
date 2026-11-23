@@ -9,7 +9,6 @@ import { useSubmit } from '@/lib/hooks/use-submit';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link } from '@/components/longlink/action/link';
 import { Separator } from '@/components/shadcn/separator';
-import { exchangeCredential } from './exchange-credential';
 import { Stack } from '@/components/longlink/layout/stack';
 import { Button } from '@/components/longlink/action/button';
 import { useFragmentToken } from '@/lib/hooks/use-fragment-token';
@@ -39,26 +38,14 @@ export default function ResetPassword() {
 
     /** Exchanges the reset credential or recovers the established setup cookie. */
     async function verify({ signal, token: resetToken }: VerificationRequest) {
-        return await exchangeCredential(
-            async () => {
-                if (resetToken) {
-                    await api('/api/v1/auth/reset-password/verify', {
-                        json: { token: resetToken },
-                        method: 'POST',
-                        signal
-                    });
-                } else {
-                    await api('/api/v1/auth/reset-password/setup', { signal });
-                }
-
-                return { status: 'verified' };
-            },
-            signal,
-            PASSWORD_RESET_TOKEN_KEY
-        );
+        if (resetToken) {
+            await api('/api/v1/auth/reset-password/verify', { json: { token: resetToken }, method: 'POST', signal });
+        } else {
+            await api('/api/v1/auth/reset-password/setup', { signal });
+        }
     }
 
-    const { verification } = useVerification(token, verify);
+    const { verification } = useVerification(token, PASSWORD_RESET_TOKEN_KEY, verify);
     const save = useSubmit(
         async (payload: ResetPasswordValues) => {
             try {

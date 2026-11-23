@@ -2,7 +2,7 @@ import pytest
 import asyncio
 from uuid import UUID, uuid4
 from types import SimpleNamespace
-from conftest import DatabasePostgres
+from conftest import DatabasePostgres, reject_provider_construction
 from datetime import UTC, datetime, timedelta
 from factories import create_organization
 from src.operations import databases
@@ -105,6 +105,57 @@ async def test_prepare_verifies_readiness_before_opening_postgres(
         persisted = await session.get(Organization, organization.id)
         assert persisted is not None
         assert persisted.database_state == DatabaseState.available
+
+
+@pytest.mark.usefixtures("database_runtime")
+@pytest.mark.parametrize("failure", [None, OSError, asyncio.CancelledError])
+async def test_prepare_existing_database_waits_without_reinitializing_or_changing_state(
+    users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch, failure: type[BaseException] | None
+) -> None:
+    """Wait for an existing database without publishing readiness failures as provisioning failures."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+    async with session_scope() as session:
+        persisted = await session.get(Organization, organization.id)
+        assert persisted is not None
+        persisted.status = Status.running
+        persisted.database_state = DatabaseState.available
+        await session.commit()
+        target = await organizations.infrastructure(session, organization.id)
+        assert target is not None
+        snapshot, compute = target
+    cluster = databases.Kubernetes(compute.kubeconfig)
+    verified = False
+
+    async def wait_ready(_client: object, organization_id: UUID) -> None:
+        """Observe external readiness without allowing SQL initialization."""
+
+        nonlocal verified
+        assert organization_id == organization.id
+        verified = True
+        if failure is not None:
+            raise failure("readiness interrupted")
+
+    monkeypatch.setattr(databases.database_resources, "wait_ready", wait_ready)
+    reject_provider_construction(monkeypatch, (databases.database_resources.postgres, "Postgres"))
+
+    # Act
+    async with databases.reconciling(organization.id) as lease:
+        assert lease is not None
+        if failure is None:
+            await databases.prepare(lease, snapshot, cluster, compute.database_storage_class)
+        else:
+            with pytest.raises(failure, match="readiness interrupted"):
+                await databases.prepare(lease, snapshot, cluster, compute.database_storage_class)
+
+    # Assert
+    assert verified
+    async with session_scope() as session:
+        persisted = await session.get(Organization, organization.id)
+        assert persisted is not None
+        assert persisted.database_state == DatabaseState.available
+        assert await session.get(OrganizationActivity, organization.id) is None
 
 
 @pytest.mark.usefixtures("database_runtime")

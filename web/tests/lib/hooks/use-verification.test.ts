@@ -8,6 +8,7 @@ import { useVerification, type VerificationRequest } from '@/lib/hooks/use-verif
 
 it('ignores late successes and failures from canceled verification attempts', async () => {
     // Arrange
+    const storageKey = 'verification-proof';
     const attempts: { request: VerificationRequest; resolve: (value: string) => void }[] = [];
 
     /** Settle canceled work even when its underlying operation ignores cancellation. */
@@ -30,12 +31,12 @@ it('ignores late successes and failures from canceled verification attempts', as
     /** Exercise both user retries and token-driven replacement. */
     function Probe() {
         const [token, setToken] = useState('proof');
-        const { verification, startVerification } = useVerification(token, verify);
+        const { verification, startVerification } = useVerification(token, storageKey, verify);
 
         return createElement(
             'div',
             null,
-            createElement('output', null, verification ?? 'Pending'),
+            createElement('output', null, verification?.status === 'verified' ? verification.data : 'Pending'),
             createElement('button', { onClick: () => void startVerification(token) }, 'Retry'),
             createElement('button', { onClick: () => setToken('replacement') }, 'Change token')
         );
@@ -47,6 +48,7 @@ it('ignores late successes and failures from canceled verification attempts', as
         const root = createRoot(container);
 
         try {
+            sessionStorage.setItem(storageKey, 'proof');
             await act(async () =>
                 root.render(
                     createElement(
@@ -60,6 +62,7 @@ it('ignores late successes and failures from canceled verification attempts', as
             // Assert
             expect(attempts[0]?.request.signal.aborted).toBe(true);
             expect(output.querySelector('output')?.textContent).toBe('Pending');
+            expect(sessionStorage.getItem(storageKey)).toBe('proof');
 
             await act(async () => output.querySelectorAll('button')[0]?.click());
             expect(attempts[1]?.request.signal.aborted).toBe(true);
@@ -69,11 +72,14 @@ it('ignores late successes and failures from canceled verification attempts', as
             expect(attempts[2]?.request.signal.aborted).toBe(true);
             expect(attempts[3]?.request.token).toBe('replacement');
             expect(output.querySelector('output')?.textContent).toBe('Pending');
+            expect(sessionStorage.getItem(storageKey)).toBe('proof');
 
             await act(async () => attempts[3]?.resolve('verified'));
             expect(output.querySelector('output')?.textContent).toBe('verified');
+            expect(sessionStorage.getItem(storageKey)).toBeNull();
         } finally {
             await act(async () => root.unmount());
+            sessionStorage.removeItem(storageKey);
         }
     });
 });

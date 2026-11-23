@@ -13,7 +13,6 @@ import { clearSessionQueries } from '@/lib/react-query';
 import { Link } from '@/components/longlink/action/link';
 import { Text } from '@/components/longlink/display/text';
 import { Separator } from '@/components/shadcn/separator';
-import { exchangeCredential } from './exchange-credential';
 import { Stack } from '@/components/longlink/layout/stack';
 import { useCurrentUser } from '@/platform/hooks/use-user';
 import { useFragmentToken } from '@/lib/hooks/use-fragment-token';
@@ -43,24 +42,14 @@ export default function VerifyEmail() {
 
     /** Exchanges the email credential or recovers the server-owned registration setup. */
     async function verify({ signal, token: registrationToken }: VerificationRequest) {
-        return await exchangeCredential(
-            async () => {
-                const data = registrationToken
-                    ? await api('/api/v1/auth/verify', {
-                          json: { token: registrationToken },
-                          method: 'POST',
-                          signal
-                      }).json(zEmailPayload)
-                    : await api('/api/v1/auth/register/setup', { signal }).json(zEmailPayload);
-
-                return { status: 'verified', data };
-            },
-            signal,
-            REGISTRATION_TOKEN_KEY
-        );
+        return registrationToken
+            ? await api('/api/v1/auth/verify', { json: { token: registrationToken }, method: 'POST', signal }).json(
+                  zEmailPayload
+              )
+            : await api('/api/v1/auth/register/setup', { signal }).json(zEmailPayload);
     }
 
-    const { verification, startVerification } = useVerification(token, verify);
+    const { verification, startVerification } = useVerification(token, REGISTRATION_TOKEN_KEY, verify);
     const verifiedEmail = verification?.status === 'verified' ? verification.data.email : null;
 
     /** Creates the account and clears the previous session's cached data. */

@@ -1,6 +1,7 @@
 import hmac
 import json
 import time
+import httpx2
 import pytest
 import stripe
 import hashlib
@@ -15,6 +16,7 @@ from factories import add_member, fetch_operations, create_organization, assert_
 from src.utils import stripe as stripe_provider
 from contextlib import asynccontextmanager
 from src.models import pricing
+from urllib.parse import parse_qs, urlsplit
 from unittest.mock import AsyncMock, MagicMock
 from collections.abc import AsyncGenerator
 from src.environments import env
@@ -189,6 +191,79 @@ async def test_payment_endpoints_require_the_organizations_owner_before_stripe(
         assert persisted.stripe_checkout_key is None
         assert persisted.stripe_payment_method_id is None
     await assert_no_new_operations(previous_operations)
+
+
+@pytest.mark.usefixtures("configured_stripe")
+@pytest.mark.parametrize(
+    ("status", "visible"),
+    [("open", True), ("paid", True), ("void", True), ("uncollectible", True), ("draft", False), (None, False), ("unknown", False)],
+)
+async def test_invoice_listing_and_pdf_require_finalized_status(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    card_organization: Organization,
+    monkeypatch: pytest.MonkeyPatch,
+    status: str | None,
+    visible: bool,
+) -> None:
+    """Expose finalized invoices consistently without leaking draft or unexpected-state PDFs."""
+
+    # Arrange
+    invoice = {
+        "id": "in_policy",
+        "object": "invoice",
+        "total": 1200,
+        "number": "POLICY-1",
+        "status": status,
+        "customer": "cus_acme",
+        "currency": "chf",
+        "created": 1767225600,
+        "invoice_pdf": "https://invoice.stripe.com/in_policy.pdf",
+        "hosted_invoice_url": None,
+    }
+    downloads: list[str] = []
+
+    async def request(
+        _self: stripe.HTTPXClient, method: str, url: str, _headers: object, _post_data: str | None = None
+    ) -> tuple[bytes, int, dict[str, str]]:
+        """Supply Stripe responses at the SDK's HTTP boundary."""
+
+        parsed = urlsplit(url)
+        assert method == "get"
+        if parsed.path == "/v1/invoices":
+            assert parse_qs(parsed.query) == {"customer": ["cus_acme"], "limit": ["100"]}
+            payload = {"object": "list", "data": [invoice], "has_more": False}
+        else:
+            assert parsed.path == "/v1/invoices/in_policy"
+            payload = invoice
+        return json.dumps(payload).encode(), 200, {}
+
+    async def download(_self: httpx2.AsyncHTTPTransport, request: httpx2.Request) -> httpx2.Response:
+        """Return PDF bytes only when application policy permits document retrieval."""
+
+        downloads.append(str(request.url))
+        return httpx2.Response(200, content=b"%PDF-1.7\ninvoice", request=request)
+
+    monkeypatch.setattr(stripe.HTTPXClient, "request_async", request)
+    monkeypatch.setattr(httpx2.AsyncHTTPTransport, "handle_async_request", download)
+    url = f"/api/v1/organizations/{card_organization.id}/invoices"
+
+    # Act
+    listing = await clients[1].get(url)
+    document = await clients[1].get(f"{url}/in_policy/pdf")
+
+    # Assert
+    assert listing.status_code == 200
+    assert [invoice["id"] for invoice in listing.json()] == (["in_policy"] if visible else [])
+    if visible:
+        assert document.status_code == 200
+        assert document.content == b"%PDF-1.7\ninvoice"
+        assert document.headers["content-type"] == "application/pdf"
+        assert document.headers["content-disposition"] == 'inline; filename="invoice.pdf"'
+        assert document.headers["cache-control"] == "private, no-store"
+        assert downloads == ["https://invoice.stripe.com/in_policy.pdf"]
+    else:
+        assert document.status_code == 404
+        assert downloads == []
 
 
 def signed_webhook(secret: str, *, livemode: bool = False) -> tuple[bytes, str]:

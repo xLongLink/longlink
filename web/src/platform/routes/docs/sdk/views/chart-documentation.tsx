@@ -1,17 +1,8 @@
 import ViewLayout from './view-layout';
 import { ChartExample, type ChartName } from './chart-example';
-import catalog from '../../../../../../../sdk/longlink/.static/jsx/components.json';
 
 /** Documents the owned chart APIs and Box-controlled sizing from the SDK catalog. */
 export default function ChartDocumentation({ name }: { name: ChartName }) {
-    const component = catalog.components.find((entry) => entry.name === name);
-    const legend = catalog.components.find((entry) => entry.name === 'ChartLegend');
-    const properties = [
-        ...(component?.properties ?? []),
-        ...(name === 'Sankey'
-            ? []
-            : (legend?.properties ?? []).map((property) => ({ ...property, name: `ChartLegend.${property.name}` })))
-    ];
     const cartesian = name === 'AreaChart' || name === 'BarChart' || name === 'LineChart';
     const sankey = name === 'Sankey';
     const radar = name === 'RadarChart';
@@ -50,7 +41,7 @@ export default function ChartDocumentation({ name }: { name: ChartName }) {
     return (
         <ViewLayout
             name={name}
-            properties={properties}
+            relatedComponents={sankey ? undefined : ['ChartLegend']}
             example={{
                 title: name,
                 preview: <ChartExample name={name} />,
