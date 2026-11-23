@@ -20,7 +20,6 @@ import * as dropdown from './action/dropdown';
 import * as currency from './display/currency';
 import * as progress from './display/progress';
 import * as fileType from './display/file-type';
-import * as viewMapComponents from './maps/map';
 import * as timestamp from './display/timestamp';
 import * as fileViewer from './display/file-viewer';
 import type { PublicComponent, PublicProps } from './props';
@@ -77,8 +76,7 @@ export const Icon: PublicComponent<typeof icon.Icon> = icon.Icon;
 export const Link: PublicComponent<typeof link.Link> = link.Link;
 export const Currency: PublicComponent<typeof currency.Currency> = currency.Currency;
 export const FileViewer: PublicComponent<typeof fileViewer.FileViewer> = fileViewer.FileViewer;
-const ViewMap: PublicComponent<typeof viewMapComponents.ViewMap> = viewMapComponents.ViewMap;
-export { ViewMap as Map };
+export { ViewMap as Map } from './maps/map';
 export { MapGeoJSON, MapControls } from './maps/map';
 export const Frame: PublicComponent<typeof frame.Frame> = frame.Frame;
 

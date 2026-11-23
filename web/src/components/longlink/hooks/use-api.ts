@@ -4,7 +4,7 @@ import { useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
 
 /** Loads Solution data with a caller-declared response shape and invalidates the complete request path. */
 export function useApi<T = unknown>(path: string): readonly [T, () => Promise<void>] {
-    const request = useContext(RequestContext)?.request;
+    const request = useContext(RequestContext);
     const client = useQueryClient();
 
     if (!request) throw new Error('useApi requires the Solution runtime');

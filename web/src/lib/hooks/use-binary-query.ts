@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { RequestContext } from '@/lib/view-capabilities';
 
 export function useBinaryQuery(src: string) {
-    const request = useContext(RequestContext)?.request;
+    const request = useContext(RequestContext);
 
     return useQuery({
         queryKey: ['api', src, 'binary'],

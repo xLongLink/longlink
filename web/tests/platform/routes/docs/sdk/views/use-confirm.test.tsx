@@ -35,7 +35,7 @@ it('runs the documented deletion and replaces the action with a return link afte
     const user = userEvent.setup();
 
     await withMounted(
-        <RequestContext value={{ request }}>
+        <RequestContext value={request}>
             <DeleteItem params={{ item: '42' }} />
         </RequestContext>,
         async (output) => {

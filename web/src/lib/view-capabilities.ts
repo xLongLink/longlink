@@ -3,9 +3,9 @@ import type { ViewData, RequestOptions } from '@/views/protocol';
 
 export type { ViewData, RequestOptions } from '@/views/protocol';
 
-export const RequestContext = createContext<{
-    request: (path: string, options?: RequestOptions) => Promise<ViewData>;
-} | null>(null);
+export const RequestContext = createContext<((path: string, options?: RequestOptions) => Promise<ViewData>) | null>(
+    null
+);
 
 export const DialogActivityContext = createContext<((open: boolean) => void) | null>(null);
 

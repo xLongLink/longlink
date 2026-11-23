@@ -22,6 +22,12 @@ const STARTUP_FAILURES = {
     readiness: 'The isolated View did not become ready within 10 seconds.'
 } as const;
 
+async function sha256Hex(bytes: BufferSource): Promise<string> {
+    const digest = await crypto.subtle.digest('SHA-256', bytes);
+
+    return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
 /** Renders Solution code only in a credential-free, opaque-origin sandbox. */
 export function JsxView({
     source,
@@ -129,9 +135,7 @@ export function JsxView({
 
             // Reject stale or mixed runtime assets instead of silently rendering with the wrong components.
             const content = `${script}\n${styles}${runtime.modules ? `\n${JSON.stringify(runtime.modules)}` : ''}`;
-            const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(content));
-
-            const version = Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
+            const version = await sha256Hex(new TextEncoder().encode(content));
 
             if (version !== runtime.version) throw new Error('The Solution View runtime does not match its manifest');
 
@@ -153,20 +157,6 @@ export function JsxView({
         const session = crypto.randomUUID();
         const pending = new Set<number>();
         let handshakeTimer: ReturnType<typeof setTimeout> | undefined;
-
-        /** Reports safe Solution failures once in the page and returns them to the requesting View. */
-        function rejectRequest(
-            command: { id: number; type: 'request' | 'download' | 'icon' },
-            failure: ReturnType<typeof host.requestError>
-        ): void {
-            if (controller.signal.aborted) return;
-
-            // Keep icon fallback local while Solution operations use the page-owned notification layer.
-            const notified = command.type !== 'icon';
-
-            if (notified) reportError(new ApiError(failure.error, failure.status ?? 0));
-            channel.port1.postMessage({ id: command.id, ok: false, ...failure, notified });
-        }
 
         /** Revokes the attempt's capabilities and startup deadline on failure or unmount. */
         function dispose(): void {
@@ -256,10 +246,7 @@ export function JsxView({
                             url.searchParams.set('v', runtime.version);
                             const body = await host.load(url.href, { signal: controller.signal });
                             const bytes = await body.arrayBuffer();
-                            const digest = await crypto.subtle.digest('SHA-256', bytes);
-                            const version = Array.from(new Uint8Array(digest), (byte) =>
-                                byte.toString(16).padStart(2, '0')
-                            ).join('');
+                            const version = await sha256Hex(bytes);
 
                             if (version !== expectedVersion) throw new Error('Solution module integrity mismatch');
 
@@ -352,7 +339,15 @@ export function JsxView({
 
                 if (!controller.signal.aborted) channel.port1.postMessage({ id: command.id, ok: true, data });
             } catch (error) {
-                rejectRequest(command, host.requestError(error));
+                const failure = host.requestError(error);
+
+                if (controller.signal.aborted) return;
+
+                // Keep icon fallback local while Solution operations use the page-owned notification layer.
+                const notified = command.type !== 'icon';
+
+                if (notified) reportError(new ApiError(failure.error, failure.status ?? 0));
+                channel.port1.postMessage({ id: command.id, ok: false, ...failure, notified });
             } finally {
                 pending.delete(command.id);
             }

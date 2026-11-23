@@ -29,7 +29,7 @@ it('renders an inline data image without requesting host capability', async () =
 
     // Act
     await withMounted(
-        <RequestContext value={{ request }}>
+        <RequestContext value={request}>
             <Image src={src} alt="Photo" />
         </RequestContext>,
         async (output) => {
@@ -44,7 +44,7 @@ it('releases owned previews on source changes and ignores late responses', async
     // Hold host responses independently so stale requests cannot overwrite the current photo.
     const pending = new Map<string, (blob: Blob) => void>();
 
-    const files = { request: (path: string) => new Promise<Blob>((resolve) => pending.set(path, resolve)) };
+    const request = (path: string) => new Promise<Blob>((resolve) => pending.set(path, resolve));
 
     const create = vi.spyOn(URL, 'createObjectURL').mockReturnValueOnce('blob:first').mockReturnValueOnce('blob:last');
     const revoke = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => undefined);
@@ -53,7 +53,7 @@ it('releases owned previews on source changes and ignores late responses', async
         const [src, setSrc] = useState('/first');
 
         return (
-            <RequestContext value={files}>
+            <RequestContext value={request}>
                 <button type="button" onClick={() => setSrc('/pending')}>
                     Pending
                 </button>
@@ -103,17 +103,15 @@ it.each(['rejected', 'non-image', 'missing'] as const)(
         // A URL-looking path still belongs to the host capability, not the browser network.
         const requests: string[] = [];
 
-        const files = {
-            request: async (path: string) => {
-                requests.push(path);
-                if (result === 'rejected') throw new Error('Denied');
+        const request = async (path: string) => {
+            requests.push(path);
+            if (result === 'rejected') throw new Error('Denied');
 
-                return new Blob(['<script>private attachment</script>'], { type: 'text/html' });
-            }
+            return new Blob(['<script>private attachment</script>'], { type: 'text/html' });
         };
 
         await withMounted(
-            <RequestContext value={result === 'missing' ? null : files}>
+            <RequestContext value={result === 'missing' ? null : request}>
                 <Image src="https://untrusted.example/photo.png" alt="Photo" />
             </RequestContext>,
             async (output) => {
@@ -140,7 +138,7 @@ it('recovers from an inline decode failure on source change without revoking cal
         const [src, setSrc] = useState('blob:broken');
 
         return (
-            <RequestContext value={{ request }}>
+            <RequestContext value={request}>
                 <button type="button" onClick={() => setSrc('blob:replacement')}>
                     Replace
                 </button>
@@ -174,7 +172,7 @@ it('recovers from an inline decode failure on source change without revoking cal
 
 it('releases a scoped preview after a decode failure and reports the original image error', async () => {
     // A failed decode must still notify callers and release the host-owned URL on unmount.
-    const files = { request: async () => new Blob(['broken'], { type: 'image/png' }) };
+    const request = async () => new Blob(['broken'], { type: 'image/png' });
 
     const create = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:broken-scoped');
     const revoke = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => undefined);
@@ -183,7 +181,7 @@ it('releases a scoped preview after a decode failure and reports the original im
 
     try {
         await withMounted(
-            <RequestContext value={files}>
+            <RequestContext value={request}>
                 <Image src="/photo" alt="Shipment photo" ratio={1} onError={onError} ref={imageRef} />
             </RequestContext>,
             async (output) => {
