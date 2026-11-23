@@ -28,8 +28,30 @@ const propertyDefaults = new Map(
     )
 );
 
+/** Collapses MapLibre's attribution once, after the preview's compact control becomes available. */
+function collapseMapAttribution(preview: HTMLDivElement | null) {
+    if (!preview) return;
+
+    const collapse = () => {
+        const attribution = preview.querySelector<HTMLDetailsElement>(
+            'details.maplibregl-ctrl-attrib.maplibregl-compact'
+        );
+        if (!attribution) return;
+
+        observer.disconnect();
+        attribution.open = false;
+        attribution.classList.remove('maplibregl-compact-show');
+    };
+
+    const observer = new MutationObserver(collapse);
+    observer.observe(preview, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
+    collapse();
+
+    return () => observer.disconnect();
+}
+
 /** Keeps an example's showcase mounted while switching between preview and code. */
-function ExampleWindow({ example }: { example: ViewExample }) {
+function ExampleWindow({ example, isMap }: { example: ViewExample; isMap: boolean }) {
     const [showCode, setShowCode] = useState(false);
 
     // Bound both modes to the same window with a persistent header and scrollable body.
@@ -54,6 +76,7 @@ function ExampleWindow({ example }: { example: ViewExample }) {
                     </Stack>
                 </div>
                 <div
+                    ref={isMap ? collapseMapAttribution : undefined}
                     className="flex min-h-0 min-w-0 flex-1 flex-col overflow-auto p-2 data-code:overflow-hidden"
                     data-code={showCode || undefined}
                 >
@@ -86,12 +109,14 @@ function ExampleWindow({ example }: { example: ViewExample }) {
 export default function ViewLayout({
     name,
     properties,
+    relatedComponents,
     example,
     children,
     toc
 }: {
     name: string;
     properties?: ViewProperty[];
+    relatedComponents?: readonly string[];
     example?: ViewExample;
     children?: ReactNode;
     toc?: { id: string; label: string; level: number }[];
@@ -120,6 +145,11 @@ export default function ViewLayout({
 
             if (properties) properties.push(row);
             else groups.set(group, [row]);
+        }
+
+        for (const relatedName of relatedComponents ?? []) {
+            const related = viewCatalog.components.find((entry) => entry.name === relatedName);
+            if (related?.properties) groups.set(relatedName, related.properties);
         }
     }
 
@@ -158,13 +188,11 @@ export default function ViewLayout({
                             <TabsTrigger value="properties">Properties</TabsTrigger>
                         </TabsList>
                         <TabsContent value="example" className="flex min-w-0 flex-col gap-5">
-                            {example ? (
-                                <ExampleWindow key={name} example={example} />
-                            ) : children ? (
-                                children
-                            ) : (
-                                <p>No standalone example is available for this component.</p>
+                            {example && (
+                                <ExampleWindow key={name} example={example} isMap={component.category === 'Maps'} />
                             )}
+                            {!example && !children && <p>No standalone example is available for this component.</p>}
+                            {children}
                         </TabsContent>
                         <TabsContent value="properties" className="flex flex-col gap-5">
                             {[...groups].map(([group, properties]) => (

@@ -26,13 +26,6 @@ export default function UseFormPage() {
                 { name: 'watch', type: 'UseFormWatch<Input>' }
             ]}
         >
-            <p>
-                useForm combines React Hook Form with a scoped Solution write. Pass a schema to validate and submit
-                parsed values, and bind form.onSubmit to a native form. Define validation in the schema rather than
-                register rules. register, control, handleSubmit, and the other React Hook Form APIs remain available.
-                Read pending state from formState.isSubmitting, field validation from formState.errors, and submission
-                failures from formState.errors.root.
-            </p>
             <CodeBlock
                 language="jsx"
                 code={`const schema = z.object({ name: z.string().trim().min(1, 'Enter a name') });
@@ -44,7 +37,7 @@ export default function ItemForm() {
   });
 
   return (
-    <form onSubmit={form.onSubmit} noValidate>
+    <Form onSubmit={form.onSubmit} noValidate>
       <Input
         {...form.register('name')}
         label="Item name"
@@ -54,7 +47,7 @@ export default function ItemForm() {
         <Text role="alert">{form.formState.errors.root.message}</Text>
       )}
       <Button type="submit" disabled={form.formState.isSubmitting}>Save</Button>
-    </form>
+    </Form>
   );
 }`}
             >
