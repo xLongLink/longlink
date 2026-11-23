@@ -9,15 +9,6 @@ export default function MenuPage() {
     return (
         <ViewLayout
             name="Menu"
-            properties={[
-                { name: 'sections', type: '{ title: string; isHeaderHidden?: boolean; entries: MenuEntry[] }[]' },
-                { name: 'gap', type: 'number' },
-                {
-                    name: 'MenuEntry',
-                    type: "({ kind: 'item' } & MenuItem) | { kind: 'subsection'; label: string; icon?: IconName; items: MenuItem[] }"
-                },
-                { name: 'MenuItem', type: '{ label: string; icon?: IconName; content?: ReactNode }' }
-            ]}
             example={{
                 title: 'Menu',
                 preview: <MenuExample />,

@@ -57,6 +57,27 @@ it('ignores a mismatched session and releases an admitted port when its mount is
     }
 }, 30_000);
 
+it('keeps native constructors accessible explicitly beside bare View components', async () => {
+    // Arrange
+    const source = `export default function View() {
+        const values = new globalThis.Map([['label', 'Native constructors']]);
+        const image = new globalThis.Image(24, 12);
+        const text = new globalThis.Text(values.get('label'));
+        const dimensions = z.object({ width: z.number(), height: z.number() }).parse(image);
+        return <Text>{text.data}: {dimensions.width} × {dimensions.height}</Text>;
+    }`;
+
+    // Act
+    const runtime = await initializeRuntime(source);
+
+    try {
+        // Assert
+        await vi.waitFor(() => expect(runtime.mount.textContent).toBe('Native constructors: 24 × 12'));
+    } finally {
+        runtime.close();
+    }
+});
+
 it('loads gallery images concurrently with Solution-owned icons', async () => {
     // Arrange
     const runtime = await initializeRuntime(

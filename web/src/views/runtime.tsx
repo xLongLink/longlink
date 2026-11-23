@@ -280,11 +280,9 @@ function initialize(event: MessageEvent<unknown>): void {
 
         const bindings = {
             // Keep JSX compilation separate from the public View API.
-            __jsx: (type: React.ElementType, props: React.Attributes | null, ...children: React.ReactNode[]) =>
-                React.createElement(Object.is(type, globalThis.Map) ? components.Map : type, props, ...children),
+            __jsx: React.createElement,
             __fragment: React.Fragment,
-            ...components,
-            Map: globalThis.Map
+            ...components
         };
 
         type ViewComponent = React.ComponentType<{ params: Readonly<Record<string, string>> }>;

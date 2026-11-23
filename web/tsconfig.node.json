@@ -23,5 +23,6 @@
         "noFallthroughCasesInSwitch": true,
         "noUncheckedSideEffectImports": true
     },
-    "include": ["vite.config.ts", "react-router.config.ts", "tests"]
+    "include": ["vite.config.ts", "react-router.config.ts", "tests"],
+    "exclude": ["tests/views/fixtures"]
 }

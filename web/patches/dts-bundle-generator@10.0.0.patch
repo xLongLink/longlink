@@ -1,0 +1,22 @@
+diff --git a/dist/bundle-generator.js b/dist/bundle-generator.js
+index e5cab11221c78aa43be7559be0949045624d92cc..843511ceaa88315b810fa37588de4d354542610a 100644
+--- a/dist/bundle-generator.js
++++ b/dist/bundle-generator.js
+@@ -533,7 +533,7 @@ export function generateDtsBundle(entries, options = {}) {
+                         }
+                         else {
+                             // export * as name from 'module';
+-                            if (isNodeUsed(st.exportClause)) {
++                            if (isNodeUsed(st.exportClause) && areDeclarationSame(statement, st.exportClause)) {
+                                 callback(st.exportClause, referencedModuleInfo, importModuleSpecifier);
+                             }
+                         }
+@@ -554,7 +554,7 @@ export function generateDtsBundle(entries, options = {}) {
+                             }
+                             else {
+                                 // import * as name from 'module';
+-                                if (isNodeUsed(st.importClause)) {
++                                if (isNodeUsed(st.importClause) && areDeclarationSame(statement, st.importClause.namedBindings)) {
+                                     callback(st.importClause.namedBindings, referencedModuleInfo, importModuleSpecifier);
+                                 }
+                             }
