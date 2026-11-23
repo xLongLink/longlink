@@ -26,7 +26,7 @@ it.each(['POST', 'PUT', 'PATCH', 'DELETE'] as const)(
         }
 
         await withMounted(
-            <RequestContext value={{ request }}>
+            <RequestContext value={request}>
                 <Example />
             </RequestContext>,
             async () => {
@@ -69,7 +69,7 @@ it('keeps a scoped submission guarded until its success callback completes', asy
     }
 
     await withMounted(
-        <RequestContext value={{ request }}>
+        <RequestContext value={request}>
             <Example />
         </RequestContext>,
         async () => {
@@ -104,7 +104,7 @@ it('rejects unsupported runtime write methods before reaching scoped transport',
     }
 
     await withMounted(
-        <RequestContext value={{ request }}>
+        <RequestContext value={request}>
             <Example />
         </RequestContext>,
         async () => {
@@ -134,7 +134,7 @@ it('rejects callback endpoints without invoking them or reaching scoped transpor
     }
 
     await withMounted(
-        <RequestContext value={{ request }}>
+        <RequestContext value={request}>
             <Example />
         </RequestContext>,
         async () => {

@@ -137,7 +137,7 @@ it('keeps an edited form preview local through code toggles and submission', asy
     const request = vi.fn().mockResolvedValue({});
 
     await withMounted(
-        <RequestContext value={{ request }}>
+        <RequestContext value={request}>
             <FormDocumentation name="Input" code={code} preview={<input aria-label="Preview draft" />} />
         </RequestContext>,
         async (output) => {

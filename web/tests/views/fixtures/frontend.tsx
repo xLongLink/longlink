@@ -16,7 +16,13 @@ const valid = (
             {text.data}
         </Text>
         <Image src="/api/photo" alt="Photo" ratio={2} />
-        <Map center={[0, 20]} zoom={2} />
+        <Map
+            center={[0, 20]}
+            zoom={2}
+            ref={(map) => {
+                map?.getZoom();
+            }}
+        />
         <FileViewer src="/api/file" title="File" />
         <Timestamp value="2026-01-01" />
     </>
@@ -32,6 +38,12 @@ const imageSource = <Image src="/api/photo" alt="" srcSet="/elsewhere" />;
 const mapCenter = <Map center="wrong" />;
 // @ts-expect-error Map zoom must be numeric.
 const mapZoom = <Map zoom="wrong" />;
+// @ts-expect-error View styling is prop driven.
+const mapClass = <Map className="hidden" />;
+// @ts-expect-error View styling is prop driven.
+const mapStyle = <Map style={{ display: 'none' }} />;
+// @ts-expect-error Map appearance belongs to the View runtime.
+const mapTheme = <Map theme="dark" />;
 // @ts-expect-error Text sizes must use the supported scale.
 const textSize = <Text size="wrong" />;
 // @ts-expect-error FileViewer requires an accessible title.
@@ -49,6 +61,9 @@ void [
     imageSource,
     mapCenter,
     mapZoom,
+    mapClass,
+    mapStyle,
+    mapTheme,
     textSize,
     fileTitle,
     timestampValue

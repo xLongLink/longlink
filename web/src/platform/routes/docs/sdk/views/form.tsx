@@ -12,7 +12,7 @@ const schema = z.object({ status: z.enum(['open', 'closed']) });
 
 export function FormExample() {
     return (
-        <RequestContext value={{ request: async () => null }}>
+        <RequestContext value={async () => null}>
             <OrderStatus />
         </RequestContext>
     );

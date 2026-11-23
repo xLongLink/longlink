@@ -9,15 +9,13 @@ import { FileViewer } from '@/components/longlink/display/file-viewer';
 
 it.each(['missing', 'rejected'] as const)('reports a %s file capability without remaining pending', async (result) => {
     // Arrange
-    const files = {
-        request: async () => {
-            throw new Error('File request denied');
-        }
+    const request = async () => {
+        throw new Error('File request denied');
     };
 
     // Act
     await withMounted(
-        <RequestContext value={result === 'missing' ? null : files}>
+        <RequestContext value={result === 'missing' ? null : request}>
             <FileViewer src="/api/report" title="Report" />
         </RequestContext>,
         async (output) => {
@@ -53,7 +51,7 @@ it('updates the accessible title without reloading or replacing the displayed me
 
     try {
         await withMounted(
-            <RequestContext value={{ request: load }}>
+            <RequestContext value={load}>
                 <Example />
             </RequestContext>,
             async (output) => {
@@ -108,9 +106,7 @@ it('ignores a pending response after replacing the file and releases the display
     try {
         await withMounted(
             <RequestContext
-                value={{
-                    request: async (path) => (path === '/api/first' ? first : new Blob(['new'], { type: 'image/png' }))
-                }}
+                value={async (path) => (path === '/api/first' ? first : new Blob(['new'], { type: 'image/png' }))}
             >
                 <Example />
             </RequestContext>,
@@ -144,7 +140,7 @@ it('displays active text documents as inert text without creating nested frames'
             const body = new Blob(['<script>active()</script>'], { type });
             const request = vi.fn(async () => body);
             await withMounted(
-                <RequestContext value={{ request }}>
+                <RequestContext value={request}>
                     <Image src="/api/report" alt="Report image" />
                     <FileViewer src="/api/report" title="Report" />
                 </RequestContext>,
@@ -172,7 +168,7 @@ it('keeps PDF bytes out of text rendering and embedded documents despite a text 
 
     // Act
     await withMounted(
-        <RequestContext value={{ request: async () => body }}>
+        <RequestContext value={async () => body}>
             <FileViewer src="/api/report" title="report.txt" />
         </RequestContext>,
         async (output) => {
@@ -192,9 +188,7 @@ it('does not embed or interpret unsupported SVG files', async () => {
 
     try {
         await withMounted(
-            <RequestContext
-                value={{ request: async () => new Blob(['<script>active()</script>'], { type: 'image/svg+xml' }) }}
-            >
+            <RequestContext value={async () => new Blob(['<script>active()</script>'], { type: 'image/svg+xml' })}>
                 <FileViewer src="/api/file" title="Attachment" />
             </RequestContext>,
             async (output) => {
@@ -232,7 +226,7 @@ it('shares a pending binary request across images and files and reloads after bo
     function Example() {
         const [visible, setVisible] = useState(true);
         return (
-            <RequestContext value={{ request }}>
+            <RequestContext value={request}>
                 <button type="button" onClick={() => setVisible(!visible)}>
                     Toggle
                 </button>

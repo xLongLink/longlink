@@ -33,7 +33,7 @@ async function requestPreviewFile() {
 function FileViewerExample() {
     // Scope the sample request capability to this example.
     return (
-        <RequestContext value={{ request: requestPreviewFile }}>
+        <RequestContext value={requestPreviewFile}>
             <FileViewer src="/api/reports/latest" title="report.pdf" />
         </RequestContext>
     );

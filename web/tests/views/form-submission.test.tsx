@@ -29,7 +29,7 @@ it('submits a controlled field through a public View form', async () => {
     }
 
     await withMounted(
-        <RequestContext value={{ request }}>
+        <RequestContext value={request}>
             <Example />
         </RequestContext>,
         async (output) => {
@@ -61,7 +61,7 @@ it.each([
     async ({ cause, reports }) => {
         // Arrange
         const request = vi
-            .fn<NonNullable<ContextType<typeof RequestContext>>['request']>()
+            .fn<NonNullable<ContextType<typeof RequestContext>>>()
             .mockRejectedValueOnce(cause)
             .mockResolvedValue(null);
         const reportError = vi.fn();
@@ -78,7 +78,7 @@ it.each([
 
         await withMounted(
             <ApiErrorContext value={reportError}>
-                <RequestContext value={{ request }}>
+                <RequestContext value={request}>
                     <Example />
                 </RequestContext>
             </ApiErrorContext>,

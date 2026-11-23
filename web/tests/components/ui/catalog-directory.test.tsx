@@ -119,7 +119,7 @@ it('wires filtered file rows to scoped previews with their own asset path and ti
     const request = vi.fn(async (_path: string, _options?: { binary?: boolean }) => new Blob(['sample']));
 
     await withMounted(
-        <RequestContext value={{ request }}>
+        <RequestContext value={request}>
             <List />
         </RequestContext>,
         async (output) => {

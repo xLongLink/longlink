@@ -83,7 +83,7 @@ function ViewFailure({ title, message, retry }: { title: string; message: string
                 <h2>{title}</h2>
             </AlertTitle>
             <AlertDescription className="min-w-0 wrap-anywhere">
-                <p>{message}</p>
+                <p>{message.slice(0, 1024)}</p>
             </AlertDescription>
             {retry && (
                 <AlertAction>
@@ -190,8 +190,6 @@ function initialize(event: MessageEvent<unknown>): void {
         const command = downloadSchema.parse({ type: 'download', id: sequence++, path, filename: name });
         await exchange(command);
     }
-
-    const requests = { request };
 
     /** Requests scoped Solution navigation. */
     function navigate(path: string): void {
@@ -316,9 +314,7 @@ function initialize(event: MessageEvent<unknown>): void {
                                 <ViewFailure
                                     title="View could not be loaded"
                                     message={
-                                        error instanceof Error
-                                            ? error.message.slice(0, 1024)
-                                            : 'An unexpected View error occurred.'
+                                        error instanceof Error ? error.message : 'An unexpected View error occurred.'
                                     }
                                     retry={resetErrorBoundary}
                                 />
@@ -336,7 +332,7 @@ function initialize(event: MessageEvent<unknown>): void {
                                 >
                                     <MenuNavigationProvider>
                                         <DialogActivityContext value={modalActivity}>
-                                            <RequestContext value={requests}>
+                                            <RequestContext value={request}>
                                                 <View params={params} />
                                             </RequestContext>
                                         </DialogActivityContext>
@@ -354,9 +350,7 @@ function initialize(event: MessageEvent<unknown>): void {
             <ViewFailure
                 title="View compilation failed"
                 message={
-                    error instanceof Error
-                        ? error.message.slice(0, 1024)
-                        : 'Export a default JSX component without package imports.'
+                    error instanceof Error ? error.message : 'Export a default JSX component without package imports.'
                 }
             />
         );

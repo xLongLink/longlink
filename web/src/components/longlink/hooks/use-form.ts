@@ -56,7 +56,7 @@ export function useForm<T extends forms.FieldValues = forms.FieldValues, U exten
     submit: (data?: T | FormData) => Promise<void>;
     onSubmit: (event?: FormEvent<HTMLFormElement>) => Promise<void>;
 } {
-    const request = useContext(RequestContext)?.request;
+    const request = useContext(RequestContext);
     const reportError = useContext(ApiErrorContext);
     const pending = useRef<Promise<void> | null>(null);
     const supplied = useRef<T | FormData | undefined>(undefined);
