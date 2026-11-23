@@ -33,13 +33,13 @@ export function RadarChart<Row extends object>({
                 {axes && <recharts.PolarGrid />}
                 <recharts.PolarAngleAxis dataKey="category" tick={axes} axisLine={axes} />
                 <recharts.PolarRadiusAxis axisLine={false} tick={false} />
-                {series.map((item, index) => (
+                {prepared.series.map((item) => (
                     <recharts.Radar
                         key={item.key}
-                        dataKey={`series-${index}`}
-                        name={`series-${index}`}
-                        stroke={data.color(index)}
-                        fill={data.color(index)}
+                        dataKey={item.id}
+                        name={item.id}
+                        stroke={item.color}
+                        fill={item.color}
                         fillOpacity={0.15}
                         activeDot={tooltip}
                         isAnimationActive={false}
