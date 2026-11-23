@@ -344,7 +344,7 @@ it('resets text on same-source replacement and ignores a superseded decoder comp
     const request = vi.fn().mockResolvedValueOnce(first).mockResolvedValueOnce(second).mockResolvedValue(third);
 
     await withMounted(
-        <RequestContext value={{ request }}>
+        <RequestContext value={request}>
             <RefreshableFile />
         </RequestContext>,
         async (output) => {
@@ -419,7 +419,7 @@ it('preserves PDF pages on rename and same-Blob refresh, but disposes replaced a
 
     try {
         await withMounted(
-            <RequestContext value={{ request }}>
+            <RequestContext value={request}>
                 <RefreshableFile />
             </RequestContext>,
             async (output) => {
