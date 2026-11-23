@@ -291,6 +291,10 @@ jobs:
                       args: ['--frozen-lockfile']
                   working-directory: web
 
+            - name: Build SDK web bundle
+              working-directory: web
+              run: vp run build:sdk:bundle --logLevel warn
+
             - name: Check web formatting
               working-directory: web
               run: vp run check
