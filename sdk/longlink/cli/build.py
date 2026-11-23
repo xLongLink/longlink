@@ -585,6 +585,7 @@ def build_solution(root: Path, build_context: Path, *, pyproject_data: Mapping[s
     dockerfile_template = files("longlink").joinpath(".static/docker/Dockerfile").read_text(encoding="utf-8")
     build_context.joinpath("Dockerfile").write_text(
         dockerfile_template.format(
+            python_version=".".join(str(part) for part in sys.version_info[:3]),
             local_dependency_manifests="\n".join(manifest_lines),
             workdir=shlex.quote(workdir),
             labels="\n".join(labels),

@@ -45,7 +45,7 @@ def init_command(
     project_name = project_name or target.resolve().name
 
     # Keep generated package metadata compatible with Python package conventions.
-    if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", project_name):
+    if not re.fullmatch(r"[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?", project_name):
         raise errors.Error(f"Invalid project name: {project_name}")
 
     # Select every scaffold before checking or copying any destination files.

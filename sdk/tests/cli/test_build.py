@@ -1056,18 +1056,26 @@ def test_build_command_reports_docker_failure(
     assert not Path(commands[0][-1]).exists()
 
 
-def test_generated_python_build_is_available_in_uv_catalog(build_project: Path, tmp_path: Path) -> None:
-    """Reject Python patch and standalone-build pins that uv cannot install."""
+def test_generated_python_matches_inspector_and_is_available_in_uv_catalog(build_project: Path, tmp_path: Path) -> None:
+    """Keep image Python installable and compatible with the Solution's locked requirement."""
 
     # Arrange
     context = tmp_path / "context"
+    pyproject = build_project / "pyproject.toml"
+    pyproject.write_text(
+        pyproject.read_text(encoding="utf-8").replace(
+            "[project]\n", f'[project]\nrequires-python = ">={sys.version_info.major}.{sys.version_info.minor}"\n'
+        ),
+        encoding="utf-8",
+    )
+    build_project.joinpath("uv.lock").unlink()
+    subprocess.run(
+        ["uv", "lock", "--project", str(build_project), "--python", sys.executable, "--offline"], capture_output=True, text=True, check=True
+    )
     metadata = build.read_pyproject(build_project)
     build.build_solution(build_project, context, pyproject_data=metadata)
     instructions = context.joinpath("Dockerfile").read_text(encoding="utf-8").splitlines()
     python_version = next(line.removeprefix("RUN uv python install ") for line in instructions if line.startswith("RUN uv python install "))
-    python_build = next(
-        line.removeprefix("ENV UV_PYTHON_CPYTHON_BUILD=") for line in instructions if line.startswith("ENV UV_PYTHON_CPYTHON_BUILD=")
-    )
 
     # Act
     result = subprocess.run(
@@ -1078,10 +1086,21 @@ def test_generated_python_build_is_available_in_uv_catalog(build_project: Path, 
         timeout=30,
     )
     downloads = json.loads(result.stdout)
+    subprocess.run(
+        ["uv", "sync", "--project", str(context), "--python", python_version, "--locked", "--no-dev", "--no-install-local", "--offline"],
+        capture_output=True,
+        text=True,
+        check=True,
+        timeout=30,
+    )
 
     # Assert
+    assert python_version == ".".join(str(part) for part in sys.version_info[:3])
+    assert f"ENV UV_PYTHON={python_version}" in instructions
+    assert not any(line.startswith("ENV UV_PYTHON_CPYTHON_BUILD=") for line in instructions)
     assert len(downloads) == 1
-    assert f"/download/{python_build}/" in downloads[0]["url"]
+    assert downloads[0]["version"] == python_version
+    assert context.joinpath("uv.lock").read_bytes() == build_project.joinpath("uv.lock").read_bytes()
 
 
 def run_docker(docker: str, *arguments: str, check: bool = True, timeout: int = 60) -> subprocess.CompletedProcess[str]:
