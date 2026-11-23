@@ -50,31 +50,54 @@ def init_command(
 
     # Select every scaffold before checking or copying any destination files.
     project_scaffold = ROOT / ".static" / "new"
-    scaffolds = [project_scaffold]
+    scaffolds = [(project_scaffold, shutil.ignore_patterns("__pycache__", ".pytest_cache", ".ruff_cache", ".venv"))]
     if ci_provider == Provider.GITHUB:
-        scaffolds.append(ROOT / ".static" / "ci" / "github")
+        scaffolds.append((ROOT / ".static" / "ci" / "github", None))
 
     # Reject conflicts across the complete scaffold plan before creating project files.
     if target.is_symlink() or (target.exists() and not target.is_dir()):
         raise errors.Error(f"Target is not a directory: {target}")
     if target.exists():
-        for scaffold in scaffolds:
-            # Reject every collision before copying any scaffold content.
-            for source in scaffold.rglob("*"):
-                destination = target / source.relative_to(scaffold)
+        for scaffold, ignore in scaffolds:
+            # Prune ignored directories using the same exclusions as copying.
+            for directory, directories, files in os.walk(scaffold):
+                ignored = ignore(directory, directories + files) if ignore else set()
+                directories[:] = [name for name in directories if name not in ignored]
+                for name in directories + files:
+                    if name in ignored:
+                        continue
+                    source = Path(directory) / name
+                    destination = target / source.relative_to(scaffold)
 
-                # Never overwrite existing project files or follow destination symlinks.
-                if destination.is_symlink() or (destination.exists() and (source.is_file() or not destination.is_dir())):
-                    raise errors.Error(f"Target already exists: {destination}")
+                    # Never overwrite existing project files or follow destination symlinks.
+                    if destination.is_symlink() or (destination.exists() and (source.is_file() or not destination.is_dir())):
+                        raise errors.Error(f"Target already exists: {destination}")
 
-    # Copy the validated plan while retaining the base scaffold's cache exclusions.
-    for scaffold in scaffolds:
-        shutil.copytree(
-            scaffold,
-            target,
-            ignore=shutil.ignore_patterns("__pycache__", ".pytest_cache", ".ruff_cache", ".venv") if scaffold == project_scaffold else None,
-            dirs_exist_ok=True,
-        )
+    # Establish Git readiness before writing any scaffold files.
+    if ci_provider == Provider.GITHUB:
+        git = shutil.which("git")
+        if git is None:
+            raise errors.Error("Unable to initialize Git repository: Git is required")
+        try:
+            ancestor = target
+            while not ancestor.exists():
+                ancestor = ancestor.parent
+            repository = subprocess.run(
+                [git, "rev-parse", "--git-dir"], cwd=ancestor, capture_output=True, text=True, env=os.environ | {"LC_ALL": "C"}
+            )
+            if repository.returncode and repository.stderr.startswith("fatal: not a git repository (or any"):
+                target.mkdir(parents=True, exist_ok=True)
+                subprocess.run([git, "init", "--initial-branch=main"], cwd=target, capture_output=True, text=True, check=True)
+            else:
+                repository.check_returncode()
+        except subprocess.CalledProcessError as error:
+            raise errors.Error(f"Unable to initialize Git repository: {error.stderr.strip() or error}") from error
+        except OSError as error:
+            raise errors.Error(f"Unable to initialize Git repository: {error}") from error
+
+    # Copy the validated plan with the same exclusions used during collision checks.
+    for scaffold, ignore in scaffolds:
+        shutil.copytree(scaffold, target, ignore=ignore, dirs_exist_ok=True)
 
     # Set the generated project metadata before resolving its dependencies.
     pyproject = target / "pyproject.toml"
@@ -83,20 +106,3 @@ def init_command(
     # Stamp the generated instructions with the installed SDK version.
     agents = target / "AGENTS.md"
     agents.write_text(agents.read_text(encoding="utf-8").replace("<version>", importlib.metadata.version("longlink")), encoding="utf-8")
-
-    if ci_provider == Provider.GITHUB:
-        git = shutil.which("git")
-        if git is None:
-            raise errors.Error("Unable to initialize Git repository: Git is required")
-        try:
-            repository = subprocess.run(
-                [git, "rev-parse", "--git-dir"], cwd=target, capture_output=True, text=True, env=os.environ | {"LC_ALL": "C"}
-            )
-            if repository.returncode and repository.stderr.startswith("fatal: not a git repository (or any"):
-                subprocess.run([git, "init", "--initial-branch=main"], cwd=target, capture_output=True, text=True, check=True)
-            else:
-                repository.check_returncode()
-        except subprocess.CalledProcessError as error:
-            raise errors.Error(f"Unable to initialize Git repository: {error.stderr.strip() or error}") from error
-        except OSError as error:
-            raise errors.Error(f"Unable to initialize Git repository: {error}") from error

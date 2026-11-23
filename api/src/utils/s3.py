@@ -41,7 +41,7 @@ class S3:
             verify: bool | str = certificate if certificate is not None else True
 
             # Bound path-style requests through the operator-configured endpoint.
-            config = AioConfig(s3={"addressing_style": "path"}, connect_timeout=10, read_timeout=30, http_session_cls=tls.Session)
+            config = AioConfig(s3={"addressing_style": "path"}, connect_timeout=10, read_timeout=30)
             session = aiobotocore.session.get_session()
             async with session.create_client(
                 "s3",

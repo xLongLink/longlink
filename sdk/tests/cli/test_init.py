@@ -1,9 +1,11 @@
 import runpy
 import pytest
+import shutil
 import sqlite3
 import subprocess
 from pathlib import Path
 from contextlib import chdir, closing
+from longlink.cli import init
 from unittest.mock import Mock
 from longlink.cli.main import main
 from longlink.database import migrations as database_migrations
@@ -43,13 +45,13 @@ def test_init_copies_github_project_scaffold_with_custom_name(tmp_path: Path, fo
         assert branch.stdout.strip() == "main"
 
 
-@pytest.mark.parametrize("nested", [False, True])
-def test_init_preserves_existing_repository(tmp_path: Path, nested: bool) -> None:
+@pytest.mark.parametrize("folder", [".", "sample-solution", "nested/sample-solution"])
+def test_init_preserves_existing_repository(tmp_path: Path, folder: str) -> None:
     """Reuse an existing repository without changing its branch or creating a nested repository."""
 
     # Arrange
     subprocess.run(["git", "init", "--initial-branch=existing"], cwd=tmp_path, capture_output=True, check=True)
-    target = tmp_path / "sample-solution" if nested else tmp_path
+    target = tmp_path / folder
 
     # Act
     main(["init", "--folder", str(target), "--ci", "github"])
@@ -59,7 +61,7 @@ def test_init_preserves_existing_repository(tmp_path: Path, nested: bool) -> Non
     branch = subprocess.run(["git", "symbolic-ref", "--short", "HEAD"], cwd=target, capture_output=True, text=True, check=True)
     assert Path(repository.stdout.strip()) == tmp_path
     assert branch.stdout.strip() == "existing"
-    if nested:
+    if folder != ".":
         assert not (target / ".git").exists()
 
 
@@ -94,31 +96,36 @@ def test_init_reports_missing_git(monkeypatch: pytest.MonkeyPatch, tmp_path: Pat
 
     # Arrange
     monkeypatch.setenv("PATH", str(tmp_path))
+    target = tmp_path / "nested" / "sample-solution"
 
     # Act
     with pytest.raises(SystemExit) as failure:
-        main(["init", "--folder", str(tmp_path / "sample-solution"), "--ci", "github"])
+        main(["init", "--folder", str(target), "--ci", "github"])
 
     # Assert
     assert failure.value.code == 1
     assert "Unable to initialize Git repository" in capsys.readouterr().err
+    assert not target.parent.exists()
 
 
-def test_init_preserves_invalid_git_metadata(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+@pytest.mark.parametrize("folder", [".", "nested/sample-solution"])
+def test_init_preserves_invalid_git_metadata(tmp_path: Path, capsys: pytest.CaptureFixture[str], folder: str) -> None:
     """Report discovery errors without initializing over an invalid repository."""
 
     # Arrange
     metadata = tmp_path / ".git"
     metadata.write_text("invalid repository metadata")
+    target = tmp_path / folder
 
     # Act
     with pytest.raises(SystemExit) as failure:
-        main(["init", "--folder", str(tmp_path), "--ci", "github"])
+        main(["init", "--folder", str(target), "--ci", "github"])
 
     # Assert
     assert failure.value.code == 1
     assert "Unable to initialize Git repository" in capsys.readouterr().err
     assert metadata.read_text() == "invalid repository metadata"
+    assert set(tmp_path.iterdir()) == {metadata}
 
 
 def test_init_reports_git_initialization_failure(
@@ -136,35 +143,81 @@ def test_init_reports_git_initialization_failure(
         ]
     )
     monkeypatch.setattr(subprocess, "run", initialize)
+    target = tmp_path / "nested" / "sample-solution"
 
     # Act
     with pytest.raises(SystemExit) as failure:
-        main(["init", "--folder", str(tmp_path / "sample-solution"), "--ci", "github"])
+        main(["init", "--folder", str(target), "--ci", "github"])
 
     # Assert
     assert failure.value.code == 1
     error = capsys.readouterr().err
     assert "Unable to initialize Git repository" in error
     assert "permission denied" in error
+    assert not tuple(target.iterdir())
+    assert initialize.call_args_list[0].kwargs["cwd"] == tmp_path
+    assert initialize.call_args_list[1].kwargs["cwd"] == target
 
 
-def test_init_refuses_conflicting_folder(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+@pytest.mark.parametrize("conflict", ["pyproject.toml", ".github/workflows/tests.yml", "src"])
+def test_init_refuses_conflicting_folder(tmp_path: Path, capsys: pytest.CaptureFixture[str], conflict: str) -> None:
     """Avoid replacing existing scaffold files in a project folder."""
 
     # Arrange
     target = tmp_path / "sample-solution"
     target.mkdir()
-    (target / "pyproject.toml").write_text("existing project", encoding="utf-8")
+    destination = target / conflict
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    if conflict == "src":
+        destination.symlink_to(tmp_path / "outside", target_is_directory=True)
+    else:
+        destination.write_text("existing project", encoding="utf-8")
 
     # Act
     with pytest.raises(SystemExit) as failure:
-        main(["init", "--folder", str(target)])
+        main(["init", "--folder", str(target), "--ci", "github"])
 
     # Assert
     assert failure.value.code == 1
     assert "Target already exists" in capsys.readouterr().err
-    assert (target / "pyproject.toml").read_text(encoding="utf-8") == "existing project"
+    if conflict == "src":
+        assert destination.is_symlink()
+        assert not (tmp_path / "outside").exists()
+    else:
+        assert destination.read_text(encoding="utf-8") == "existing project"
     assert not (target / "main.py").exists()
+    assert not (target / ".git").exists()
+
+
+def test_init_ignores_excluded_scaffold_collisions(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """Skip excluded scaffold directories without traversing or replacing their destinations."""
+
+    # Arrange
+    root = tmp_path / "sdk"
+    scaffold = root / ".static" / "new"
+    shutil.copytree(
+        init.ROOT / ".static" / "new", scaffold, ignore=shutil.ignore_patterns("__pycache__", ".pytest_cache", ".ruff_cache", ".venv")
+    )
+    target = tmp_path / "sample-solution"
+    target.mkdir()
+    for name in ("__pycache__", ".pytest_cache", ".ruff_cache", ".venv"):
+        source = scaffold / "src" / name
+        source.mkdir(parents=True)
+        (source / "cached").write_text("scaffold cache")
+        destination = target / "src" / name
+        destination.mkdir(parents=True)
+        (destination / "cached").write_text("existing cache")
+    monkeypatch.setattr(init, "ROOT", root)
+    monkeypatch.setenv("PATH", "")
+
+    # Act
+    main(["init", "--folder", str(target)])
+
+    # Assert
+    assert (target / "main.py").is_file()
+    assert not (target / ".git").exists()
+    for name in ("__pycache__", ".pytest_cache", ".ruff_cache", ".venv"):
+        assert (target / "src" / name / "cached").read_text() == "existing cache"
 
 
 @pytest.mark.parametrize("project_name", ["../invalid", "sample-", "sample.", "sample_", "-sample", ".", "_"])
