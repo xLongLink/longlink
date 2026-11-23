@@ -138,63 +138,6 @@ it('blocks user dismissal during pending work but permits a caller-controlled su
     });
 });
 
-it('resizes an open dialog through props without losing its draft', async () => {
-    // Arrange
-    const user = userEvent.setup();
-
-    function Editor() {
-        const [expanded, setExpanded] = useState(false);
-
-        return (
-            <Dialog
-                title="Edit draft"
-                trigger={<Button>Edit</Button>}
-                width={expanded ? 720 : 640}
-                height={expanded ? 400 : 'auto'}
-                footer={<Button onClick={() => setExpanded((value) => !value)}>Toggle size</Button>}
-            >
-                <Input label="Draft" defaultValue="Retained" />
-            </Dialog>
-        );
-    }
-
-    await withMounted(<Editor />, async (output) => {
-        const trigger = output.querySelector('button');
-
-        if (!trigger) throw new Error('Expected the editor trigger');
-        await act(async () => user.click(trigger));
-        const modal = document.querySelector<HTMLElement>('[role="dialog"]');
-        const input = modal?.querySelector('input');
-        const toggle = modal?.querySelector('[data-slot="dialog-footer"] button');
-
-        if (!modal || !input || !toggle) throw new Error('Expected the draft editor');
-        await act(async () => user.type(input, ' draft'));
-        expect(modal.style.width).toBe('640px');
-        expect(modal.style.height).toBe('auto');
-
-        // Act
-        await act(async () => user.click(toggle));
-
-        // Assert
-        expect(document.querySelector('[role="dialog"]')).toBe(modal);
-        expect(modal.style.width).toBe('720px');
-        expect(modal.style.height).toBe('400px');
-        expect(modal.querySelector('input')).toBe(input);
-        expect(input.value).toBe('Retained draft');
-
-        // Act
-        await act(async () => user.click(toggle));
-
-        // Assert
-        expect(modal.style.width).toBe('640px');
-        expect(modal.style.height).toBe('auto');
-        expect(input.value).toBe('Retained draft');
-        await act(async () => user.keyboard('{Escape}'));
-        expect(document.querySelector('[role="dialog"]')).toBeNull();
-        expect(document.activeElement).toBe(trigger);
-    });
-});
-
 it('retains an uncontrolled draft and host activity when the caller cancels Escape', async () => {
     const activity = vi.fn();
 

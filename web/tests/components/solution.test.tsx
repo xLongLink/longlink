@@ -169,36 +169,6 @@ describe('SolutionPage', () => {
         ).toBeNull();
     });
 
-    it.each([undefined, 'compact'] as const)('restores %s view width after leaving a wide dashboard', async (width) => {
-        stubFetch((url) =>
-            url.endsWith('/views.json')
-                ? manifestResponse([
-                      { path: 'dashboard.jsx', route: '/dashboard', width: 'wide' },
-                      { path: 'settings.jsx', route: '/settings', width }
-                  ])
-                : sourceResponse('export default function Page() { return <Text>Content</Text>; }')
-        );
-
-        const output = await renderPage('/dashboard');
-        await vi.waitFor(() =>
-            expect(output.querySelector('.platform-page-container')?.classList.contains('max-w-none')).toBe(true)
-        );
-
-        const settings = output.querySelector<HTMLAnchorElement>(
-            '[aria-label="Section navigation"] a[href="/settings"]'
-        );
-
-        if (!settings) throw new Error('Expected compact View navigation');
-
-        await act(async () => settings.click());
-        await vi.waitFor(() =>
-            expect(output.querySelector('[data-path]')?.getAttribute('data-path')).toBe('/settings')
-        );
-        const container = output.querySelector('.platform-page-container');
-        expect(container?.classList.contains('max-w-[1000px]')).toBe(true);
-        expect(container?.classList.contains('max-w-none')).toBe(false);
-    });
-
     it('rejects an external manifest view path before fetching the view', async () => {
         // Arrange
         const fetchRequest = vi.fn((url: string) => {

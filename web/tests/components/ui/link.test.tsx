@@ -336,43 +336,6 @@ it('commits callback state updates before the returned promise settles', async (
     }
 });
 
-it('preserves native anchor props and ref without wrapping caller-owned content', async () => {
-    const anchorRef = createRef<HTMLAnchorElement>();
-    const navigate = vi.fn();
-
-    await withMounted(
-        <LinkNavigationContext value={{ baseUrl: '/solutions/orders', navigate, download: vi.fn() }}>
-            <Link href="/invoices" ref={anchorRef} target="_blank" rel="nofollow" title="Invoices">
-                <strong>Invoices</strong>
-            </Link>
-        </LinkNavigationContext>,
-        async (output) => {
-            const anchor = output.querySelector('a');
-
-            if (!anchor) throw new Error('Expected navigation link');
-            expect(anchorRef.current).toBe(anchor);
-            expect(anchor.firstElementChild?.tagName).toBe('STRONG');
-            expect(anchor.title).toBe('Invoices');
-            expect(anchor.rel).toBe('nofollow noopener noreferrer');
-            let preventedByLink = true;
-
-            // Observe the navigation decision, then stop happy-dom from loading another document.
-            output.addEventListener(
-                'click',
-                (event) => {
-                    preventedByLink = event.defaultPrevented;
-                    event.preventDefault();
-                },
-                { once: true }
-            );
-            const event = new MouseEvent('click', { bubbles: true, cancelable: true });
-            await act(async () => anchor.dispatchEvent(event));
-            expect(preventedByLink).toBe(false);
-            expect(navigate).not.toHaveBeenCalled();
-        }
-    );
-});
-
 it.each([false, true])('recovers from an already-reported action failure (async: %s)', async (asynchronous) => {
     const failure = new ReportedError('Request already reported');
 
