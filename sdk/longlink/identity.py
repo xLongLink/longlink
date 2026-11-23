@@ -20,12 +20,11 @@ class DevelopmentIdentity(BaseModel):
     user: Annotated[User, BeforeValidator(User.model_validate)]
 
 
-def create_identity_token(user: User | None, secret: str, access: permissions.Access | None = None) -> str:
+def create_identity_token(user: User | None, secret: str, access: permissions.Access) -> str:
     """Create one short-lived Platform identity assertion for a Solution request."""
 
-    # Anonymous assertions carry grants but never impersonate a persisted user.
-    if user is None and access is None:
-        raise ValueError("Anonymous identity requires endpoint permissions")
+    # Every signed principal carries validated endpoint grants.
+    access = permissions.Access.model_validate(access)
 
     # Bind the assertion to one user and a fixed runtime-only token purpose.
     issued_at = datetime.now(UTC)
@@ -33,7 +32,7 @@ def create_identity_token(user: User | None, secret: str, access: permissions.Ac
         {
             "sub": str(user.id) if user is not None else "anonymous",
             "profile": user.model_dump(mode="json", exclude={"id"}) if user is not None else None,
-            "access": access.model_dump(mode="json") if access is not None else None,
+            "access": access.model_dump(mode="json"),
             "aud": IDENTITY_TOKEN_AUDIENCE,
             "iat": issued_at,
             "exp": issued_at + timedelta(seconds=IDENTITY_TOKEN_LIFETIME_SECONDS),
@@ -44,7 +43,7 @@ def create_identity_token(user: User | None, secret: str, access: permissions.Ac
     )
 
 
-def identity_token_data(token: str, secret: str) -> tuple[User | None, permissions.Access | None]:
+def identity_token_data(token: str, secret: str) -> tuple[User | None, permissions.Access]:
     """Validate the user profile carried by a signed Platform identity assertion."""
 
     # Reject missing runtime credentials before attempting JWT verification.
@@ -53,18 +52,22 @@ def identity_token_data(token: str, secret: str) -> tuple[User | None, permissio
 
     # Restrict verification to LongLink's fixed algorithm and token purpose.
     data = jwt.decode(
-        token, secret, audience=IDENTITY_TOKEN_AUDIENCE, algorithms=[IDENTITY_TOKEN_ALGORITHM], options={"require": ["exp", "iat", "sub"]}
+        token,
+        secret,
+        audience=IDENTITY_TOKEN_AUDIENCE,
+        algorithms=[IDENTITY_TOKEN_ALGORITHM],
+        options={"require": ["exp", "iat", "sub", "access"]},
     )
 
     # Validate profile fields and require an authoritative timestamp for ordered updates.
     try:
         if "profile" not in data:
             raise jwt.InvalidTokenError("Identity profile is required")
-        access = permissions.Access.model_validate(data["access"]) if data.get("access") is not None else None
+        access = permissions.Access.model_validate(data["access"])
 
         # A signed anonymous principal has no profile and always has explicit endpoint grants.
         if data["sub"] == "anonymous":
-            if data["profile"] is not None or access is None:
+            if data["profile"] is not None:
                 raise jwt.InvalidTokenError("Invalid anonymous identity")
             return None, access
 

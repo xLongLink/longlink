@@ -16,7 +16,8 @@ def mint_identity_token(
     """Mint one execution-time identity token with controlled defects."""
 
     # Start with a real current assertion and decode it only to construct controlled test defects.
-    token = identity.create_identity_token(User(id=UUID(int=1), name="Test User", email="test@example.com"), secret)
+    access = permissions.Access(catalog="a" * 64, endpoints=[0])
+    token = identity.create_identity_token(User(id=UUID(int=1), name="Test User", email="test@example.com"), secret, access)
     payload = jwt.decode(token, options={"verify_signature": False})
 
     # Apply only the requested claim defects before signing with the requested algorithm.
@@ -35,21 +36,22 @@ def test_identity_token_data_returns_identity_from_created_token() -> None:
     # Arrange
     user_id = UUID("00000000-0000-0000-0000-000000000001")
     user = User(id=user_id, name="Test User", email="test@example.com", avatar="https://example.com/avatar.png")
-    token = identity.create_identity_token(user, IDENTITY_SECRET)
+    access = permissions.Access(catalog="a" * 64, endpoints=[0])
+    token = identity.create_identity_token(user, IDENTITY_SECRET, access)
 
     # Act
-    result, _access = identity.identity_token_data(token, IDENTITY_SECRET)
+    result, result_access = identity.identity_token_data(token, IDENTITY_SECRET)
 
     # Assert
     assert result is not None
     assert result.model_dump() == user.model_dump()
+    assert result_access == access
     claims = jwt.decode(token, IDENTITY_SECRET, algorithms=["HS256"], audience="longlink:identity")
     assert claims["sub"] == str(user_id)
     assert claims["aud"] == "longlink:identity"
     assert claims["exp"] - claims["iat"] == 300
 
     # Anonymous assertions preserve grants without inventing a persisted user.
-    access = permissions.Access(catalog="a" * 64, endpoints=[0])
     guest_token = identity.create_identity_token(None, IDENTITY_SECRET, access)
     guest, guest_access = identity.identity_token_data(guest_token, IDENTITY_SECRET)
     assert guest is None
@@ -65,6 +67,8 @@ def test_identity_token_data_rejects_empty_identity_secret() -> None:
 
 
 INVALID_SIGNED_TOKENS = [
+    pytest.param(IDENTITY_SECRET, {"access": None}, jwt.InvalidTokenError, id="null-access"),
+    pytest.param(IDENTITY_SECRET, {"access": {"catalog": "invalid", "endpoints": []}}, jwt.InvalidTokenError, id="invalid-access"),
     pytest.param(IDENTITY_SECRET, {"exp": datetime(2000, 1, 1, tzinfo=UTC)}, jwt.ExpiredSignatureError, id="expired"),
     pytest.param(IDENTITY_SECRET, {"aud": "other-audience"}, jwt.InvalidAudienceError, id="wrong-audience"),
     pytest.param("other-identity-secret-01234567890", {}, jwt.InvalidSignatureError, id="wrong-secret"),
@@ -126,7 +130,7 @@ def test_identity_token_data_rejects_malformed_subject() -> None:
         identity.identity_token_data(token, IDENTITY_SECRET)
 
 
-@pytest.mark.parametrize("missing_claim", ["sub", "aud", "iat", "exp", "profile"])
+@pytest.mark.parametrize("missing_claim", ["sub", "aud", "iat", "exp", "profile", "access"])
 def test_identity_token_data_rejects_missing_required_claim(missing_claim: str) -> None:
     """Reject an otherwise valid identity token missing any required claim."""
 

@@ -6,9 +6,8 @@ import shutil
 import tomllib
 import tempfile
 import subprocess
-from typing import TypedDict, NotRequired
 from pathlib import Path
-from longlink import permissions
+from longlink import metadata, permissions
 from pydantic import TypeAdapter, ValidationError
 from longlink.cli import errors
 from collections.abc import Mapping, Sequence
@@ -60,15 +59,6 @@ CONTEXT_IGNORE_PATTERNS = (
 DOCKER_CONTEXT_IGNORE_RULES = ("Dockerfile", ".dockerignore")
 
 
-class EnvironmentEntry(TypedDict):
-    """Validate the environment requirements returned by the isolated inspector."""
-
-    # Runtime environment metadata, without defaults or secret values.
-    name: str
-    required: bool
-    description: NotRequired[str]
-
-
 def _inspect(root: Path, script: str, arguments: Sequence[str]) -> bytes:
     """Run an SDK inspector with isolated imports and a separate metadata file."""
 
@@ -93,7 +83,7 @@ def _inspect(root: Path, script: str, arguments: Sequence[str]) -> bytes:
         return result_path.read_bytes()
 
 
-def read_env_spec(root: Path, pyproject_data: Mapping[str, object]) -> list[EnvironmentEntry]:
+def read_env_spec(root: Path, pyproject_data: Mapping[str, object]) -> list[metadata.EnvironmentMetadata]:
     """Parse the configured Solution environment model."""
 
     # Require the project configuration that selects the environment model.
@@ -110,7 +100,7 @@ def read_env_spec(root: Path, pyproject_data: Mapping[str, object]) -> list[Envi
         raise errors.Error("[tool.longlink].environments must be a module:Class import string")
 
     # Validate the child response before using it as image metadata or a CLI error.
-    adapter = TypeAdapter(list[EnvironmentEntry] | str)
+    adapter = TypeAdapter(list[metadata.EnvironmentMetadata] | str)
     try:
         response = _inspect(root, "environments", [environment_import])
         environments = adapter.validate_json(response, strict=True)
@@ -124,6 +114,10 @@ def read_env_spec(root: Path, pyproject_data: Mapping[str, object]) -> list[Envi
     # The inspector reports expected validation errors as strings.
     if isinstance(environments, str):
         raise errors.Error(environments)
+
+    # Inspectors omit absent descriptions; only legacy image labels may contain null.
+    if any(environment.description is None and "description" in environment.model_fields_set for environment in environments):
+        raise errors.Error(f"Unable to inspect environment model {environment_import}: invalid child response")
     return environments
 
 
@@ -484,7 +478,8 @@ def build_solution(root: Path, build_context: Path, *, pyproject_data: Mapping[s
         labels.append(f"LABEL org.opencontainers.image.description={json.dumps(project_description)}")
     environments = read_env_spec(root, pyproject_data)
     if environments:
-        labels.append(f"LABEL dev.longlink.environments={json.dumps(json.dumps(environments, separators=(',', ':')))}")
+        environment_labels = [environment.model_dump(exclude_none=True) for environment in environments]
+        labels.append(f"LABEL dev.longlink.environments={json.dumps(json.dumps(environment_labels, separators=(',', ':')))}")
     catalog = read_permission_spec(root)
     labels.append(f"LABEL dev.longlink.permissions={json.dumps(catalog.model_dump_json())}")
 
@@ -571,22 +566,10 @@ def build_solution(root: Path, build_context: Path, *, pyproject_data: Mapping[s
 
     # Write the generated Dockerfile into the temporary build context.
     workdir = "/workspace" if root == source_root else f"/workspace/{root.relative_to(source_root).as_posix()}"
-    manifest_lines: list[str] = []
-    for manifest in project_manifests:
-        relative_path = manifest.relative_to(source_root).as_posix()
-        if relative_path == "pyproject.toml":
-            continue
-
-        # Preserve literals through Docker's source-pattern matching, shell expansion, and JSON parsing.
-        source_pattern = relative_path.replace("\\", "[\\\\]")
-        source = shlex.quote(source_pattern)
-        destination = shlex.quote(f"/workspace/{relative_path}")
-        manifest_lines.append(f"COPY {json.dumps([source, destination])}")
     dockerfile_template = files("longlink").joinpath(".static/docker/Dockerfile").read_text(encoding="utf-8")
     build_context.joinpath("Dockerfile").write_text(
         dockerfile_template.format(
             python_version=".".join(str(part) for part in sys.version_info[:3]),
-            local_dependency_manifests="\n".join(manifest_lines),
             workdir=shlex.quote(workdir),
             labels="\n".join(labels),
             # Quote the installed SDK version as Dockerfile data.

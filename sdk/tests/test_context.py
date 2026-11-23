@@ -1,18 +1,18 @@
 import pytest
 from uuid import UUID
 from datetime import UTC, datetime, timedelta
-from longlink import User, context, identity
+from longlink import User, context, identity, permissions
 from longlink.app import LongLink
 from fastapi.testclient import TestClient
 
 IDENTITY_SECRET = "test-identity-secret-01234567890"
 
 
-def identity_headers(user: User) -> dict[str, str]:
+def identity_headers(user: User, catalog: permissions.Catalog) -> dict[str, str]:
     """Build one current Platform identity assertion for context tests."""
 
     # Use the shared token constructor used by the Platform gateway.
-    return {"x-longlink-identity": identity.create_identity_token(user, IDENTITY_SECRET)}
+    return {"x-longlink-identity": identity.create_identity_token(user, IDENTITY_SECRET, catalog.access("write"))}
 
 
 @pytest.mark.usefixtures("solution_source")
@@ -44,7 +44,7 @@ def test_data_resolves_request_services(monkeypatch: pytest.MonkeyPatch) -> None
 
     # Act
     with client:
-        response = client.get("/", headers=identity_headers(user))
+        response = client.get("/", headers=identity_headers(user, app.state.permission_catalog))
         updated = user.model_copy(
             update={
                 "name": "Updated",
@@ -53,12 +53,12 @@ def test_data_resolves_request_services(monkeypatch: pytest.MonkeyPatch) -> None
                 "updated_at": user.updated_at + timedelta(seconds=1),
             }
         )
-        refreshed = client.get("/", headers=identity_headers(updated))
+        refreshed = client.get("/", headers=identity_headers(updated, app.state.permission_catalog))
         conflicting = updated.model_copy(
             update={"name": "Conflicting", "email": "conflicting@example.com", "avatar": "https://example.com/conflicting.png"}
         )
-        same_version = client.get("/", headers=identity_headers(conflicting))
-        stale = client.get("/", headers=identity_headers(user))
+        same_version = client.get("/", headers=identity_headers(conflicting, app.state.permission_catalog))
+        stale = client.get("/", headers=identity_headers(user, app.state.permission_catalog))
         assert client.portal is not None
         persisted_profile = client.portal.call(read_profile)
         guest_token = identity.create_identity_token(None, IDENTITY_SECRET, app.state.permission_catalog.access("read"))
@@ -108,7 +108,7 @@ def test_data_closes_database_session_when_endpoint_fails(monkeypatch: pytest.Mo
     # Act
     with TestClient(app) as client:
         with pytest.raises(RuntimeError, match="endpoint failed"):
-            client.get("/", headers=identity_headers(user))
+            client.get("/", headers=identity_headers(user, app.state.permission_catalog))
 
         # Assert the independent profile transaction survived the failed business transaction.
         assert client.portal is not None

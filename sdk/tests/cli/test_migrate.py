@@ -27,18 +27,20 @@ def test_migrate_command_keeps_an_unchanged_project_at_its_existing_revision(
     assert "No migrations were created" in capsys.readouterr().out
 
 
-def test_migrate_command_generates_and_applies_a_discovered_model(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """Persist a newly discovered model and its generated revision through the CLI."""
+def test_migrate_command_generates_and_applies_a_discovered_model(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Discover a nested model, apply its revision, and skip unchanged generations."""
 
     # Arrange
     monkeypatch.chdir(tmp_path)
     monkeypatch.setenv("LONGLINK_ENV", "development")
     table_name = "cli_migrated_inventory_items"
-    module_name = "src.models.cli_migrated_inventory"
+    module_name = "src.models.catalog.cli_migrated_inventory"
     assert table_name not in SQLModel.metadata.tables
     assert module_name not in sys.modules
     previous_modules = set(sys.modules)
-    model_path = tmp_path / "src" / "models" / "cli_migrated_inventory.py"
+    model_path = tmp_path / "src" / "models" / "catalog" / "cli_migrated_inventory.py"
     model_path.parent.mkdir(parents=True)
     model_path.write_text(
         "from sqlmodel import Field, SQLModel\n"
@@ -62,8 +64,15 @@ def test_migrate_command_generates_and_applies_a_discovered_model(tmp_path: Path
         with closing(sqlite3.connect(tmp_path / "dev.db")) as connection:
             tables = connection.execute("SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?", (table_name,)).fetchall()
             applied_revisions = connection.execute("SELECT version_num FROM alembic_version").fetchall()
+            assert connection.execute("SELECT COUNT(*) FROM users").fetchone() == (0,)
         assert tables == [(table_name,)]
         assert applied_revisions == [(revision,)]
+
+        # Keep the applied revision when the discovered schema is unchanged.
+        capsys.readouterr()
+        main(["migrate"])
+        assert list((tmp_path / "migrations").glob("*.py")) == [revision_path]
+        assert "No migrations were created" in capsys.readouterr().out
     finally:
         # Remove test-owned metadata and imported Solution modules even on migration failure.
         table = SQLModel.metadata.tables.get(table_name)
