@@ -1,10 +1,10 @@
 import { z } from 'zod';
 import * as React from 'react';
 import { transform } from 'sucrase';
-import * as components from './index';
 import { CircleX } from 'lucide-react';
 import { createRoot } from 'react-dom/client';
 import { ReportedError } from '@/lib/reported';
+import * as components from '@/components/longlink';
 import { ErrorBoundary } from 'react-error-boundary';
 import { Spinner } from '@/components/shadcn/spinner';
 import { appearanceSchema, type Appearance } from '@/lib/appearance';
@@ -62,15 +62,6 @@ function MenuNavigationProvider({ children }: { children: React.ReactNode }) {
         >
             {children}
         </MenuNavigationContext>
-    );
-}
-
-/** Keeps loaded Views and compilation errors in the same content region. */
-function ViewLayout({ children }: { children: React.ReactNode }) {
-    return (
-        <section className="min-h-full min-w-0 p-0" aria-label="Solution View">
-            {children}
-        </section>
     );
 }
 
@@ -367,7 +358,11 @@ function initialize(event: MessageEvent<unknown>): void {
 
     // Start from the handshake, then receive live preferences over the private port.
     renderAppearance(parsed.data.appearance);
-    root.render(<ViewLayout>{content}</ViewLayout>);
+    root.render(
+        <section className="min-h-full min-w-0 p-0" aria-label="Solution View">
+            {content}
+        </section>
+    );
 }
 
 // A fresh opaque-origin frame cannot read parent state, storage, or cookies.

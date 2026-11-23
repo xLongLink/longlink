@@ -67,6 +67,43 @@ it('switches to the shared reference without losing published props, description
     );
 });
 
+it('shows authored hook properties without copying them to an absent companion reference', async () => {
+    // Arrange
+    const user = userEvent.setup();
+
+    await withMounted(
+        <ViewLayout
+            name="useApi"
+            relatedComponents={['MissingCompanion']}
+            properties={[
+                { name: 'path', type: 'string', description: 'The Solution endpoint to query.' },
+                { name: 'data', type: 'ViewData', default: [] }
+            ]}
+        >
+            <p>Hook example</p>
+        </ViewLayout>,
+        async (output) => {
+            const propertiesTab = Array.from(output.querySelectorAll<HTMLButtonElement>('[role="tab"]')).find(
+                (tab) => tab.textContent === 'Properties'
+            );
+            if (!propertiesTab) throw new Error('Expected properties tab');
+
+            // Act
+            await act(async () => user.click(propertiesTab));
+
+            // Assert
+            expect(output.textContent).not.toContain('Hook example');
+            const tables = output.querySelectorAll('table');
+            expect(tables).toHaveLength(1);
+            expect(tables[0]?.getAttribute('aria-label')).toBe('useApi properties');
+            const rows = tables[0]?.querySelectorAll('tbody tr');
+            expect(rows?.[0]?.querySelector('td')?.textContent).toContain('path');
+            expect(rows?.[0]?.textContent).toContain('The Solution endpoint to query.');
+            expect(rows?.[1]?.querySelector('td:last-child')?.textContent).toBe('[]');
+        }
+    );
+});
+
 it('collapses the map preview attribution when it becomes available and leaves it open after reopening', async () => {
     const user = userEvent.setup();
 

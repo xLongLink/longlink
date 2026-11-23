@@ -30,7 +30,6 @@ it('keeps the auth-owned label and external descriptions when clearing a field e
                     label="Email"
                     labelHidden
                     required
-                    description="Your account email."
                     error={error}
                     aria-labelledby="external-label"
                     aria-describedby="policy"
@@ -56,15 +55,11 @@ it('keeps the auth-owned label and external descriptions when clearing a field e
         expect(input.getAttribute('aria-labelledby')).toBe(label.id);
         expect(input.getAttribute('aria-required')).toBe('true');
         expect(input.getAttribute('aria-invalid')).toBe('true');
-        expect(input.getAttribute('aria-describedby')?.split(' ')).toEqual([
-            'policy',
-            `${input.id}-description`,
-            `${input.id}-error`
-        ]);
+        expect(input.getAttribute('aria-describedby')?.split(' ')).toEqual(['policy', `${input.id}-error`]);
 
         await act(async () => user.type(input, 'mara@example.com'));
         expect(input.getAttribute('aria-invalid')).not.toBe('true');
-        expect(input.getAttribute('aria-describedby')?.split(' ')).toEqual(['policy', `${input.id}-description`]);
+        expect(input.getAttribute('aria-describedby')?.split(' ')).toEqual(['policy']);
         expect(document.getElementById(`${input.id}-error`)).toBeNull();
     });
 });
@@ -256,6 +251,88 @@ it.each([
         }
     }
 );
+
+it('reports a failed identity refresh without redirecting and lets the retained sign-in form retry', async () => {
+    // Arrange
+    const errors: unknown[] = [];
+    let signedIn = false;
+    let refreshFails = true;
+
+    const transport = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, options) => {
+        const request = input instanceof Request ? input : new Request(input, options);
+        const path = new URL(request.url).pathname;
+
+        if (path === '/api/v1/me') {
+            if (!signedIn) return Response.json({ detail: 'Not authenticated' }, { status: 401 });
+            if (refreshFails) return Response.json({ detail: 'Identity temporarily unavailable' }, { status: 503 });
+
+            return Response.json(user);
+        }
+
+        if (path === '/api/v1/auth/oauth') return Response.json({ google: false, github: false });
+
+        if (path === '/api/v1/auth/password/login' && request.method === 'POST') {
+            signedIn = true;
+
+            return new Response(null, { status: 204 });
+        }
+
+        throw new Error(`Unexpected request: ${request.method} ${path}`);
+    });
+
+    try {
+        await withMounted(
+            <ApiErrorContext value={(error) => errors.push(error)}>
+                <LocationProbe />
+                <AccountProvider>
+                    <ApiBoundary>
+                        <Routes>
+                            <Route path="/login" element={<Page />} />
+                            <Route path="/user/organizations" element={<p>Organizations</p>} />
+                        </Routes>
+                    </ApiBoundary>
+                </AccountProvider>
+            </ApiErrorContext>,
+            async (output) => {
+                const events = userEvent.setup();
+                const password = output.querySelector<HTMLInputElement>('input[name="password"]');
+                const submit = output.querySelector<HTMLButtonElement>('button[type="submit"]');
+
+                if (!password || !submit) throw new Error('Expected the sign-in form');
+
+                // Act
+                await act(async () => {
+                    await events.type(password, 'Correct-password-123');
+                    await events.click(submit);
+                });
+
+                // Assert
+                await vi.waitFor(() =>
+                    expect(errors).toEqual([
+                        expect.objectContaining({ status: 503, message: 'Identity temporarily unavailable' })
+                    ])
+                );
+                expect(output.querySelector('output')?.textContent).toBe('/login?email=owner%40example.com');
+                expect(output.querySelector('input[name="password"]')).toBe(password);
+                expect(password.value).toBe('Correct-password-123');
+                expect(output.querySelector<HTMLInputElement>('input[name="email"]')?.value).toBe('owner@example.com');
+                expect(output.textContent).not.toContain('Organizations');
+
+                // Act
+                refreshFails = false;
+                await act(async () => events.click(submit));
+
+                // Assert
+                await vi.waitFor(() => expect(output.querySelector('output')?.textContent).toBe('/user/organizations'));
+                expect(output.textContent).toContain('Organizations');
+                expect(errors).toHaveLength(1);
+            },
+            '/login?email=owner%40example.com'
+        );
+    } finally {
+        transport.mockRestore();
+    }
+});
 
 it('retains the complete MCP approval query when the persistent identity is already authenticated', async () => {
     // Resolve the real identity observer before the sign-in page redirects.

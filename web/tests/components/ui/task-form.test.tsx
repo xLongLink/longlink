@@ -2,9 +2,9 @@
 import * as React from 'react';
 import { transform } from 'sucrase';
 import { it, expect } from 'vitest';
-import * as components from '@/views';
 import { withMounted } from '../../render';
 import { ReportedError } from '@/lib/reported';
+import * as components from '@/components/longlink';
 import userEvent from '@testing-library/user-event';
 import { RequestContext } from '@/lib/view-capabilities';
 import source from '../../../../sdk/longlink/.static/new/src/views/tasks.jsx?raw';

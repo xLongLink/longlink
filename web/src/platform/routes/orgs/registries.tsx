@@ -14,7 +14,7 @@ import { Table, TableBody, TableRow, TableCell } from '@/components/longlink/dis
 /** Lists organization-owned registry connections without loading credentials. */
 export default function Registries({ base, canMaintain }: { base: string; canMaintain: boolean }) {
     const [connections, invalidate] = useApi(`${base}/registries`, schemas.zRegistryResponse.array());
-    const [action, setAction, closeAction] = useSelection<{ kind: 'create' }>();
+    const [action, setAction, closeAction] = useSelection<symbol>();
     const confirmation = useConfirm();
 
     async function onSuccess() {
@@ -33,12 +33,7 @@ export default function Registries({ base, canMaintain }: { base: string; canMai
                             Private registries
                         </Heading>
                         {canMaintain && (
-                            <Button
-                                size="sm"
-                                onClick={() =>
-                                    setAction((current) => (current?.kind === 'create' ? current : { kind: 'create' }))
-                                }
-                            >
+                            <Button size="sm" onClick={() => setAction((current) => current ?? Symbol())}>
                                 Add registry
                             </Button>
                         )}
