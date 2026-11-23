@@ -471,7 +471,11 @@ async def update_usage(session: AsyncSession, organization_id: UUID, user_id: UU
     try:
         async with asyncio.timeout(15):
             provisioned = await databases.provisioned_storage_bytes(cluster, organization_id)
-    except (TimeoutError, OSError, ServerError, NotFoundError, APITimeoutError, ConnectionClosedError, httpx.HTTPError) as exc:
+    except NotFoundError as exc:
+        if organization.status != Status.failed or organization.provisioned_at is not None:
+            raise HTTPException(status_code=503, detail="Database resources unavailable") from exc
+        provisioned = 0
+    except (TimeoutError, OSError, ServerError, APITimeoutError, ConnectionClosedError, httpx.HTTPError) as exc:
         raise HTTPException(status_code=503, detail="Database resources unavailable") from exc
     if payload.database_storage_bytes < provisioned:
         raise HTTPException(status_code=409, detail="Database storage cannot be reduced below provisioned capacity")
