@@ -29,7 +29,6 @@ Thumbs.db
 # Project
 .storage/
 /frontend.d.ts
-/frontend.native.d.ts
 *.egg-info/
 dist/
 build/

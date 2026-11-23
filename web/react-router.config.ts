@@ -131,18 +131,19 @@ export default {
                 .map(({ name }) => name)
                 .filter((name) => !['Image', 'Text', 'Map', 'FrontendElement'].includes(name))
                 .sort()
-                .map((name) => `import ${name} = NativeFrontend.${name};`)
+                .map((name) => `export import ${name} = NativeFrontend.${name};`)
                 .join('\n');
             const icons = Object.keys(iconImports)
                 .map((name) => JSON.stringify(name))
                 .join(' | ');
             const declarationDirectory = path.resolve(import.meta.dirname, '../sdk/longlink/.static/jsx');
             await mkdir(declarationDirectory, { recursive: true });
-            await writeFile(path.join(declarationDirectory, 'frontend.native.d.ts'), native);
+            const globalDeclarations = `${globals.trimEnd().replace(/^declare /gm, '')}\n\ntype IconName = ${icons};\n\n${aliases}`;
             await writeFile(
                 path.join(declarationDirectory, 'frontend.d.ts'),
-                `/// <reference path="./frontend.native.d.ts" />\n${globals.trimEnd()}\n\ntype IconName = ${icons};\n\n${aliases}\n`
+                `import * as NativeFrontend from './frontend';\n\n${native}\ndeclare global {\n${globalDeclarations.replace(/^(.+)$/gm, '    $1')}\n}\n`
             );
+            await rm(path.join(declarationDirectory, 'frontend.native.d.ts'), { force: true });
 
             await cp(path.join(import.meta.dirname, 'build/views'), path.join(clientDirectory, 'views'), {
                 recursive: true

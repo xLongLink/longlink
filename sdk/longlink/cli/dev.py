@@ -31,11 +31,10 @@ def dev_command(*, host: str = "127.0.0.1") -> None:
         logger.warning("Development server is exposed on host %s", host)
 
     # Refresh SDK-owned editor declarations without requiring a JavaScript toolchain.
-    for name in ("frontend.native.d.ts", "frontend.d.ts"):
-        declarations = (ROOT / ".static" / "jsx" / name).read_bytes()
-        destination = Path.cwd() / name
-        if not destination.is_file() or destination.read_bytes() != declarations:
-            destination.write_bytes(declarations)
+    declarations = (ROOT / ".static" / "jsx" / "frontend.d.ts").read_bytes()
+    destination = Path.cwd() / "frontend.d.ts"
+    if not destination.is_file() or destination.read_bytes() != declarations:
+        destination.write_bytes(declarations)
 
     # Apply committed Solution migrations before serving requests locally.
     apply_migrations()
