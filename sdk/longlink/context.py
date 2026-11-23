@@ -23,18 +23,18 @@ async def _data(request: Request) -> AsyncGenerator[_ContextData, None]:
     # Signed guests receive request services without a synthetic persisted user.
     async with request.app.state.longlink.database.session() as database:
         user_id = audit.current_actor.get()
+        user = None
         if user_id is None:
             if request.scope.get("longlink.access") is None:
                 raise HTTPException(status_code=401, detail="Authentication required")
-            yield _ContextData(user=None, storage=request.app.state.longlink.storage, database=database)
-            return
+        else:
+            # Signed identity must resolve to the request database's local user record.
+            user = await database.get(User, user_id)
+            if user is None:
+                raise HTTPException(status_code=401, detail="User not found")
 
-        # Signed identity must resolve to the request database's local user record.
-        user = await database.get(User, user_id)
-        if user is None:
-            raise HTTPException(status_code=401, detail="User not found")
-
-        yield _ContextData(user=user, storage=request.app.state.longlink.storage, database=database)
+        data = _ContextData(user=user, storage=request.app.state.longlink.storage, database=database)
+        yield data
 
 
 Context = Annotated[_ContextData, Depends(_data)]

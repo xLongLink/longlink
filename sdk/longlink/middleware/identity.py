@@ -48,8 +48,6 @@ class IdentityMiddleware:
         if self.identity_secret:
             try:
                 user, access = identity.identity_token_data(request.headers.get("x-longlink-identity", ""), self.identity_secret)
-                if self.mode == "production" and access is None:
-                    raise jwt.InvalidTokenError("Endpoint permissions are required")
                 scope["longlink.access"] = access
                 verified = True
 

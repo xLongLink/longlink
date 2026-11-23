@@ -1,15 +1,7 @@
 from pydantic import Field, BaseModel
 from src.models.types import Image
+from longlink.metadata import EnvironmentMetadata
 from longlink.permissions import Catalog
-
-
-class EnvironmentMetadata(BaseModel):
-    """Typed metadata for a single environment variable."""
-
-    # Metadata
-    name: str
-    required: bool
-    description: str | None = None
 
 
 class LongLinkMetadata(BaseModel):

@@ -15,15 +15,9 @@ ENV UV_PYTHON_INSTALL_DIR=/opt/python
 RUN uv python install {python_version}
 ENV UV_PYTHON_DOWNLOADS=never
 
-COPY ["pyproject.toml", "uv.lock", "/workspace/"]
-{local_dependency_manifests}
-
 WORKDIR {workdir}
 
 ENV SETUPTOOLS_SCM_PRETEND_VERSION_FOR_LONGLINK={sdk_version}
-
-# Install locked remote dependencies before Solution source changes can invalidate this layer.
-RUN --mount=type=cache,target=/root/.cache/uv uv sync --locked --no-dev --no-install-local
 
 COPY . /workspace
 

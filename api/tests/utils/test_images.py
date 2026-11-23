@@ -4,7 +4,8 @@ from fastapi import HTTPException
 from src.utils import images
 from collections.abc import Callable, AsyncIterator
 from src.models.types import Image
-from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
+from longlink.metadata import EnvironmentMetadata
+from src.models.metadata import LongLinkMetadata
 
 pytestmark = pytest.mark.no_db
 
@@ -21,7 +22,16 @@ def mock_async_client(monkeypatch: pytest.MonkeyPatch, respond: Callable[[httpx2
     "manifest_headers",
     [pytest.param({"Docker-Content-Digest": "sha256:deadbeef"}, id="digest-header"), pytest.param({}, id="digest-reference-fallback")],
 )
-async def test_metadata_fetches_digest_image_references(monkeypatch: pytest.MonkeyPatch, manifest_headers: dict[str, str]) -> None:
+@pytest.mark.parametrize(
+    "environment_label",
+    [
+        pytest.param('[{"name":"API_KEY","required":true}]', id="omitted-description"),
+        pytest.param('[{"name":"API_KEY","required":true,"description":null}]', id="legacy-null-description"),
+    ],
+)
+async def test_metadata_fetches_digest_image_references(
+    monkeypatch: pytest.MonkeyPatch, manifest_headers: dict[str, str], environment_label: str
+) -> None:
     """Inspect public GHCR digest-pinned image references."""
 
     # Arrange
@@ -44,12 +54,7 @@ async def test_metadata_fetches_digest_image_references(monkeypatch: pytest.Monk
         return httpx2.Response(
             200,
             json={
-                "config": {
-                    "Labels": {
-                        "org.opencontainers.image.description": "Demo app",
-                        "dev.longlink.environments": '[{"name":"API_KEY","required":true}]',
-                    }
-                }
+                "config": {"Labels": {"org.opencontainers.image.description": "Demo app", "dev.longlink.environments": environment_label}}
             },
         )
 

@@ -5,7 +5,8 @@ from fastapi import HTTPException
 from factories import create_organization
 from src.utils import images
 from src.models.types import Image
-from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
+from longlink.metadata import EnvironmentMetadata
+from src.models.metadata import LongLinkMetadata
 from src.database.models.users import User
 from src.database.models.organizations import Organization
 

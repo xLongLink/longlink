@@ -16,8 +16,9 @@ from sqlalchemy.orm import Mapper, selectinload
 from src.environments import env
 from src.models.roles import OrganizationRoles
 from src.models.types import Image
+from longlink.metadata import EnvironmentMetadata
 from sqlalchemy.engine import Connection
-from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
+from src.models.metadata import LongLinkMetadata
 from src.models.statuses import Status
 from longlink.permissions import Catalog
 from src.database.session import session_scope

@@ -1,3 +1,4 @@
+import jwt
 import httpx2
 import pytest
 import asyncio
@@ -20,7 +21,11 @@ def identity_headers(user_id: UUID) -> dict[str, str]:
     """Build a current Platform identity assertion for middleware admission."""
 
     return {
-        "x-longlink-identity": identity.create_identity_token(User(id=user_id, name="Test User", email="test@example.com"), IDENTITY_SECRET)
+        "x-longlink-identity": identity.create_identity_token(
+            User(id=user_id, name="Test User", email="test@example.com"),
+            IDENTITY_SECRET,
+            permissions.Access(catalog="a" * 64, endpoints=[]),
+        )
     }
 
 
@@ -137,6 +142,9 @@ def test_production_context_rejects_signed_identity_without_endpoint_permissions
 
     # Arrange
     headers = identity_headers(UUID(int=1))
+    payload = jwt.decode(headers["x-longlink-identity"], options={"verify_signature": False})
+    del payload["access"]
+    headers["x-longlink-identity"] = jwt.encode(payload, IDENTITY_SECRET, algorithm=identity.IDENTITY_TOKEN_ALGORITHM)
 
     # Act
     response = production_client.get("/views.json", headers=headers)

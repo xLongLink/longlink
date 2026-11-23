@@ -150,7 +150,7 @@ def test_read_env_spec_emits_supported_environment_metadata(tmp_path: Path) -> N
     env_spec = build.read_env_spec(tmp_path, build.read_pyproject(tmp_path))
 
     # Assert
-    assert env_spec == [
+    assert [environment.model_dump(exclude_none=True) for environment in env_spec] == [
         {"name": "LONG_API_KEY", "required": False, "description": "API key"},
         {"name": "LONG_TOKEN", "required": False},
         {"name": "PORT", "required": False},
@@ -178,7 +178,7 @@ def test_read_env_spec_reads_package_exported_model(tmp_path: Path, module_name:
     metadata = build.read_env_spec(tmp_path, config)
 
     # Assert
-    assert metadata == [{"name": "TOKEN", "required": True}]
+    assert [environment.model_dump(exclude_none=True) for environment in metadata] == [{"name": "TOKEN", "required": True}]
 
 
 @pytest.mark.parametrize("module_name", ["missing_settings", "missing_settings.envs", "settings.missing"])
@@ -310,7 +310,7 @@ def test_read_env_spec_isolates_solution_state_and_preserves_output(
             build.read_env_spec(tmp_path, config)
     else:
         metadata = build.read_env_spec(tmp_path, config)
-        assert metadata == [{"name": "TOKEN", "required": True}]
+        assert [environment.model_dump(exclude_none=True) for environment in metadata] == [{"name": "TOKEN", "required": True}]
 
     # Assert
     output = capsys.readouterr()
@@ -338,11 +338,22 @@ def test_read_env_spec_reads_each_solution_without_cached_modules(tmp_path: Path
     second = build.read_env_spec(projects[1], config)
 
     # Assert
-    assert first == [{"name": "FIRST", "required": True}]
-    assert second == [{"name": "SECOND", "required": True}]
+    assert [environment.model_dump(exclude_none=True) for environment in first] == [{"name": "FIRST", "required": True}]
+    assert [environment.model_dump(exclude_none=True) for environment in second] == [{"name": "SECOND", "required": True}]
 
 
-@pytest.mark.parametrize("response", [b"not-json", b'{"unexpected":"format"}'], ids=["invalid-json", "invalid-schema"])
+@pytest.mark.parametrize(
+    "response",
+    [
+        pytest.param(b"not-json", id="invalid-json"),
+        pytest.param(b'{"unexpected":"format"}', id="invalid-schema"),
+        pytest.param(b'[{"name":42,"required":true}]', id="non-string-name"),
+        pytest.param(b'[{"name":"TOKEN","required":"true"}]', id="non-boolean-required"),
+        pytest.param(b'[{"name":"TOKEN","required":true,"description":42}]', id="non-string-description"),
+        pytest.param(b'[{"name":"TOKEN","required":true,"description":null}]', id="null-description"),
+        pytest.param(b'[{"name":"TOKEN"}]', id="missing-required"),
+    ],
+)
 def test_read_env_spec_rejects_malformed_child_response(build_project: Path, monkeypatch: pytest.MonkeyPatch, response: bytes) -> None:
     """Reject corrupted subprocess responses rather than using them as image labels."""
 
@@ -425,7 +436,9 @@ def test_build_solution_generates_docker_artifacts_from_project_metadata(chdir_p
     # Assert
     dockerfile = build_context.joinpath("Dockerfile").read_text(encoding="utf-8")
     assert "WORKDIR /workspace\n" in dockerfile
-    assert 'COPY ["pyproject.toml", "uv.lock", "/workspace/"]\n' in dockerfile
+    assert dockerfile.index("COPY . /workspace\n") < dockerfile.index("uv sync --locked --no-dev\n")
+    assert dockerfile.count("uv sync ") == 1
+    assert "USER 10001:10001\n" in dockerfile
     assert 'ENV SETUPTOOLS_SCM_PRETEND_VERSION_FOR_LONGLINK="0.0.0"' in dockerfile
     assert 'LABEL org.opencontainers.image.description="Demo Solution"' in dockerfile
     assert 'LABEL dev.longlink.environments="[{\\"name\\":\\"API_KEY\\",\\"required\\":true}]"' in dockerfile
@@ -743,28 +756,13 @@ def test_build_solution_preserves_workspace_manifests_without_unrelated_sources(
 
     # Assert
     dockerfile = context.joinpath("Dockerfile").read_text(encoding="utf-8")
-    dependency_layer = dockerfile.split("COPY . /workspace", maxsplit=1)[0]
-    copies = [
-        [shlex.split(argument)[0] for argument in json.loads(line.removeprefix("COPY "))]
-        for line in dependency_layer.splitlines()
-        if line.startswith("COPY [")
-    ]
-    assert ["pyproject.toml", "uv.lock", "/workspace/"] in copies
-    assert f"{member_directories['solution']}/uv.lock" not in dockerfile
     assert 'ENV PATH="/workspace/.venv/bin:$PATH"' in dockerfile
 
     # Both image stages use the selected workspace member as their working directory.
     workdirs = [shlex.split(line.removeprefix("WORKDIR ")) for line in dockerfile.splitlines() if line.startswith("WORKDIR ")]
     assert workdirs == [[f"/workspace/{member_directories['solution']}"]] * 2
     for name in member_directories.values():
-        assert context.joinpath(name, "pyproject.toml").is_file()
-        source, destination = next(arguments for arguments in copies if arguments[-1] == f"/workspace/{name}/pyproject.toml")
-        assert source.replace(r"[\\]", "\\") == f"{name}/pyproject.toml"
-        assert (
-            context.joinpath(destination.removeprefix("/workspace/")).read_bytes()
-            # Docker's manifest layer must contain the exact selected dependency metadata.
-            == workspace.joinpath(name, "pyproject.toml").read_bytes()
-        )
+        assert context.joinpath(name, "pyproject.toml").read_bytes() == workspace.joinpath(name, "pyproject.toml").read_bytes()
     assert context.joinpath("uv.lock").read_text(encoding="utf-8") == "workspace lock"
     assert context.joinpath(member_directories["shared"], "source.py").exists() is shared_source_present
     assert not context.joinpath(member_directories["unrelated"], "source.py").exists()
@@ -1087,7 +1085,7 @@ def test_generated_python_matches_inspector_and_is_available_in_uv_catalog(build
     )
     downloads = json.loads(result.stdout)
     subprocess.run(
-        ["uv", "sync", "--project", str(context), "--python", python_version, "--locked", "--no-dev", "--no-install-local", "--offline"],
+        ["uv", "sync", "--project", str(context), "--python", python_version, "--locked", "--no-dev", "--offline"],
         capture_output=True,
         text=True,
         check=True,
@@ -1119,7 +1117,7 @@ def run_docker(docker: str, *arguments: str, check: bool = True, timeout: int = 
 
 @pytest.mark.integration
 @pytest.mark.skipif(os.environ.get("LONGLINK_DOCKER_TESTS") != "1", reason="Set LONGLINK_DOCKER_TESTS=1 to use real Docker")
-def test_generated_manifest_layer_preserves_literal_workspace_paths(tmp_path: Path) -> None:
+def test_generated_context_copy_preserves_literal_workspace_paths(tmp_path: Path) -> None:
     """Build raw generated COPY and WORKDIR instructions and inspect the stopped image."""
 
     # Require a functioning Docker installation only after explicit opt-in.
@@ -1160,25 +1158,23 @@ def test_generated_manifest_layer_preserves_literal_workspace_paths(tmp_path: Pa
     shared.joinpath("source.py").write_text("VALUE = 1\n", encoding="utf-8")
     unrelated.joinpath("private.txt").write_text("private unrelated source\n", encoding="utf-8")
 
-    # Generate the actual context and retain manifest instructions verbatim, not reconstructed arguments.
+    # Generate the actual context and retain copy instructions verbatim, not reconstructed arguments.
     context = tmp_path / "context"
     metadata = build.read_pyproject(solution)
     build.build_solution(solution, context, pyproject_data=metadata)
     assert not context.joinpath("unrelated", "private.txt").exists()
     assert context.joinpath("shared", "source.py").is_file()
     generated_lines = context.joinpath("Dockerfile").read_text(encoding="utf-8").splitlines()
-    manifest_instructions: list[str] = []
+    context_instructions: list[str] = []
     for line in generated_lines:
-        # Preserve only manifest-layer instructions for the dependency-cache probe.
-        if line.startswith(("COPY [", "WORKDIR ")):
-            manifest_instructions.append(line)
-        if line.startswith("WORKDIR "):
+        # Exercise the generated context copy without downloading an image or dependencies.
+        if line.startswith(("COPY . ", "WORKDIR ")):
+            context_instructions.append(line)
+        if line.startswith("COPY . "):
             break
-    assert sum(line.startswith("COPY [") for line in manifest_instructions) == 4
-    assert manifest_instructions[-1].startswith("WORKDIR ")
 
-    # Build only the generated manifest layer to inspect its actual exported files.
-    context.joinpath("Dockerfile").write_text("FROM scratch\n" + "\n".join(manifest_instructions) + "\n", encoding="utf-8")
+    # Build only the generated context layer to inspect its actual exported files.
+    context.joinpath("Dockerfile").write_text("FROM scratch\n" + "\n".join(context_instructions) + "\n", encoding="utf-8")
 
     # Give every resource a unique known name so even failed build/create attempts can be cleaned up.
     resource_id = uuid.uuid4().hex
@@ -1207,13 +1203,19 @@ def test_generated_manifest_layer_preserves_literal_workspace_paths(tmp_path: Pa
                     exported_files[member.name] = contents.read()
 
         # Compare actual filesystem paths and bytes, without repeating production quoting logic.
-        assert exported_files == {
+        expected_files = {
             "workspace/pyproject.toml": workspace.joinpath("pyproject.toml").read_bytes(),
             "workspace/uv.lock": b"authoritative workspace lock\n",
             f"workspace/{solution_name}/pyproject.toml": solution.joinpath("pyproject.toml").read_bytes(),
             "workspace/shared/pyproject.toml": shared.joinpath("pyproject.toml").read_bytes(),
             "workspace/unrelated/pyproject.toml": unrelated.joinpath("pyproject.toml").read_bytes(),
+            "workspace/shared/source.py": b"VALUE = 1\n",
         }
+        assert expected_files.items() <= exported_files.items()
+        assert f"workspace/{solution_name}/main.py" in exported_files
+        assert "workspace/unrelated/private.txt" not in exported_files
+        assert "workspace/Dockerfile" not in exported_files
+        assert "workspace/.dockerignore" not in exported_files
     finally:
         # Remove only this test's resources, including names allocated by unsuccessful Docker commands.
         try:
