@@ -1,10 +1,10 @@
 import { z } from 'zod';
 import * as React from 'react';
 import { transform } from 'sucrase';
+import * as components from './index';
 import { CircleX } from 'lucide-react';
 import { createRoot } from 'react-dom/client';
 import { ReportedError } from '@/lib/reported';
-import * as components from '@/components/longlink';
 import { ErrorBoundary } from 'react-error-boundary';
 import { Spinner } from '@/components/shadcn/spinner';
 import { appearanceSchema, type Appearance } from '@/lib/appearance';
