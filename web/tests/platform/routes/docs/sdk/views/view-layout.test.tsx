@@ -33,17 +33,13 @@ it('documents every public Dropdown component under the Dropdown reference', () 
     expect(missing).toEqual([]);
 });
 
-it('switches between the example and authored companion references without merging published properties', async () => {
+it('switches to the shared reference without losing published props, descriptions, or guidance', async () => {
     const user = userEvent.setup();
 
     await withMounted(
         <ViewLayout
             name="Button"
-            properties={[
-                { name: 'size', type: 'AuthoredButtonSize' },
-                { name: 'ButtonGroup.orientation', type: 'AuthoredOrientation' },
-                { name: 'ButtonGroupSeparator.orientation', type: 'AuthoredSeparatorOrientation' }
-            ]}
+            relatedComponents={['ButtonGroup']}
             example={{ title: 'Plain card', code: '<Card />', preview: <p>Order details</p> }}
         />,
         async (output) => {
@@ -54,20 +50,16 @@ it('switches between the example and authored companion references without mergi
             expect(output.querySelector('table')).toBeNull();
             await act(async () => user.click(propertiesTab));
             expect(output.textContent).not.toContain('Order details');
-            expect(Array.from(output.querySelectorAll('table'), (table) => table.getAttribute('aria-label'))).toEqual([
-                'Button properties',
-                'ButtonGroup properties',
-                'ButtonGroupSeparator properties'
-            ]);
-            expect(
-                Array.from(output.querySelectorAll('tbody tr'), (row) =>
-                    Array.from(row.querySelectorAll('td'), (cell) => cell.textContent)
-                )
-            ).toEqual([
-                ['size', 'AuthoredButtonSize', '"default"'],
-                ['orientation', 'AuthoredOrientation', '"horizontal"'],
-                ['orientation', 'AuthoredSeparatorOrientation', '"vertical"']
-            ]);
+            expect(output.querySelector('table')?.getAttribute('aria-label')).toBe('Button properties');
+            expect(output.textContent).toContain('nativeButton');
+            expect(output.textContent).toContain('Set false when render produces a non-button element');
+            expect(output.textContent).toContain('Manage asynchronous pending state and error feedback in the View.');
+            const labelReference = output.querySelector('table[aria-label="ButtonGroupText properties"]');
+            expect(labelReference?.textContent).toContain('render');
+            expect(labelReference?.textContent).toContain('Replaces the default div');
+            const separatorReference = output.querySelector('table[aria-label="ButtonGroupSeparator properties"]');
+            expect(separatorReference?.textContent).toContain('orientation');
+            expect(separatorReference?.textContent).toContain('"vertical"');
             await act(async () => user.click(exampleTab));
             expect(output.querySelector('[role="tabpanel"]')?.textContent).toContain('Order details');
             expect(output.querySelector('table')).toBeNull();

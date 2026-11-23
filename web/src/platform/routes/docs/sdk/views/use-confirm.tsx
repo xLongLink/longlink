@@ -22,11 +22,14 @@ export default function UseConfirmPage() {
             <CodeBlock
                 language="jsx"
                 code={`export default function DeleteItem({ params }) {
+  const [deleted, setDeleted] = useState(false);
   const confirmation = useConfirm();
   const form = useForm(\`/api/items/\${params.item}\`, {
     method: 'DELETE',
-    onSuccess: () => navigate('/items')
+    onSuccess: () => setDeleted(true)
   });
+
+  if (deleted) return <Link href="/items">Back to items</Link>;
 
   return (
     <>

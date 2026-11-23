@@ -12,21 +12,9 @@ import viewCatalog from '../../../../../../../sdk/longlink/.static/jsx/component
 import { CodeBlock, CodeBlockCopyButton } from '@/components/reui/code-block/code-block';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
 
-type ViewProperty = { name: string; type: string };
+type ViewProperty = { name: string; type: string; description?: string; default?: unknown };
 
 type ViewExample = { title: string; code: string; preview: ReactNode };
-
-const propertyDefaults = new Map(
-    viewCatalog.components.flatMap((entry) =>
-        (entry.properties ?? []).map(
-            (property) =>
-                [
-                    property.name.includes('.') ? property.name : `${entry.name}.${property.name}`,
-                    'default' in property ? property.default : undefined
-                ] as const
-        )
-    )
-);
 
 /** Collapses MapLibre's attribution once, after the preview's compact control becomes available. */
 function collapseMapAttribution(preview: HTMLDivElement | null) {
@@ -127,29 +115,26 @@ export default function ViewLayout({
     if (!component) throw new Error(`Missing View documentation: ${name}`);
     const runtime = component.category === 'Runtime';
 
-    // Read published defaults without duplicating component configuration in each documentation page.
     const catalogComponent = viewCatalog.components.find((entry) => entry.name === name);
 
     // Prepare property tables for the reference tab.
     const groups = new Map<string, ViewProperty[]>();
 
     if (!runtime) {
-        // Group authored overrides or published properties by component.
-        for (const property of properties ?? catalogComponent?.properties ?? []) {
-            const separator = property.name.indexOf('.');
-            const group = separator < 0 ? name : property.name.slice(0, separator);
+        for (const referenceName of [name, ...(relatedComponents ?? [])]) {
+            const reference = viewCatalog.components.find((entry) => entry.name === referenceName);
+            const referenceProperties = reference?.properties ?? (referenceName === name ? properties : undefined);
+            for (const property of referenceProperties ?? []) {
+                const separator = /^[A-Z]/.test(property.name) ? property.name.indexOf('.') : -1;
+                const group = separator < 0 ? referenceName : property.name.slice(0, separator);
 
-            const row = { ...property, name: separator < 0 ? property.name : property.name.slice(separator + 1) };
+                const row = { ...property, name: separator < 0 ? property.name : property.name.slice(separator + 1) };
 
-            const properties = groups.get(group);
+                const properties = groups.get(group);
 
-            if (properties) properties.push(row);
-            else groups.set(group, [row]);
-        }
-
-        for (const relatedName of relatedComponents ?? []) {
-            const related = viewCatalog.components.find((entry) => entry.name === relatedName);
-            if (related?.properties) groups.set(relatedName, related.properties);
+                if (properties) properties.push(row);
+                else groups.set(group, [row]);
+            }
         }
     }
 
@@ -195,6 +180,18 @@ export default function ViewLayout({
                             {children}
                         </TabsContent>
                         <TabsContent value="properties" className="flex flex-col gap-5">
+                            {catalogComponent && 'guidance' in catalogComponent && <p>{catalogComponent.guidance}</p>}
+                            {relatedComponents?.map((relatedName) => {
+                                const related = viewCatalog.components.find((entry) => entry.name === relatedName);
+                                return related && 'guidance' in related ? (
+                                    <p key={relatedName}>{related.guidance}</p>
+                                ) : null;
+                            })}
+                            {catalogComponent && 'reference' in catalogComponent && (
+                                <a href={catalogComponent.reference} className="underline underline-offset-4">
+                                    {component.label} upstream reference
+                                </a>
+                            )}
                             {[...groups].map(([group, properties]) => (
                                 <div key={group} className="flex flex-col gap-3">
                                     {groups.size > 1 && <h3 className="text-sm font-medium">{group}</h3>}
@@ -208,12 +205,17 @@ export default function ViewLayout({
                                         </TableHeader>
                                         <TableBody>
                                             {properties.map((row) => {
-                                                const defaultValue = propertyDefaults.get(`${group}.${row.name}`);
+                                                const defaultValue = row.default;
 
                                                 return (
                                                     <TableRow key={row.name}>
                                                         <TableCell>
                                                             <InlineCode>{row.name}</InlineCode>
+                                                            {row.description && (
+                                                                <p className="mt-2 text-sm text-muted-foreground">
+                                                                    {row.description}
+                                                                </p>
+                                                            )}
                                                         </TableCell>
                                                         <TableCell>
                                                             <InlineCode>{row.type}</InlineCode>

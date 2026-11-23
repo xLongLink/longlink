@@ -1,0 +1,14 @@
+{
+    "compilerOptions": {
+        "noEmit": true,
+        "strict": true,
+        "skipLibCheck": false,
+        "jsx": "preserve",
+        "target": "ES2022",
+        "module": "ESNext",
+        "moduleResolution": "bundler",
+        "lib": ["ES2022", "DOM", "DOM.Iterable", "ESNext.Disposable"],
+        "types": []
+    },
+    "files": ["frontend.tsx"]
+}

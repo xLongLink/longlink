@@ -7,25 +7,7 @@ export default function ButtonsPage() {
     return (
         <ViewLayout
             name="Button"
-            properties={[
-                { name: 'children', type: 'ReactNode' },
-                { name: 'variant', type: '"primary" | "outline" | "secondary" | "ghost" | "destructive" | "link"' },
-                { name: 'size', type: '"xs" | "sm" | "default" | "lg" | "icon" | "icon-xs" | "icon-sm" | "icon-lg"' },
-                { name: 'type', type: '"button" | "submit" | "reset"' },
-                { name: 'name', type: 'string' },
-                { name: 'value', type: 'string | number | readonly string[]' },
-                { name: 'form', type: 'string' },
-                { name: 'disabled', type: 'boolean' },
-                { name: 'focusableWhenDisabled', type: 'boolean' },
-                { name: 'onClick', type: '(event: React.MouseEvent<HTMLButtonElement>) => void' },
-                { name: 'aria-label', type: 'string' },
-                { name: 'ButtonGroup.orientation', type: '"horizontal" | "vertical"' },
-                { name: 'ButtonGroup.aria-label', type: 'string' },
-                { name: 'ButtonGroup.children', type: 'ReactNode' },
-                { name: 'ButtonGroupText.children', type: 'ReactNode' },
-                { name: 'ButtonGroupText.render', type: 'ReactElement | ((props, state) => ReactElement)' },
-                { name: 'ButtonGroupSeparator.orientation', type: '"horizontal" | "vertical"' }
-            ]}
+            relatedComponents={['ButtonGroup']}
             example={{
                 title: 'Button',
                 preview: <ButtonExample />,

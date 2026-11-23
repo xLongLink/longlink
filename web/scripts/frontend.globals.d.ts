@@ -15,13 +15,15 @@ type ViewMouseEvent = Omit<MouseEvent, 'currentTarget'> & { currentTarget: HTMLE
 declare namespace React {
     namespace JSX {
         type Element = NativeFrontend.FrontendElement;
-        type ElementType = NativeFrontend.FrontendElementType | typeof Text | typeof Map;
+        type ElementType = NativeFrontend.FrontendElementType | typeof Text | typeof Image | typeof Map;
         // These components share names with standard browser globals.
         type LibraryManagedAttributes<Component, Props> = Component extends typeof Text
             ? Parameters<typeof NativeFrontend.Text>[0]
-            : Component extends typeof Map
-              ? Parameters<typeof NativeFrontend.Map>[0]
-              : Props;
+            : Component extends typeof Image
+              ? Parameters<typeof NativeFrontend.Image>[0]
+              : Component extends typeof Map
+                ? Parameters<typeof NativeFrontend.Map>[0]
+                : Props;
 
         interface ElementChildrenAttribute {
             children: unknown;
@@ -32,9 +34,3 @@ declare namespace React {
         }
     }
 }
-
-/** @category Display */
-declare function Text(props: Parameters<typeof NativeFrontend.Text>[0]): React.JSX.Element;
-
-/** @category Display */
-declare function Image(props: Parameters<typeof NativeFrontend.Image>[0]): React.JSX.Element;

@@ -56,6 +56,9 @@
       },
     },
   },
+  "patchedDependencies": {
+    "dts-bundle-generator@10.0.0": "patches/dts-bundle-generator@10.0.0.patch",
+  },
   "overrides": {
     "vite": "npm:@voidzero-dev/vite-plus-core@1.6.0",
   },

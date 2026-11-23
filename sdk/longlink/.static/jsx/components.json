@@ -37,6 +37,122 @@
                     "description": "Receives the original domain record."
                 },
                 {
+                    "name": "onCellsChange",
+                    "type": "(details: DataGridCellsChangeDetails<T>) => void",
+                    "description": "Receives edit, paste, cut, clear, and fill batches. Apply accepted changes to caller-owned data; without this handler writes are no-ops."
+                },
+                {
+                    "name": "onCellEditRequest",
+                    "type": "(request: DataGridCellEditRequest<T>) => void",
+                    "description": "Opens a caller-owned editor from Enter, F2, or typing."
+                },
+                {
+                    "name": "onCellSelectionChange",
+                    "type": "(snapshot: DataGridCellSelectionSnapshot) => void",
+                    "description": "Receives resolved focus and cell-range changes."
+                },
+                {
+                    "name": "onCellsCopy",
+                    "type": "(details: DataGridCopyDetails) => void",
+                    "description": "Called after copying or cutting to the clipboard."
+                },
+                {
+                    "name": "onRowCreate",
+                    "type": "() => void",
+                    "description": "Presence adds an Add row action; caller owns creation and persistence."
+                },
+                { "name": "rowCreateLabel", "type": "ReactNode", "default": "Add row" },
+                {
+                    "name": "appendRow",
+                    "type": "ReactNode",
+                    "description": "Draft row after data rows. Supply a tr with cells; it is excluded from data and pagination."
+                },
+                {
+                    "name": "getRowStatus",
+                    "type": "(row: T) => DataGridRowStatus | undefined",
+                    "description": "Optional new, dirty, or deleted indication; does not mutate data."
+                },
+                {
+                    "name": "getCellStatus",
+                    "type": "(row: T, columnId: string) => DataGridCellStatus | undefined",
+                    "description": "Optional dirty or invalid cell indication."
+                },
+                { "name": "fetchingMoreMessage", "type": "ReactNode" },
+                { "name": "allRowsLoadedMessage", "type": "ReactNode" },
+                {
+                    "name": "tableLayout.cellSelection",
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enables cell focus, ranges, keyboard navigation, and clipboard operations."
+                },
+                { "name": "tableLayout.cellSelectionMode", "type": "\"single\" | \"range\"", "default": "range" },
+                {
+                    "name": "tableLayout.cellFillHandle",
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Requires cellSelection; writes through onCellsChange."
+                },
+                { "name": "tableLayout.cellEditMode", "type": "\"dblclick\" | \"click\"", "default": "dblclick" },
+                {
+                    "name": "tableLayout.cellEditEnterAdvance",
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enter commits and moves down; Shift+Enter moves up. Tab always commits and moves across."
+                },
+                {
+                    "name": "tableLayout.cellFillHandleVariant",
+                    "type": "\"dot\" | \"ring\" | \"square\"",
+                    "default": "dot"
+                },
+                {
+                    "name": "DataGridColumnMeta.headerTitle",
+                    "type": "string",
+                    "description": "Label for column headers and visibility controls."
+                },
+                {
+                    "name": "DataGridColumnMeta.skeleton",
+                    "type": "ReactNode",
+                    "description": "Column-specific loading placeholder."
+                },
+                { "name": "DataGridColumnMeta.expandedContent", "type": "(row: T) => ReactNode" },
+                { "name": "DataGridColumnMeta.autoSize", "type": "boolean" },
+                {
+                    "name": "DataGridColumnMeta.headerColSpan",
+                    "type": "number",
+                    "description": "Number of adjacent sibling leaf columns covered by this header."
+                },
+                {
+                    "name": "DataGridColumnMeta.fillWidth",
+                    "type": "boolean",
+                    "description": "Under columnsResizable, one column may absorb remaining width; manual resizing is visually inert while free space remains."
+                },
+                {
+                    "name": "DataGridColumnMeta.cellEdit",
+                    "type": "DataGridColumnCellEdit<T>",
+                    "description": "Column write contract on columnDef.meta; its presence marks the column writable. All writes still require onCellsChange."
+                },
+                {
+                    "name": "DataGridColumnCellEdit.editable",
+                    "type": "boolean | ((row: T) => boolean)",
+                    "default": true
+                },
+                {
+                    "name": "DataGridColumnCellEdit.parse",
+                    "type": "(raw: string, row: T) => unknown",
+                    "description": "Return undefined to reject a write. Without parsing, raw strings pass through unchanged."
+                },
+                {
+                    "name": "DataGridColumnCellEdit.format",
+                    "type": "(value: unknown, row: T) => string",
+                    "description": "Clipboard output; defaults to String(value ?? '')."
+                },
+                { "name": "DataGridColumnCellEdit.clearValue", "type": "unknown", "default": null },
+                {
+                    "name": "DataGridColumnCellEdit.control",
+                    "type": "\"text\" | \"textarea\"",
+                    "description": "Opts into the built-in editor; otherwise use onCellEditRequest or a custom cell renderer."
+                },
+                {
                     "name": "i18n",
                     "type": "{ labels?: Partial<DataGridI18nLabels> }",
                     "description": "Overrides built-in labels, including accessible names and pagination text."
@@ -44,7 +160,7 @@
                 {
                     "name": "tableLayout",
                     "type": "DataGridProps<F, T>[\"tableLayout\"]",
-                    "description": "Layout and interaction flags such as dense, rowBorder, headerBackground, headerSticky, width, columnsVisibility, columnsResizable, columnsPinnable, and cellSelection. Styling overrides remain internal."
+                    "description": "Layout flags: dense, cellBorder, rowBorder, rowRounded, stripped, headerBackground, footerBackground, headerBorder, headerSticky, width (auto or fixed). Interaction flags: columnsVisibility, columnsResizable, columnsPinnable, columnsMovable, columnsDraggable, rowsDraggable, rowsPinnable, and cell options. Styling overrides remain internal."
                 },
                 {
                     "name": "DataGridContainer.children",
@@ -134,17 +250,179 @@
             "source": "reui",
             "reference": "https://reui.io/docs/components/base/filters",
             "introduction": "Native ReUI filter builder with caller-owned query state.",
-            "guidance": "Initialize with createFilterQuery(). Use flattenFilterConditions(query) for flat conjunctions; callers own query evaluation.",
+            "guidance": "Initialize with createFilterQuery(). Callers own evaluation and persistence. flattenFilterConditions(query) drops group structure; traverse the original query for mixed AND/OR groups. Basic mode displays flat chips and cannot express group structure. Use advanced mode for nested queries. Field IDs must be unique among siblings and full field paths unique.",
             "properties": [
                 {
                     "name": "fields",
                     "type": "FilterField[]",
                     "description": "Caller-defined fields, choices, and operators."
                 },
+                { "name": "query", "type": "FilterQuery", "description": "Controlled filter query." },
+                { "name": "defaultQuery", "type": "FilterQuery", "description": "Initial uncontrolled query." },
                 {
-                    "name": "query / onQueryChange",
-                    "type": "FilterQuery / (query: FilterQuery) => void",
-                    "description": "Controlled filter query."
+                    "name": "onQueryChange",
+                    "type": "(query: FilterQuery, details: FilterChangeDetails) => void",
+                    "description": "Receives the proposed query and action details."
+                },
+                {
+                    "name": "onBeforeQueryChange",
+                    "type": "(query: FilterQuery, details: FilterChangeDetails) => boolean | void",
+                    "description": "Return false to veto a UI change; disabled and read-only controls do not call it."
+                },
+                {
+                    "name": "labels",
+                    "type": "Partial<FilterLabels>",
+                    "description": "Overrides builder and accessible labels."
+                },
+                {
+                    "name": "operatorLabels",
+                    "type": "FilterOperatorLabels",
+                    "description": "Overrides operator wording independently of builder labels."
+                },
+                {
+                    "name": "editors",
+                    "type": "FilterEditorRegistry",
+                    "description": "Extra or replacement value editors selected by field.editor."
+                },
+                { "name": "variant", "type": "\"basic\" | \"advanced\"", "default": "basic" },
+                { "name": "advancedMode", "type": "\"popover\" | \"inline\"", "default": "popover" },
+                { "name": "advancedAlign", "type": "\"start\" | \"center\" | \"end\"", "default": "start" },
+                {
+                    "name": "reorderable",
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Allows advanced rows to move by drag or Alt+Arrow."
+                },
+                { "name": "size", "type": "\"sm\" | \"default\"", "default": "default" },
+                { "name": "disabled", "type": "boolean", "default": false },
+                { "name": "readOnly", "type": "boolean", "default": false },
+                {
+                    "name": "onConvertToAdvanced",
+                    "type": "() => void",
+                    "description": "Presence enables the chip conversion action; caller changes variant."
+                },
+                {
+                    "name": "pathCollapse",
+                    "type": "FilterPathCollapse",
+                    "default": "none",
+                    "description": "Shortens nested field paths visually while retaining the full accessible name."
+                },
+                {
+                    "name": "maxPathSegments",
+                    "type": "number",
+                    "default": 3,
+                    "description": "Visible segment limit; ignored when pathCollapse is none."
+                },
+                { "name": "trigger", "type": "ReactNode", "description": "Replaces the Add filter button." },
+                { "name": "showClear", "type": "boolean", "default": false },
+                { "name": "renderValue", "type": "(context: FilterValueDisplayContext) => ReactNode" },
+                { "name": "renderChip", "type": "(rule: FilterRule) => ReactNode" },
+                {
+                    "name": "renderEmpty",
+                    "type": "(context: FilterEmptyStateContext) => ReactNode",
+                    "description": "Advanced empty state; return null to omit it."
+                },
+                { "name": "children", "type": "ReactNode" },
+                {
+                    "name": "FilterField.id / label",
+                    "type": "string",
+                    "description": "Required stable ID and display label. IDs must be unique among siblings."
+                },
+                {
+                    "name": "FilterField.icon / description / keywords / count",
+                    "type": "ReactNode / string / string[] / number",
+                    "description": "Field picker metadata. Count defaults to known children."
+                },
+                {
+                    "name": "FilterField.fields",
+                    "type": "FilterField[]",
+                    "description": "Nested branch fields; full paths must be unique."
+                },
+                {
+                    "name": "FilterField.selectable / disabled",
+                    "type": "boolean",
+                    "description": "selectable makes a branch itself filterable; leaves are always selectable."
+                },
+                {
+                    "name": "FilterField.type",
+                    "type": "\"text\" | \"number\" | \"range\" | \"select\" | \"multiselect\" | \"boolean\""
+                },
+                {
+                    "name": "FilterField.options",
+                    "type": "FilterOption[]",
+                    "description": "Static choices; also seeds the async option cache."
+                },
+                {
+                    "name": "FilterField.loadOptions",
+                    "type": "(query, { signal, cursor }) => FilterOption[] | Promise<FilterOption[] | FilterLoadResult>",
+                    "description": "Load paged choices. Honor cancellation. Results include items, optional nextCursor, and optional hasMore."
+                },
+                {
+                    "name": "FilterField.resolveValues",
+                    "type": "(values: string[]) => FilterOption[] | Promise<FilterOption[]>",
+                    "description": "Resolve restored values not returned by loadOptions."
+                },
+                {
+                    "name": "FilterField.operators",
+                    "type": "FilterOperator[] | ((field) => FilterOperator[])",
+                    "description": "Overrides operators for the field type."
+                },
+                {
+                    "name": "FilterField.defaultOperator",
+                    "type": "string",
+                    "description": "Fallback when changing an existing rule's field; does not preselect an operator on creation."
+                },
+                {
+                    "name": "FilterField.editor",
+                    "type": "FilterEditorRef",
+                    "description": "Overrides the editor selected by type."
+                },
+                {
+                    "name": "FilterField.renderValue / valueText",
+                    "type": "(context: FilterValueDisplayContext) => ReactNode / string",
+                    "description": "Visual value and plain-text accessible value."
+                },
+                {
+                    "name": "FilterField.placeholder",
+                    "type": "string",
+                    "description": "Editor or option search placeholder."
+                },
+                { "name": "FilterField.searchable", "type": "boolean", "default": true },
+                { "name": "FilterField.pinSelected", "type": "boolean", "default": false },
+                {
+                    "name": "FilterField.sortSelected",
+                    "type": "\"none\" | \"label\" | \"snapshot\"",
+                    "default": "none",
+                    "description": "snapshot freezes the selected partition while the menu is open; without pinSelected it preserves declaration order."
+                },
+                {
+                    "name": "FilterField.validate",
+                    "type": "(context: FilterValidateContext) => string | null | undefined | false",
+                    "description": "Return an error message. Runs after built-in checks on committed values; omitted for valueless operators."
+                },
+                {
+                    "name": "FilterField.column / data",
+                    "type": "string / unknown",
+                    "description": "Caller-owned storage column and payload; not interpreted by Filters."
+                },
+                {
+                    "name": "FilterOperator.value / label / arity / inverse / hidden",
+                    "type": "string / string / FilterOperatorArity / string / boolean",
+                    "description": "Operator ID and label are required. Arity defaults to one; inverse defines negation; hidden operators remain valid for restored queries."
+                },
+                {
+                    "name": "FilterOption.value / label",
+                    "type": "string",
+                    "description": "Required stable option value and display label."
+                },
+                {
+                    "name": "FilterOption.icon / description / keywords / disabled / data",
+                    "type": "ReactNode / string / string[] / boolean / unknown"
+                },
+                {
+                    "name": "FilterOption.exclusive",
+                    "type": "boolean",
+                    "description": "Selecting clears other choices and vice versa. The value must be resolvable, not available only in an unfetched page."
                 }
             ]
         },
@@ -278,15 +556,28 @@
             "justification": "Preserves native mapcn composition while containing WebGL initialization failures and retry within the map region.",
             "reference": "https://www.mapcn.dev/docs/basic-map",
             "introduction": "Native mapcn map container for composable geographic layers.",
-            "guidance": "Place Map inside a Box with an explicit height. Use blank for a transparent basemap with no street tiles, then compose MapGeoJSON inside it. The map follows the UI theme automatically. Coordinates use longitude, latitude. The bundled worker stays local; external map resources remain limited to the approved CARTO origins.",
+            "guidance": "Place Map inside a Box with an explicit height. Map names the UI component; create JavaScript collections with new globalThis.Map(). Use blank for a transparent basemap with no street tiles, then compose MapGeoJSON inside it. The map follows the UI theme automatically. Coordinates use longitude, latitude. Inherits MapLibre MapOptions except container and style: https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapOptions/. Styling props and theme are not exposed. The bundled worker stays local; external map resources remain limited to the approved CARTO origins.",
             "properties": [
                 { "name": "children", "type": "ReactNode" },
                 { "name": "blank", "type": "boolean", "default": false },
                 { "name": "center", "type": "[number, number]" },
                 { "name": "zoom", "type": "number" },
                 { "name": "projection", "type": "{ type: \"mercator\" | \"globe\" }" },
-                { "name": "viewport", "type": "Partial<MapViewport>" },
-                { "name": "onViewportChange", "type": "(viewport: MapViewport) => void" },
+                {
+                    "name": "viewport",
+                    "type": "Partial<MapViewport>",
+                    "description": "Controlled center [longitude, latitude], zoom, bearing, and pitch. Pair with onViewportChange for controlled camera updates."
+                },
+                {
+                    "name": "onViewportChange",
+                    "type": "(viewport: MapViewport) => void",
+                    "description": "Continuously observes pan, zoom, rotation, and pitch; also usable without viewport."
+                },
+                {
+                    "name": "ref",
+                    "type": "Ref<MapLibreGL.Map>",
+                    "description": "Access to the native MapLibre instance."
+                },
                 { "name": "loading", "type": "boolean", "default": false }
             ]
         },
@@ -867,6 +1158,12 @@
             "guidance": "Manage asynchronous pending state and error feedback in the View. Compose with Link through render and nativeButton={false} for scoped navigation.",
             "properties": [
                 {
+                    "name": "nativeButton",
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Set false when render produces a non-button element such as Link. Native DOM attributes, events, and refs are inherited; className and style are not exposed."
+                },
+                {
                     "name": "children",
                     "type": "ReactNode",
                     "description": "Button content, including text and optional Icon children."
@@ -1037,7 +1334,23 @@
                     "default": "min(560px, calc(100dvh - var(--spacing) * 40))",
                     "description": "Dialog height; use auto to fit content. Ignored when fullscreen."
                 },
-                { "name": "title", "type": "string", "description": "Required visible and accessible dialog title." },
+                {
+                    "name": "title",
+                    "type": "string",
+                    "description": "Required accessible title; visually hidden when showHeader is false."
+                },
+                {
+                    "name": "showHeader",
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Shows title and description; false keeps them available to assistive technology."
+                },
+                {
+                    "name": "bodyPadding",
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Disable for edge-to-edge body content. Scrolling remains owned by the dialog."
+                },
                 { "name": "description", "type": "string", "description": "Optional accessible supporting text." },
                 {
                     "name": "trigger",
@@ -1646,8 +1959,14 @@
                     "type": "string",
                     "description": "Scoped Solution image path, or an image data/blob URL."
                 },
-                { "name": "alt", "type": "string", "description": "Accessible description of the photo." }
+                { "name": "alt", "type": "string", "description": "Accessible description of the photo." },
+                {
+                    "name": "ratio",
+                    "type": "number",
+                    "description": "Optional frame width divided by height; omit to retain intrinsic proportions."
+                }
             ],
+            "guidance": "Accepts native img attributes, events, and ref except srcSet, srcset, children, dangerouslySetInnerHTML, and styling overrides. Use src for scoped Solution paths or image data/blob URLs; external URLs cannot bypass scoped loading.",
             "source": "custom",
             "justification": "Coordinates failed image states and scoped attachment preview capabilities."
         },
@@ -1884,8 +2203,28 @@
             "name": "Select",
             "category": "Form",
             "introduction": "An options-based select with single or multiple string values.",
-            "guidance": "Supply options and optional label, description, and error. Trigger, popup, and option composition are internal. Use multiple with array values and repeated named form entries. Box owns width.",
+            "guidance": "Supply options and optional label, description, and error. Trigger, popup, and option composition are internal. Use multiple with array values and repeated named form entries. Box owns width. Only the listed Base UI Select.Root form and selection props are inherited, plus trigger focus events and refs; not arbitrary root props. Base UI contracts: https://base-ui.com/react/components/select.",
             "properties": [
+                {
+                    "name": "id",
+                    "type": "string",
+                    "description": "Trigger ID; generated when omitted and associated with the field label."
+                },
+                { "name": "form", "type": "string", "description": "Form owner ID for the hidden input." },
+                { "name": "autoComplete", "type": "string" },
+                { "name": "readOnly", "type": "boolean" },
+                { "name": "inputRef", "type": "Ref<HTMLInputElement>", "description": "Hidden form input reference." },
+                { "name": "ref", "type": "Ref<HTMLButtonElement>", "description": "Visible trigger reference." },
+                {
+                    "name": "onBlur / onFocus",
+                    "type": "FocusEventHandler<HTMLButtonElement>",
+                    "description": "Native trigger focus events."
+                },
+                {
+                    "name": "aria-label / aria-labelledby / aria-describedby / aria-invalid",
+                    "type": "ARIA attributes",
+                    "description": "Trigger accessibility attributes; field feedback and labels are associated internally."
+                },
                 { "name": "label", "type": "string" },
                 { "name": "description", "type": "string" },
                 { "name": "error", "type": "string" },

@@ -8,11 +8,6 @@ export default function ImagePage() {
     return (
         <ViewLayout
             name="Image"
-            properties={[
-                { name: 'src', type: 'string' },
-                { name: 'alt', type: 'string' },
-                { name: 'ratio', type: 'number' }
-            ]}
             example={{
                 title: 'Card photo',
                 preview: (
