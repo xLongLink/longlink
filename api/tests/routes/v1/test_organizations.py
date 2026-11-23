@@ -1,5 +1,6 @@
 import pytest
 import aiosmtplib
+from kr8s import NotFoundError
 from uuid import UUID, uuid4
 from httpx2 import AsyncClient
 from datetime import UTC, datetime
@@ -204,8 +205,9 @@ async def test_usage_edit_accepts_database_pools_larger_than_compute_and_files(
     assert response.json()["status"] == "creating"
 
 
+@pytest.mark.parametrize("status", [Status.running, Status.failed])
 async def test_usage_edit_rejects_desired_and_provisioned_database_shrinking(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch, status: Status
 ) -> None:
     """Preserve database capacity even when provisioned PVCs exceed desired state."""
 
@@ -215,7 +217,7 @@ async def test_usage_edit_rejects_desired_and_provisioned_database_shrinking(
         persisted = await session.get(Organization, organization.id)
         assert persisted is not None
         persisted.database_storage_bytes *= 2
-        persisted.status = Status.running
+        persisted.status = status
         persisted.storage_bytes *= 4
         persisted.compute_cpu_millicores *= 2
         await session.commit()
@@ -257,8 +259,12 @@ async def test_usage_edit_rejects_desired_and_provisioned_database_shrinking(
     assert restored.status_code == 409
 
 
+@pytest.mark.parametrize("previously_provisioned", [False, True])
 async def test_usage_edit_preserves_current_files_on_downsize(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
+    previously_provisioned: bool,
 ) -> None:
     """Reject capacity that cannot contain current files and persist a safe downsize."""
 
@@ -268,7 +274,8 @@ async def test_usage_edit_preserves_current_files_on_downsize(
         persisted = await session.get(Organization, organization.id)
         assert persisted is not None
         persisted.storage_bytes *= 4
-        persisted.status = Status.running
+        persisted.status = Status.running if previously_provisioned else Status.failed
+        persisted.provisioned_at = datetime.now(UTC) if previously_provisioned else None
         await session.commit()
     response = await clients[0].get(f"/api/v1/organizations/{organization.id}/usage")
     capacity = {
@@ -284,7 +291,8 @@ async def test_usage_edit_preserves_current_files_on_downsize(
     }
     capacity["storage_bytes"] //= 2
     quota = capacity["storage_bytes"]
-    monkeypatch.setattr(databases, "provisioned_storage_bytes", AsyncMock(return_value=capacity["database_storage_bytes"]))
+    provisioned = AsyncMock(return_value=capacity["database_storage_bytes"])
+    monkeypatch.setattr(databases, "provisioned_storage_bytes", provisioned)
     measurement = AsyncMock(side_effect=[TimeoutError(), quota + 1, quota, quota])
     monkeypatch.setattr(s3.S3, "usage", measurement)
 
@@ -311,8 +319,20 @@ async def test_usage_edit_preserves_current_files_on_downsize(
         await operations.fail(session, operation, "Provider failed")
         await session.commit()
 
-    # Failed reconciliation remains explicitly retryable with the same desired allocation.
+    # Provider outages must not be mistaken for an absent initial database.
+    provisioned.side_effect = TimeoutError()
+    unavailable = await clients[0].patch(f"/api/v1/organizations/{organization.id}/usage", json=capacity)
+    assert unavailable.status_code == 503
+
+    # Only failed initial provisioning may retry without an existing Cluster.
+    provisioned.side_effect = NotFoundError("Database Cluster not found")
     retried = await clients[0].patch(f"/api/v1/organizations/{organization.id}/usage", json=capacity)
+    assert retried.status_code == (503 if previously_provisioned else 200)
+    if previously_provisioned:
+        provisioned.side_effect = None
+        retried = await clients[0].patch(f"/api/v1/organizations/{organization.id}/usage", json=capacity)
+
+    # Failed reconciliation remains explicitly retryable with the same desired allocation.
     assert retried.status_code == 200
     assert retried.json()["status"] == "creating"
 
