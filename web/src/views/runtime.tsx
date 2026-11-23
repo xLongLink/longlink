@@ -29,7 +29,7 @@ import {
     appearanceMessageSchema,
     type AppearanceMessage
 } from './protocol';
-import './runtime.css';
+import '../theme.css';
 
 declare global {
     interface Window {
