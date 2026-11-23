@@ -7,6 +7,7 @@ import { Route, Routes } from 'react-router';
 import { withMounted } from '../../../render';
 import { ApiBoundary } from '@/components/api';
 import { ApiErrorContext } from '@/lib/errors';
+import UserLayout from '@/platform/layouts/user';
 import { useQuery } from '@tanstack/react-query';
 import Page from '@/platform/routes/user/settings';
 import userEvent from '@testing-library/user-event';
@@ -154,7 +155,9 @@ it('saves theme by keyboard without discarding the name draft, then resets the d
                         >
                             <Routes>
                                 <Route element={<Authenticated />}>
-                                    <Route path="/user/settings" element={<Page />} />
+                                    <Route element={<UserLayout />}>
+                                        <Route path="/user/settings" element={<Page />} />
+                                    </Route>
                                 </Route>
                             </Routes>
                         </form>

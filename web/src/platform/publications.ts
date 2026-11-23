@@ -71,7 +71,8 @@ import {
 
 export type PublicationPage = { path: string; label: string; icon: LucideIcon; children?: readonly PublicationPage[] };
 
-type DocumentationSection = { title: string; pages: PublicationPage[]; paths?: readonly string[] };
+type DocumentationPage = PublicationPage & { file: string; index?: true };
+type DocumentationSection = { title: string; pages: PublicationPage[] };
 
 // Keep category navigation and overview headings in the same reading order.
 const categories = [
@@ -192,37 +193,51 @@ export const documentationCategories = categories.map((category) => ({
     components: componentDocumentation.filter((component) => component.category === category.category)
 }));
 
-export const documentationNavigation: Array<{ path: string; label: string; sections: DocumentationSection[] }> = [
+const solutionPages: DocumentationPage[] = [
+    { path: '/docs/sdk', file: './routes/docs/sdk/index.tsx', index: true, label: 'Overview', icon: Package },
+    { path: '/docs/sdk/environments', file: './routes/docs/sdk/environments.tsx', label: 'Environments', icon: Globe },
+    { path: '/docs/sdk/routes', file: './routes/docs/sdk/routes.tsx', label: 'Routes', icon: Waypoints },
+    { path: '/docs/sdk/storage', file: './routes/docs/sdk/storage.tsx', label: 'Storage', icon: HardDrive },
+    { path: '/docs/sdk/database', file: './routes/docs/sdk/database.tsx', label: 'Database', icon: Database },
+    { path: '/docs/sdk/testing', file: './routes/docs/sdk/testing.tsx', label: 'Testing', icon: FlaskConical },
+    { path: '/docs/sdk/building', file: './routes/docs/sdk/building.tsx', label: 'Building', icon: Rocket }
+];
+
+const platformPages: DocumentationPage[] = [
+    { path: '/docs/api', file: './routes/docs/api/index.tsx', index: true, label: 'Overview', icon: ShieldCheck },
     {
-        path: '/docs/sdk',
-        label: 'Solutions',
-        sections: [
-            {
-                title: 'Solutions',
-                pages: [
-                    { path: '/docs/sdk', label: 'Overview', icon: Package },
-                    { path: '/docs/sdk/environments', label: 'Environments', icon: Globe },
-                    { path: '/docs/sdk/routes', label: 'Routes', icon: Waypoints },
-                    { path: '/docs/sdk/storage', label: 'Storage', icon: HardDrive },
-                    { path: '/docs/sdk/database', label: 'Database', icon: Database },
-                    { path: '/docs/sdk/testing', label: 'Testing', icon: FlaskConical },
-                    { path: '/docs/sdk/building', label: 'Building', icon: Rocket }
-                ]
-            }
-        ]
+        path: '/docs/api/organizations',
+        file: './routes/docs/api/organizations.tsx',
+        label: 'Organizations',
+        icon: Building2
     },
+    { path: '/docs/api/solutions', file: './routes/docs/api/solutions.tsx', label: 'Solutions', icon: Package },
+    { path: '/docs/api/mcp', file: './routes/docs/api/mcp.tsx', label: 'MCP', icon: Plug }
+];
+
+const selfHostedPages: DocumentationPage[] = [
+    {
+        path: '/docs/api/self-hosted/platform',
+        file: './routes/docs/api/self-hosted/platform.tsx',
+        label: 'Platform',
+        icon: ShieldCheck
+    },
+    {
+        path: '/docs/api/self-hosted/compute',
+        file: './routes/docs/api/self-hosted/compute.tsx',
+        label: 'Compute',
+        icon: Layers
+    }
+];
+
+export const documentationNavigation: Array<{ path: string; label: string; sections: DocumentationSection[] }> = [
+    { path: '/docs/sdk', label: 'Solutions', sections: [{ title: 'Solutions', pages: solutionPages }] },
     {
         path: '/docs/sdk/views',
         label: 'Views',
         sections: [
             {
                 title: 'Views',
-                paths: [
-                    '/docs/sdk/views',
-                    ...documentationCategories.flatMap(({ components }) =>
-                        components.map((component) => `/docs/sdk/views/${component.slug}`)
-                    )
-                ],
                 pages: documentationCategories.map(({ label, category, anchor, icon, components }) => ({
                     path: `/docs/sdk/views${anchor}`,
                     label,
@@ -243,30 +258,22 @@ export const documentationNavigation: Array<{ path: string; label: string; secti
         path: '/docs/api',
         label: 'Platform',
         sections: [
-            {
-                title: 'Platform',
-                pages: [
-                    { path: '/docs/api', label: 'Overview', icon: ShieldCheck },
-                    { path: '/docs/api/organizations', label: 'Organizations', icon: Building2 },
-                    { path: '/docs/api/solutions', label: 'Solutions', icon: Package },
-                    { path: '/docs/api/mcp', label: 'MCP', icon: Plug }
-                ]
-            },
-            {
-                title: 'Self hosted',
-                pages: [
-                    { path: '/docs/api/self-hosted/platform', label: 'Platform', icon: ShieldCheck },
-                    { path: '/docs/api/self-hosted/compute', label: 'Compute', icon: Layers }
-                ]
-            }
+            { title: 'Platform', pages: platformPages },
+            { title: 'Self hosted', pages: selfHostedPages }
         ]
     }
 ];
 
 // Keep static tutorials and generated component references in their published reading order.
-export const documentationPaths = [
-    '/docs',
-    ...documentationNavigation.flatMap(({ sections }) =>
-        sections.flatMap(({ paths, pages }) => paths ?? pages.map(({ path }) => path))
-    )
+export const documentationPages: Array<{ path: string; file: string; index?: true }> = [
+    { path: '/docs', file: './routes/docs/index.tsx', index: true },
+    ...solutionPages,
+    { path: '/docs/sdk/views', file: './routes/docs/sdk/views.tsx', index: true },
+    ...documentationCategories.flatMap(({ components }) =>
+        components.map(({ slug }) => ({ path: `/docs/sdk/views/${slug}`, file: `./routes/docs/sdk/views/${slug}.tsx` }))
+    ),
+    ...platformPages,
+    ...selfHostedPages
 ];
+
+export const documentationPaths = documentationPages.map(({ path }) => path);

@@ -1,5 +1,6 @@
 // @vitest-environment happy-dom
 // @vitest-environment-options {"url":"http://localhost"}
+import { act } from 'react';
 import { ApiError } from '@/lib/api';
 import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../render';
@@ -15,7 +16,11 @@ it.each([
 ])('blocks nested solution content when membership returns $status', async ({ status, title }) => {
     // Arrange
     const errors: unknown[] = [];
-    const transport = vi.spyOn(globalThis, 'fetch').mockResolvedValue(Response.json({ detail: 'Denied' }, { status }));
+    let respond!: (response: Response) => void;
+    const response = new Promise<Response>((resolve) => {
+        respond = resolve;
+    });
+    const transport = vi.spyOn(globalThis, 'fetch').mockReturnValue(response);
 
     try {
         // Act
@@ -34,9 +39,17 @@ it.each([
             </ApiErrorContext>,
             async (output) => {
                 // Assert
+                expect(output.querySelector('[aria-label="Loading solution"]')).not.toBeNull();
+                expect(output.querySelector('nav[aria-label="Section navigation"]')).toBeNull();
+
+                // Act
+                await act(async () => respond(Response.json({ detail: 'Denied' }, { status })));
+
+                // Assert
                 await vi.waitFor(() => expect(output.querySelector('h1')?.textContent).toBe(title));
                 expect(output.textContent).not.toContain('Protected solution content');
                 expect(output.textContent).not.toContain("We couldn't load this organization.");
+                expect(output.querySelector('nav[aria-label="Section navigation"]')).toBeNull();
                 expect(errors).toHaveLength(1);
                 expect(errors[0]).toMatchObject({ status });
             },
@@ -55,6 +68,10 @@ it.each([
     const base = `/api/v1/organizations/${membership.organization.id}`;
     const requests: string[] = [];
     const errors: unknown[] = [];
+    let respond!: (response: Response) => void;
+    const response = new Promise<Response>((resolve) => {
+        respond = resolve;
+    });
 
     const transport = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, options) => {
         const request = input instanceof Request ? input : new Request(input, options);
@@ -62,7 +79,7 @@ it.each([
         requests.push(`${request.method} ${path}`);
 
         if (request.method === 'GET' && path === base) {
-            return Response.json({ detail: status === 403 ? 'Access denied' : 'Organization not found' }, { status });
+            return await response;
         }
 
         if (request.method === 'GET' && path === `${base}/tags`) return Response.json([]);
@@ -86,10 +103,27 @@ it.each([
             </ApiErrorContext>,
             async (output) => {
                 // Assert
+                expect(output.querySelector('[aria-label="Loading organization"]')).not.toBeNull();
+                expect(output.querySelector('button[aria-label="Organization"]')).not.toBeNull();
+                expect(output.querySelector('nav[aria-label="Section navigation"]')).not.toBeNull();
+
+                // Act
+                await act(async () =>
+                    respond(
+                        Response.json(
+                            { detail: status === 403 ? 'Access denied' : 'Organization not found' },
+                            { status }
+                        )
+                    )
+                );
+
+                // Assert
                 await vi.waitFor(() => expect(output.querySelector('h1')?.textContent).toBe(title));
                 expect(output.textContent).toContain(description);
                 expect(output.textContent).not.toContain('Protected organization content');
-                expect(output.textContent).not.toContain('Loading organization');
+                expect(output.querySelector('[aria-label="Loading organization"]')).toBeNull();
+                expect(output.querySelector('button[aria-label="Organization"]')).toBeNull();
+                expect(output.querySelector('nav[aria-label="Section navigation"]')).not.toBeNull();
                 expect(requests).toEqual([`GET ${base}`]);
                 expect(errors).toHaveLength(1);
                 expect(errors[0]).toBeInstanceOf(ApiError);

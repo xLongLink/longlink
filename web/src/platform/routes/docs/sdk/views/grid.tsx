@@ -35,7 +35,7 @@ export default function GridPage() {
 }
 
 /** Renders the page's grid example for documentation and the catalog. */
-export function GridExample() {
+function GridExample() {
     // Show two columns and an item spanning the full row.
     return (
         <Box width={320} maxWidth="100%">

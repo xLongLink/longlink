@@ -10,6 +10,7 @@ import { Dialog } from '@/components/longlink/layout/dialog';
 import { Heading } from '@/components/longlink/display/heading';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { useEffect, useRef, useState, useTransition } from 'react';
+import { IllustratedForm } from '@/platform/components/illustrated-form';
 import { Field, FieldError, FieldLabel } from '@/components/shadcn/field';
 
 /** Owns image inspection and configuration for one creation attempt. */
@@ -113,8 +114,12 @@ export default function CreateSolution({
 
     return (
         <Dialog open onOpenChange={onOpenChange} title="Create solution" showHeader={false} bodyPadding={false}>
-            <form
-                className="grid min-h-full grid-cols-1 items-center sm:grid-cols-2"
+            <IllustratedForm
+                image={{
+                    src: stage === 'image' ? '/images/solution.png' : '/images/nametag.png',
+                    width: stage === 'image' ? 272 : 1448,
+                    height: stage === 'image' ? 279 : 1086
+                }}
                 onSubmit={(event) => {
                     if (stage === 'image') {
                         event.preventDefault();
@@ -215,24 +220,7 @@ export default function CreateSolution({
                         </Stack>
                     </Stack>
                 </fieldset>
-                <Stack
-                    direction="horizontal"
-                    gap={0}
-                    align="center"
-                    justify="center"
-                    padding={6}
-                    className="h-full bg-black/10 dark:bg-black/20"
-                >
-                    <img
-                        src={stage === 'image' ? '/images/solution.png' : '/images/nametag.png'}
-                        alt=""
-                        width={stage === 'image' ? 272 : 1448}
-                        height={stage === 'image' ? 279 : 1086}
-                        decoding="async"
-                        className="w-full max-w-72 object-contain invert dark:invert-0"
-                    />
-                </Stack>
-            </form>
+            </IllustratedForm>
         </Dialog>
     );
 }

@@ -31,21 +31,14 @@ const sections = {
     compute: {
         title: 'Compute',
         fields: { cpu: 'compute_cpu_millicores', ram: 'compute_ram_bytes' },
-        color: 'bg-blue-500/10',
-        image: '/images/capacity.png'
+        color: 'bg-blue-500/10'
     },
     database: {
         title: 'Database',
         fields: { cpu: 'database_cpu_millicores', ram: 'database_ram_bytes', storage: 'database_storage_bytes' },
-        color: 'bg-violet-500/10',
-        image: '/images/capacity.png'
+        color: 'bg-violet-500/10'
     },
-    storage: {
-        title: 'Storage',
-        fields: { storage: 'storage_bytes' },
-        color: 'bg-emerald-500/10',
-        image: '/images/capacity.png'
-    }
+    storage: { title: 'Storage', fields: { storage: 'storage_bytes' }, color: 'bg-emerald-500/10' }
 } as const;
 
 const capacitySchema = z.object({
@@ -235,7 +228,7 @@ function CapacityEditor({
                             path: [key],
                             message: `Enter ${label} in increments of ${1 / units} ${unit}.`
                         });
-                    } else if (!schema.safeParse(value * units * (scale / units)).success) {
+                    } else if (!schema.safeParse(value * scale).success) {
                         context.addIssue({ code: 'custom', path: [key], message: `Enter a smaller ${label} amount.` });
                     }
                 }
@@ -253,9 +246,9 @@ function CapacityEditor({
                 database_ram_bytes: usage.database_ram_bytes,
                 database_storage_bytes: usage.database_storage_bytes
             };
-            for (const { key, units, scale } of resources) {
+            for (const { key, scale } of resources) {
                 const field = fields[key];
-                if (field) allocation[field] = capacity[key] * units * (scale / units);
+                if (field) allocation[field] = capacity[key] * scale;
             }
             const json = schemas.zOrganizationUsageUpdate.parse(allocation);
             await api.patch(`${base}/usage`, { json }).json(schemas.zOrganizationUsage);
@@ -342,7 +335,7 @@ function CapacityEditor({
                 </fieldset>
                 <Stack direction="horizontal" gap={0} align="center" justify="center" padding={6}>
                     <img
-                        src={sections[section].image}
+                        src="/images/capacity.png"
                         alt=""
                         decoding="async"
                         className="w-full max-w-72 object-contain invert dark:invert-0"

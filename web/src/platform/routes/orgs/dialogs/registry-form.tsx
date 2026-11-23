@@ -10,8 +10,9 @@ import { Button } from '@/components/longlink/action/button';
 import { Dialog } from '@/components/longlink/layout/dialog';
 import { Heading } from '@/components/longlink/display/heading';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
+import { IllustratedForm } from '@/platform/components/illustrated-form';
 import { Field, FieldError, FieldLabel } from '@/components/shadcn/field';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/shadcn/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/shadcn/tooltip';
 
 export function RegistryForm({
     base,
@@ -43,8 +44,8 @@ export function RegistryForm({
             showHeader={false}
             bodyPadding={false}
         >
-            <form
-                className="grid min-h-full grid-cols-1 items-center sm:grid-cols-2"
+            <IllustratedForm
+                image={{ src: '/images/lock.png', width: 1327, height: 1186 }}
                 onSubmit={form.handleSubmit(submit)}
                 noValidate
                 aria-busy={form.formState.isSubmitting}
@@ -58,18 +59,16 @@ export function RegistryForm({
                     <Field data-invalid={Boolean(form.formState.errors.credential)}>
                         <Stack direction="horizontal" align="center" justify="between" gap={2}>
                             <FieldLabel htmlFor="registry-credential">Personal access token (classic)</FieldLabel>
-                            <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger
-                                        type="button"
-                                        aria-label="Token scope requirements"
-                                        className="shrink-0 text-muted-foreground hover:text-foreground"
-                                    >
-                                        <InfoIcon className="size-4" aria-hidden="true" />
-                                    </TooltipTrigger>
-                                    <TooltipContent>Requires the read:packages scope.</TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger
+                                    type="button"
+                                    aria-label="Token scope requirements"
+                                    className="shrink-0 text-muted-foreground hover:text-foreground"
+                                >
+                                    <InfoIcon className="size-4" aria-hidden="true" />
+                                </TooltipTrigger>
+                                <TooltipContent>Requires the read:packages scope.</TooltipContent>
+                            </Tooltip>
                         </Stack>
                         <Input
                             {...form.register('credential')}
@@ -89,24 +88,7 @@ export function RegistryForm({
                         <Button type="submit">Save</Button>
                     </Stack>
                 </fieldset>
-                <Stack
-                    direction="horizontal"
-                    gap={0}
-                    align="center"
-                    justify="center"
-                    padding={6}
-                    className="h-full bg-black/10 dark:bg-black/20"
-                >
-                    <img
-                        src="/images/lock.png"
-                        alt=""
-                        width={1327}
-                        height={1186}
-                        decoding="async"
-                        className="w-full max-w-72 object-contain invert dark:invert-0"
-                    />
-                </Stack>
-            </form>
+            </IllustratedForm>
         </Dialog>
     );
 }

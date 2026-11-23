@@ -35,7 +35,7 @@ export default function LinkPage() {
 }
 
 /** Demonstrates navigation and a link-styled dialog action. */
-export function LinkExample() {
+function LinkExample() {
     const [isOpen, setIsOpen] = useState(false);
 
     // Keep navigation separate from the action that opens the dialog.

@@ -84,7 +84,6 @@ export function OrganizationSwitcher({ organization }: { organization: Organizat
                                     render={<RouterLink to={`/orgs/${item.id}`} />}
                                     aria-current={item.id === organization.id ? 'page' : undefined}
                                     key={item.id}
-                                    onClickCapture={() => setIsOpen(false)}
                                 >
                                     <Avatar shape="rounded" size="sm" name={item.name} />
                                     <span className="truncate">{item.name}</span>

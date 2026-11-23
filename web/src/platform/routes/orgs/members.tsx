@@ -161,9 +161,7 @@ export default function MembersSection({ base, role }: { base: string; role: Org
                                 return;
                             }
                         } else {
-                            await api.patch(`${base}/members/${member.id}`, {
-                                json: schemas.zOrganizationMemberUpdate.parse({ role: member.action.role })
-                            });
+                            await api.patch(`${base}/members/${member.id}`, { json: { role: member.action.role } });
                         }
 
                         // Refresh access-dependent controls after changing the current user's role.

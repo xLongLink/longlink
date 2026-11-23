@@ -3,9 +3,13 @@
 import { act } from 'react';
 import { it, expect, vi } from 'vitest';
 import { membership } from '../../render';
+import { useApi } from '@/lib/hooks/use-api';
 import { withMounted } from '../../../render';
+import { ApiErrorContext } from '@/lib/errors';
 import userEvent from '@testing-library/user-event';
+import TabsSection from '@/platform/routes/orgs/tags';
 import { TagForm } from '@/platform/routes/orgs/dialogs/tag-form';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SolutionTags } from '@/platform/routes/orgs/dialogs/solution-tags';
 import { zOrganizationTagResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 
@@ -14,6 +18,117 @@ const tags = [
     { id: '00000000-0000-4000-8000-000000000002', name: 'Operations', icon: 'wrench', kind: 'tag' },
     { id: '00000000-0000-4000-8000-000000000003', name: 'All Solutions', icon: 'layers', kind: 'all' }
 ].map((tag) => zOrganizationTagResponse.parse(tag));
+
+/** Connects the section to the same shared query refreshed by tab moves. */
+function SharedTabs({ base }: { base: string }) {
+    const [rows] = useApi(`${base}/tags`, zOrganizationTagResponse.array());
+
+    return <TabsSection base={base} tags={rows} canMaintain />;
+}
+
+it.each([
+    { direction: 'up', target: 'Operations', id: tags[1].id, label: 'Move Up' },
+    { direction: 'down', target: 'Purchases', id: tags[0].id, label: 'Move Down' }
+] as const)('moves a tab $direction and stays pending until the shared order refreshes', async (move) => {
+    // Arrange
+    const base = `/api/v1/organizations/${membership.organization.id}`;
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0, refetchOnMount: false } } });
+    client.setQueryData(['api', `${base}/tags`], tags);
+    const events = userEvent.setup();
+    const requests: { method: string; path: string; body?: unknown }[] = [];
+    let finishRefresh: (response: Response) => void = () => undefined;
+    const refresh = new Promise<Response>((resolve) => {
+        finishRefresh = resolve;
+    });
+    const transport = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, options) => {
+        const request = input instanceof Request ? input : new Request(input, options);
+        const path = new URL(request.url).pathname;
+
+        if (request.method === 'POST' && path === `${base}/tags/${move.id}/move`) {
+            requests.push({ method: request.method, path, body: await request.json() });
+            return new Response(null, { status: 204 });
+        }
+
+        if (request.method === 'GET' && path === `${base}/tags`) {
+            requests.push({ method: request.method, path });
+            return await refresh;
+        }
+
+        throw new Error(`Unexpected request: ${request.method} ${request.url}`);
+    });
+
+    try {
+        await withMounted(
+            <QueryClientProvider client={client}>
+                <ApiErrorContext
+                    value={(error) => {
+                        throw error;
+                    }}
+                >
+                    <SharedTabs base={base} />
+                </ApiErrorContext>
+            </QueryClientProvider>,
+            async (output) => {
+                /** Opens a real row menu and returns its requested action. */
+                async function action(name: string, label: string) {
+                    const trigger = output.querySelector<HTMLButtonElement>(`button[aria-label="Actions for ${name}"]`);
+
+                    if (!trigger) throw new Error(`Expected actions for ${name}`);
+                    await act(async () => events.click(trigger));
+                    const item = [...document.querySelectorAll<HTMLElement>('[role="menuitem"]')].find(
+                        (item) => item.textContent === label
+                    );
+
+                    if (!item) throw new Error(`Expected ${label}`);
+                    return item;
+                }
+
+                // Act and assert: unavailable boundary moves never issue writes.
+                const firstUp = await action('Purchases', 'Move Up');
+                expect(firstUp.getAttribute('aria-disabled')).toBe('true');
+                await act(async () => events.click(firstUp));
+                expect(requests).toEqual([]);
+                await act(async () => events.keyboard('{Escape}'));
+                const lastDown = await action('All Solutions', 'Move Down');
+                expect(lastDown.getAttribute('aria-disabled')).toBe('true');
+                await act(async () => events.click(lastDown));
+                expect(requests).toEqual([]);
+                await act(async () => events.keyboard('{Escape}'));
+
+                const item = await action(move.target, move.label);
+                await act(async () => events.click(item));
+                await vi.waitFor(() =>
+                    expect(requests).toEqual([
+                        { method: 'POST', path: `${base}/tags/${move.id}/move`, body: { direction: move.direction } },
+                        { method: 'GET', path: `${base}/tags` }
+                    ])
+                );
+                expect([...output.querySelectorAll('tbody tr')].map((row) => row.textContent)).toEqual([
+                    'Purchases',
+                    'Operations',
+                    'All Solutions'
+                ]);
+                const triggers = [...output.querySelectorAll<HTMLButtonElement>('button[aria-haspopup="menu"]')];
+                expect(triggers).toHaveLength(3);
+                expect(triggers.every((trigger) => trigger.disabled)).toBe(true);
+
+                await act(async () => finishRefresh(Response.json([tags[1], tags[0], tags[2]])));
+                await vi.waitFor(() => expect(triggers.every((trigger) => !trigger.disabled)).toBe(true));
+                expect([...output.querySelectorAll('tbody tr')].map((row) => row.textContent)).toEqual([
+                    'Operations',
+                    'Purchases',
+                    'All Solutions'
+                ]);
+                const newFirstUp = await action('Operations', 'Move Up');
+                expect(newFirstUp.getAttribute('aria-disabled')).toBe('true');
+            }
+        );
+    } finally {
+        finishRefresh(Response.json(tags));
+        transport.mockRestore();
+        client.clear();
+    }
+});
 
 it.each(['create', 'edit'] as const)(
     'validates and retries a %s tab name without losing the draft or icon',

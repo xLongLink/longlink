@@ -175,8 +175,13 @@ it('returns focus after Escape and explicitly focuses the routed content from th
 
             const main = output.querySelector('main');
             const skip = output.querySelector<HTMLAnchorElement>(`a[href="#${main?.id}"]`);
-            await act(async () => skip?.click());
+
+            if (!main || !skip) throw new Error('Missing skip link destination');
+
+            const activation = new MouseEvent('click', { bubbles: true, cancelable: true });
+            await act(async () => skip.dispatchEvent(activation));
             expect(document.activeElement).toBe(main);
+            expect(activation.defaultPrevented).toBe(false);
         },
         '/docs/first'
     );

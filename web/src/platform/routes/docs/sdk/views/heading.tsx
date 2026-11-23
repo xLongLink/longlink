@@ -28,7 +28,7 @@ export default function HeadingPage() {
 }
 
 /** Renders the page's heading example for documentation and the catalog. */
-export function HeadingExample() {
+function HeadingExample() {
     // Display heading levels from largest to smallest.
     return (
         <Stack gap={2} align="center">

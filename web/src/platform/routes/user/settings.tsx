@@ -13,7 +13,6 @@ import { Field, FieldLabel } from '@/components/shadcn/field';
 import OrganizationManagement from './organization-management';
 import { Heading } from '@/components/longlink/display/heading';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { PageContainer } from '@/components/layouts/page-container';
 import { SettingsLayout, SettingsLink } from '@/platform/layouts/settings';
 import { useUpdateUser, useAuthenticatedUser } from '@/platform/hooks/use-user';
 
@@ -22,10 +21,10 @@ export default function Settings() {
     const user = useAuthenticatedUser();
 
     return (
-        <PageContainer>
+        <>
             <title>Account Settings | LongLink</title>
             <SettingsPage key={user.id} user={user} />
-        </PageContainer>
+        </>
     );
 }
 

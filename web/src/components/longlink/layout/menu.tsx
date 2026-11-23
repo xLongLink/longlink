@@ -1,4 +1,5 @@
 import { cn } from 'cn';
+import { spacing } from './spacing';
 import { ChevronDown } from 'lucide-react';
 import { useContext, type ReactNode } from 'react';
 import type { IconName } from 'lucide-react/dynamic';
@@ -98,7 +99,7 @@ export function Menu({
     return (
         <div
             className="grid min-w-0 grid-cols-[260px_minmax(0,1fr)] items-start gap-3 max-[768px]:grid-cols-[minmax(0,1fr)]"
-            style={{ gap: gap === undefined ? undefined : `calc(var(--spacing) * ${gap})` }}
+            style={{ gap: spacing(gap) }}
         >
             <nav
                 className="box-border min-w-0 bg-inherit ps-2 pe-6 pb-2 font-sans max-[768px]:pe-2"

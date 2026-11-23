@@ -1,4 +1,5 @@
 import Content from '@/components/layouts/content';
+import { SkipLink } from '@/components/ui/skip-link';
 import { Separator } from '@/components/shadcn/separator';
 import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import { TooltipProvider } from '@/components/shadcn/tooltip';
@@ -56,7 +57,7 @@ function findActiveTab(tabs: readonly NavigationTab[], pathname: string): Naviga
 export default function Platform(props: PlatformProps) {
     return (
         <TooltipProvider>
-            <SidebarProvider className="relative min-h-[calc(100dvh-var(--\_app-shell-header-height,0px))] bg-background">
+            <SidebarProvider className="relative min-h-dvh bg-background">
                 <PlatformLayout {...props} />
             </SidebarProvider>
         </TooltipProvider>
@@ -84,16 +85,14 @@ function PlatformLayout({
 
     return (
         <>
-            <a
+            <SkipLink
                 className="absolute -m-px size-px overflow-hidden whitespace-nowrap [clip-path:inset(50%)] focus:fixed focus:top-2 focus:start-2 focus:z-[9999] focus:m-0 focus:h-auto focus:w-auto focus:overflow-visible focus:bg-card focus:px-4 focus:py-2 focus:text-foreground focus:[clip-path:none] focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-ring focus-visible:outline-offset-2"
-                href={`#${mainId}`}
-                onClick={() => mainRef.current?.focus()}
-            >
-                Skip to content
-            </a>
+                destinationId={mainId}
+                mainRef={mainRef}
+            />
             <Sidebar
                 collapsible="icon"
-                className="top-[var(--\_app-shell-header-height,0px)] h-[calc(100dvh-var(--\_app-shell-header-height,0px))] group-data-[side=left]:border-r-0 group-data-[side=right]:border-l-0"
+                className="top-0 h-dvh group-data-[side=left]:border-r-0 group-data-[side=right]:border-l-0"
             >
                 <SidebarHeader>
                     <SidebarMenu>

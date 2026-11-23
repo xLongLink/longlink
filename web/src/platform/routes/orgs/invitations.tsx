@@ -1,7 +1,7 @@
 import { api } from '@/lib/api';
-import { useTransition } from 'react';
+import { useApiError } from '@/lib/errors';
 import { useApi } from '@/lib/hooks/use-api';
-import { useSubmit } from '@/lib/hooks/use-submit';
+import { ReportedError } from '@/lib/reported';
 import { Button } from '@/components/shadcn/button';
 import * as permissions from '@/platform/permissions';
 import { useSelection } from '@/lib/hooks/use-selection';
@@ -10,6 +10,7 @@ import { Separator } from '@/components/shadcn/separator';
 import { Stack } from '@/components/longlink/layout/stack';
 import { Empty } from '@/components/longlink/display/empty';
 import { Heading } from '@/components/longlink/display/heading';
+import { useConfirmAction } from '@/lib/hooks/use-confirm-action';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import type { OrganizationContext } from '@/platform/layouts/organization';
 import { InviteMember } from '@/platform/routes/orgs/dialogs/invite-member';
@@ -28,14 +29,20 @@ export default function InvitationsSection({ base, role }: { base: string; role:
     );
 
     // Serialize revocation until the refreshed list is available.
-    const [revoking, startTransition] = useTransition();
-    const revokeInvitation = useSubmit(
-        async (id: string) => {
-            await api.delete(`${base}/invitations/${id}`);
-            await invalidateInvitations();
-        },
-        { onError: () => {} }
-    );
+    const reportError = useApiError();
+    const { isPending: revoking, run } = useConfirmAction();
+
+    function revokeInvitation(id: string) {
+        run(async () => {
+            try {
+                await api.delete(`${base}/invitations/${id}`);
+                await invalidateInvitations();
+            } catch (cause) {
+                const error = cause instanceof Error ? cause : new Error('Submission failed', { cause });
+                if (!(error instanceof ReportedError)) reportError(error);
+            }
+        });
+    }
 
     return (
         <>
@@ -69,11 +76,7 @@ export default function InvitationsSection({ base, role }: { base: string; role:
                                             variant="destructive"
                                             disabled={revoking}
                                             aria-busy={revoking || undefined}
-                                            onClick={() => {
-                                                startTransition(async () => {
-                                                    await revokeInvitation(row.id);
-                                                });
-                                            }}
+                                            onClick={() => revokeInvitation(row.id)}
                                         >
                                             Revoke
                                         </Button>
