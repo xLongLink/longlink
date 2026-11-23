@@ -1,8 +1,8 @@
 import { ChartFrame } from './frame';
 import * as recharts from 'recharts';
-import { prepareSeries } from './data';
 import type { ReactNode } from 'react';
 import type { CartesianChartProps } from './types';
+import { prepareSeries, type PreparedSeries } from './data';
 import { ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from '@/components/shadcn/chart';
 
 export function CartesianChart<Row extends object>({
@@ -22,7 +22,7 @@ export function CartesianChart<Row extends object>({
 }: CartesianChartProps<Row> & {
     chart: typeof recharts.AreaChart | typeof recharts.LineChart | typeof recharts.BarChart;
     label: string;
-    children: ReactNode;
+    children: (series: readonly PreparedSeries<Row>[]) => ReactNode;
 }) {
     const prepared = prepareSeries(data, xKey, series);
 
@@ -55,7 +55,7 @@ export function CartesianChart<Row extends object>({
                     width={48}
                     tickFormatter={yTickFormatter}
                 />
-                {children}
+                {children(prepared.series)}
                 {tooltip && <ChartTooltip isAnimationActive={false} content={<ChartTooltipContent />} />}
                 {legend && (
                     <ChartLegend

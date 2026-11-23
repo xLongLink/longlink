@@ -8,8 +8,12 @@ import type { PDFDocumentProxy, PDFDocumentLoadingTask, RenderTask } from 'pdfjs
 /** Displays admitted media and inert document content without nested frames. */
 export function FilePreview({ body, title }: { body: Blob; title: string }) {
     const container = useRef<HTMLDivElement>(null);
+    const [content, setContent] = useState({ body, key: 0 });
     const media = body.type.split(';', 1)[0].toLowerCase();
     const kind = previewKind(media);
+
+    // Reset decoders for new bytes without replacing media elements.
+    if (content.body !== body) setContent({ body, key: content.key + 1 });
 
     // Never grant HTML, SVG, or unknown binary bytes a host-origin document.
     useEffect(() => {
@@ -29,7 +33,7 @@ export function FilePreview({ body, title }: { body: Blob; title: string }) {
 
     // Use browser controls rather than a custom attachment toolbar.
     if (kind === undefined) return <span role="status">Preview unavailable for this file type.</span>;
-    if (kind === 'text') return <TextFile body={body} title={title} />;
+    if (kind === 'text') return <TextFile key={content.key} body={body} title={title} />;
 
     // PDF parsing and text rendering remain in the same document as the caller.
     return (
@@ -41,7 +45,7 @@ export function FilePreview({ body, title }: { body: Blob; title: string }) {
             ) : kind === 'video' ? (
                 <video controls preload="metadata" aria-label={title} className="size-full" />
             ) : (
-                <PdfFile body={body} title={title} />
+                <PdfFile key={content.key} body={body} title={title} />
             )}
         </div>
     );
@@ -49,8 +53,7 @@ export function FilePreview({ body, title }: { body: Blob; title: string }) {
 
 /** Treats source documents as text rather than navigable or executable markup. */
 function TextFile({ body, title }: { body: Blob; title: string }) {
-    const [result, setResult] = useState<{ body: Blob; text: string | Error }>();
-    const text = result?.body === body ? result.text : undefined;
+    const [text, setText] = useState<string | Error>();
 
     // Ignore decoded content after replacing or closing the document.
     useEffect(() => {
@@ -58,9 +61,9 @@ function TextFile({ body, title }: { body: Blob; title: string }) {
         async function load() {
             try {
                 const text = await body.text();
-                if (!cancelled) setResult({ body, text });
+                if (!cancelled) setText(text);
             } catch {
-                if (!cancelled) setResult({ body, text: new Error('Unable to display this file.') });
+                if (!cancelled) setText(new Error('Unable to display this file.'));
             }
         }
         void load();
@@ -76,8 +79,7 @@ function TextFile({ body, title }: { body: Blob; title: string }) {
 }
 
 function PdfFile({ body, title }: { body: Blob; title: string }) {
-    const [result, setResult] = useState<{ body: Blob; document: PDFDocumentProxy | Error }>();
-    const document = result?.body === body ? result.document : undefined;
+    const [document, setDocument] = useState<PDFDocumentProxy | Error>();
 
     useEffect(() => {
         let cancelled = false;
@@ -106,7 +108,7 @@ function PdfFile({ body, title }: { body: Blob; title: string }) {
                 });
                 port.addEventListener('error', () => {
                     if (cancelled) return;
-                    setResult({ body, document: new Error('Unable to display this PDF.') });
+                    setDocument(new Error('Unable to display this PDF.'));
                     dispose();
                 });
                 worker = pdf.PDFWorker.create({ port });
@@ -119,10 +121,10 @@ function PdfFile({ body, title }: { body: Blob; title: string }) {
                     disableWorkerRendering: true
                 });
                 const loaded = await task.promise;
-                if (!cancelled) setResult({ body, document: loaded });
+                if (!cancelled) setDocument(loaded);
             } catch {
                 if (!cancelled) {
-                    setResult({ body, document: new Error('Unable to display this PDF.') });
+                    setDocument(new Error('Unable to display this PDF.'));
                     dispose();
                 }
             }

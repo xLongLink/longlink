@@ -1,6 +1,8 @@
 import type { ChartConfig } from '@/components/shadcn/chart';
 import type { ChartKey, ChartSeries, ChartValueKey, SankeyNode, SankeyLink } from './types';
 
+export type PreparedSeries<Row> = { key: ChartValueKey<Row>; id: string; color: string };
+
 /** Assigns theme-owned colors without interpreting data keys as CSS. */
 export function color(index: number): string {
     return `var(--chart-${(index % 5) + 1})`;
@@ -14,41 +16,58 @@ export function prepareSeries<Row extends object>(
 ) {
     const config: ChartConfig = {};
     const rows: Record<string, string | number | null>[] = [];
+    const preparedSeries: PreparedSeries<Row>[] = [];
     const keys = new Set<string>();
     let hasValues = false;
 
     for (const [index, item] of series.entries()) {
-        if (keys.has(item.key)) return { config, rows, hasValues, error: 'Chart series must use distinct keys.' };
+        if (keys.has(item.key)) {
+            return { config, rows, series: preparedSeries, hasValues, error: 'Chart series must use distinct keys.' };
+        }
         keys.add(item.key);
-        config[`series-${index}`] = { label: item.label ?? item.key, color: color(index) };
+        const descriptor = { key: item.key, id: `series-${index}`, color: color(index) };
+        preparedSeries.push(descriptor);
+        config[descriptor.id] = { label: item.label ?? item.key, color: descriptor.color };
     }
 
     for (const row of data) {
         const category = row?.[categoryKey];
 
         if (typeof category !== 'string' && !(typeof category === 'number' && Number.isFinite(category))) {
-            return { config, rows, hasValues, error: 'Chart categories must be text or finite numbers.' };
+            return {
+                config,
+                rows,
+                series: preparedSeries,
+                hasValues,
+                error: 'Chart categories must be text or finite numbers.'
+            };
         }
 
         const point: Record<string, string | number | null> = { category };
 
-        for (const [index, item] of series.entries()) {
+        for (const item of preparedSeries) {
             const value = row[item.key];
 
             if (value === null || value === undefined) {
-                point[`series-${index}`] = null;
+                point[item.id] = null;
                 continue;
             }
             if (typeof value !== 'number' || !Number.isFinite(value)) {
-                return { config, rows, hasValues, error: 'Chart values must be finite numbers or null.' };
+                return {
+                    config,
+                    rows,
+                    series: preparedSeries,
+                    hasValues,
+                    error: 'Chart values must be finite numbers or null.'
+                };
             }
-            point[`series-${index}`] = value;
+            point[item.id] = value;
             hasValues = true;
         }
         rows.push(point);
     }
 
-    return { config, rows, hasValues, error: undefined };
+    return { config, rows, series: preparedSeries, hasValues, error: undefined };
 }
 
 /** Normalizes segment names and colors without exposing arbitrary SVG styling. */

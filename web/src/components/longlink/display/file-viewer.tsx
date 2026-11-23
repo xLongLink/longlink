@@ -18,7 +18,7 @@ export function FileViewer({
     return (
         <div className="flex h-96 w-full min-w-0 items-center justify-center" aria-label={title}>
             {data ? (
-                <FilePreview key={src} body={data} title={title} />
+                <FilePreview body={data} title={title} />
             ) : isError ? (
                 <span role="status">{error instanceof Error ? error.message : 'File preview failed'}</span>
             ) : (
