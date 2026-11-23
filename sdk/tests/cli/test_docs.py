@@ -71,6 +71,7 @@ def test_docs_build_resolves_editing_form_guidance(capsys: pytest.CaptureFixture
     # Assert
     output = capsys.readouterr().out
     assert "Approach: Editing form" in output
+    assert "longlink docs component Form" in output
     assert "longlink docs component Controller" in output
     assert "longlink docs component Hooks" in output
 

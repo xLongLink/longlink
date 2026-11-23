@@ -2,10 +2,35 @@
 import { act } from 'react';
 import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../../../../render';
+import * as components from '@/components/longlink';
 import userEvent from '@testing-library/user-event';
 import { RequestContext } from '@/lib/view-capabilities';
 import ViewLayout from '@/platform/routes/docs/sdk/views/view-layout';
 import FormDocumentation from '@/platform/routes/docs/sdk/views/form-documentation';
+import { componentDocumentation, documentationPaths } from '@/platform/publications';
+import viewCatalog from '../../../../../../../sdk/longlink/.static/jsx/components.json';
+
+it('registers a website reference for each component in the SDK catalog', () => {
+    const groupedPages: Readonly<Record<string, string>> = { ButtonGroup: 'Button', Controller: 'Form' };
+    const pages = new Map(componentDocumentation.map(({ name, slug }) => [name, `/docs/sdk/views/${slug}`]));
+
+    const missing = viewCatalog.components
+        .map(({ name }) => ({ name, path: pages.get(groupedPages[name] ?? name) }))
+        .filter(({ path }) => !path || !documentationPaths.includes(path))
+        .map(({ name }) => name);
+
+    expect(missing).toEqual([]);
+});
+
+it('documents every public Dropdown component under the Dropdown reference', () => {
+    const dropdown = viewCatalog.components.find(({ name }) => name === 'Dropdown');
+    const documented = new Set(
+        dropdown?.properties?.map(({ name }) => (name.includes('.') ? name.split('.')[0] : 'Dropdown'))
+    );
+    const missing = Object.keys(components).filter((name) => name.startsWith('Dropdown') && !documented.has(name));
+
+    expect(missing).toEqual([]);
+});
 
 it('switches between the example and authored companion references without merging published properties', async () => {
     const user = userEvent.setup();
@@ -45,6 +70,42 @@ it('switches between the example and authored companion references without mergi
             await act(async () => user.click(exampleTab));
             expect(output.querySelector('[role="tabpanel"]')?.textContent).toContain('Order details');
             expect(output.querySelector('table')).toBeNull();
+        }
+    );
+});
+
+it('collapses the map preview attribution when it becomes available and leaves it open after reopening', async () => {
+    const user = userEvent.setup();
+
+    await withMounted(
+        <ViewLayout
+            name="StreetMap"
+            example={{
+                title: 'Street map',
+                code: '<StreetMap />',
+                preview: <details className="maplibregl-ctrl-attrib maplibregl-attrib-empty" />
+            }}
+        />,
+        async (output) => {
+            const attribution = output.querySelector<HTMLDetailsElement>('details.maplibregl-ctrl-attrib');
+            const showCode = output.querySelector<HTMLElement>('[role="switch"][aria-label="Show code"]');
+            if (!attribution || !showCode) throw new Error('Expected map attribution and code switch');
+
+            attribution.open = true;
+            attribution.classList.remove('maplibregl-attrib-empty');
+            attribution.classList.add('maplibregl-compact', 'maplibregl-compact-show');
+
+            await vi.waitFor(() => expect(attribution.open).toBe(false));
+            expect(attribution.classList.contains('maplibregl-compact-show')).toBe(false);
+
+            attribution.open = true;
+            attribution.classList.add('maplibregl-compact-show');
+            await act(async () => user.click(showCode));
+            await act(async () => user.click(showCode));
+
+            expect(output.querySelector('details.maplibregl-ctrl-attrib')).toBe(attribution);
+            expect(attribution.open).toBe(true);
+            expect(attribution.classList.contains('maplibregl-compact-show')).toBe(true);
         }
     );
 });

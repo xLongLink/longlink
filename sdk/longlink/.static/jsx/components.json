@@ -1077,23 +1077,343 @@
         {
             "name": "Dropdown",
             "category": "Action",
-            "introduction": "Dropdown menu composition with Base UI behavior and component-owned styling.",
-            "guidance": "Compose DropdownTrigger, DropdownContent, DropdownItem, checkbox and radio items, groups, separators, and submenus.",
+            "introduction": "Compose a menu of actions and settings that opens from a trigger.",
+            "guidance": "Place DropdownTrigger and DropdownContent inside Dropdown. Content and submenu content already portal; add DropdownPortal only when you need a custom mount container. Use DropdownLabel inside DropdownGroup, and pair DropdownSubTrigger with DropdownSubContent inside DropdownSub. DropdownShortcut displays a key hint but does not bind a shortcut.",
             "properties": [
+                { "name": "children", "type": "ReactNode", "description": "The trigger and menu content." },
+                { "name": "open", "type": "boolean", "description": "Controlled visibility." },
                 {
-                    "name": "open / defaultOpen",
+                    "name": "defaultOpen",
                     "type": "boolean",
-                    "description": "Controlled or initial uncontrolled visibility."
+                    "default": false,
+                    "description": "Initial visibility in uncontrolled mode."
                 },
                 {
                     "name": "onOpenChange",
-                    "type": "(open, details) => void",
+                    "type": "(open: boolean, details: Menu.Root.ChangeEventDetails) => void",
                     "description": "Native visibility callback with cancellable event details."
                 },
+                { "name": "disabled", "type": "boolean", "default": false, "description": "Disables the menu." },
                 {
-                    "name": "children",
+                    "name": "modal",
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Limits outside interaction while the menu is open. Ignored by nested menus and menus opened on hover."
+                },
+                {
+                    "name": "loopFocus",
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Wraps keyboard focus at the start and end of the menu."
+                },
+                {
+                    "name": "DropdownTrigger.children",
                     "type": "ReactNode",
-                    "description": "Native compound menu parts with their documented props."
+                    "description": "Text or other trigger content."
+                },
+                {
+                    "name": "DropdownTrigger.render",
+                    "type": "ReactElement | (props, state) => ReactElement",
+                    "description": "Replaces or composes the trigger, for example with a Button."
+                },
+                {
+                    "name": "DropdownTrigger.nativeButton",
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Set to false if render replaces the trigger with something other than a native button."
+                },
+                {
+                    "name": "DropdownTrigger.disabled",
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Disables the trigger."
+                },
+                {
+                    "name": "DropdownTrigger.openOnHover",
+                    "type": "boolean",
+                    "description": "Also opens the menu on hover."
+                },
+                {
+                    "name": "DropdownTrigger.delay",
+                    "type": "number",
+                    "default": 100,
+                    "description": "Hover-open delay in milliseconds; requires openOnHover."
+                },
+                {
+                    "name": "DropdownTrigger.closeDelay",
+                    "type": "number",
+                    "default": 0,
+                    "description": "Hover-close delay in milliseconds; requires openOnHover."
+                },
+                {
+                    "name": "DropdownPortal.children",
+                    "type": "ReactNode",
+                    "description": "Content to mount in the portal."
+                },
+                {
+                    "name": "DropdownPortal.container",
+                    "type": "HTMLElement | ShadowRoot | RefObject<HTMLElement | ShadowRoot | null> | null",
+                    "description": "The mount target. Without a target, it mounts in the nearest enclosing portal or the document body."
+                },
+                {
+                    "name": "DropdownPortal.keepMounted",
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Keeps this portal mounted when the menu closes, not the popup that DropdownContent portals separately."
+                },
+                {
+                    "name": "DropdownContent.children",
+                    "type": "ReactNode",
+                    "description": "The menu items and groups."
+                },
+                {
+                    "name": "DropdownContent.align",
+                    "type": "'start' | 'center' | 'end'",
+                    "default": "start",
+                    "description": "Aligns the popup to its trigger."
+                },
+                {
+                    "name": "DropdownContent.alignOffset",
+                    "type": "number | (data) => number",
+                    "default": 0,
+                    "description": "Offset along the alignment axis in pixels."
+                },
+                {
+                    "name": "DropdownContent.side",
+                    "type": "'top' | 'right' | 'bottom' | 'left' | 'inline-start' | 'inline-end'",
+                    "default": "bottom",
+                    "description": "Preferred side of the trigger."
+                },
+                {
+                    "name": "DropdownContent.sideOffset",
+                    "type": "number | (data) => number",
+                    "default": 4,
+                    "description": "Gap between the trigger and popup in pixels."
+                },
+                {
+                    "name": "DropdownGroup.children",
+                    "type": "ReactNode",
+                    "description": "Related menu items and an optional DropdownLabel."
+                },
+                {
+                    "name": "DropdownLabel.children",
+                    "type": "ReactNode",
+                    "description": "An accessible label for the containing DropdownGroup."
+                },
+                { "name": "DropdownLabel.inset", "type": "boolean", "description": "Indents the label." },
+                {
+                    "name": "DropdownItem.children",
+                    "type": "ReactNode",
+                    "description": "The action label, optionally followed by a DropdownShortcut."
+                },
+                {
+                    "name": "DropdownItem.onClick",
+                    "type": "(event: BaseUIEvent<React.MouseEvent<HTMLDivElement>>) => void",
+                    "description": "Runs when the item is activated by mouse or keyboard."
+                },
+                {
+                    "name": "DropdownItem.disabled",
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Prevents activation."
+                },
+                {
+                    "name": "DropdownItem.label",
+                    "type": "string",
+                    "description": "Overrides the text used for keyboard typeahead."
+                },
+                {
+                    "name": "DropdownItem.closeOnClick",
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Closes the menu when the item is activated."
+                },
+                { "name": "DropdownItem.inset", "type": "boolean", "description": "Indents the item." },
+                {
+                    "name": "DropdownItem.variant",
+                    "type": "'default' | 'destructive'",
+                    "default": "default",
+                    "description": "Highlights destructive actions."
+                },
+                {
+                    "name": "DropdownCheckboxItem.children",
+                    "type": "ReactNode",
+                    "description": "The label for an independent toggle."
+                },
+                {
+                    "name": "DropdownCheckboxItem.checked",
+                    "type": "boolean",
+                    "description": "Controlled checked state."
+                },
+                {
+                    "name": "DropdownCheckboxItem.defaultChecked",
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Initial checked state in uncontrolled mode."
+                },
+                {
+                    "name": "DropdownCheckboxItem.onCheckedChange",
+                    "type": "(checked: boolean, details: Menu.CheckboxItem.ChangeEventDetails) => void",
+                    "description": "Runs when the checked state changes."
+                },
+                {
+                    "name": "DropdownCheckboxItem.disabled",
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Prevents activation."
+                },
+                {
+                    "name": "DropdownCheckboxItem.closeOnClick",
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Closes the menu when the item is toggled."
+                },
+                { "name": "DropdownCheckboxItem.inset", "type": "boolean", "description": "Indents the item." },
+                {
+                    "name": "DropdownRadioGroup.children",
+                    "type": "ReactNode",
+                    "description": "The mutually exclusive DropdownRadioItem choices."
+                },
+                {
+                    "name": "DropdownRadioGroup.value",
+                    "type": "any",
+                    "description": "Controlled selection. Use a value from one of the radio items."
+                },
+                {
+                    "name": "DropdownRadioGroup.defaultValue",
+                    "type": "any",
+                    "description": "Initial selection in uncontrolled mode."
+                },
+                {
+                    "name": "DropdownRadioGroup.onValueChange",
+                    "type": "(value: any, details: Menu.RadioGroup.ChangeEventDetails) => void",
+                    "description": "Runs when selection changes."
+                },
+                {
+                    "name": "DropdownRadioGroup.disabled",
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Disables all radio items in the group."
+                },
+                {
+                    "name": "DropdownRadioItem.children",
+                    "type": "ReactNode",
+                    "description": "The label for this choice."
+                },
+                {
+                    "name": "DropdownRadioItem.value",
+                    "type": "any",
+                    "description": "Required value to select in the parent DropdownRadioGroup."
+                },
+                {
+                    "name": "DropdownRadioItem.disabled",
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Prevents selection."
+                },
+                {
+                    "name": "DropdownRadioItem.closeOnClick",
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Closes the menu when the item is selected."
+                },
+                { "name": "DropdownRadioItem.inset", "type": "boolean", "description": "Indents the item." },
+                {
+                    "name": "DropdownSeparator.orientation",
+                    "type": "'horizontal' | 'vertical'",
+                    "default": "horizontal",
+                    "description": "Semantic orientation of the separator; the built-in styling is a horizontal rule."
+                },
+                {
+                    "name": "DropdownShortcut.children",
+                    "type": "ReactNode",
+                    "description": "Displays a keyboard hint. Does not register a shortcut."
+                },
+                {
+                    "name": "DropdownSub.children",
+                    "type": "ReactNode",
+                    "description": "The nested DropdownSubTrigger and DropdownSubContent."
+                },
+                { "name": "DropdownSub.open", "type": "boolean", "description": "Controlled submenu visibility." },
+                {
+                    "name": "DropdownSub.defaultOpen",
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Initial submenu visibility in uncontrolled mode."
+                },
+                {
+                    "name": "DropdownSub.onOpenChange",
+                    "type": "(open: boolean, details: Menu.SubmenuRoot.ChangeEventDetails) => void",
+                    "description": "Runs when the submenu opens or closes."
+                },
+                {
+                    "name": "DropdownSub.closeParentOnEsc",
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Closes the parent menu too when Escape is pressed in the submenu."
+                },
+                {
+                    "name": "DropdownSubTrigger.children",
+                    "type": "ReactNode",
+                    "description": "The label for the item that opens the submenu."
+                },
+                {
+                    "name": "DropdownSubTrigger.disabled",
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Disables the submenu trigger."
+                },
+                {
+                    "name": "DropdownSubTrigger.openOnHover",
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Also opens the submenu on hover."
+                },
+                {
+                    "name": "DropdownSubTrigger.delay",
+                    "type": "number",
+                    "default": 100,
+                    "description": "Hover-open delay in milliseconds; requires openOnHover."
+                },
+                {
+                    "name": "DropdownSubTrigger.closeDelay",
+                    "type": "number",
+                    "default": 0,
+                    "description": "Hover-close delay in milliseconds; requires openOnHover."
+                },
+                {
+                    "name": "DropdownSubTrigger.inset",
+                    "type": "boolean",
+                    "description": "Indents the submenu trigger."
+                },
+                {
+                    "name": "DropdownSubContent.children",
+                    "type": "ReactNode",
+                    "description": "The submenu items and groups."
+                },
+                {
+                    "name": "DropdownSubContent.align",
+                    "type": "'start' | 'center' | 'end'",
+                    "default": "start",
+                    "description": "Aligns the submenu to its trigger."
+                },
+                {
+                    "name": "DropdownSubContent.alignOffset",
+                    "type": "number | (data) => number",
+                    "default": -3,
+                    "description": "Offset along the alignment axis in pixels."
+                },
+                {
+                    "name": "DropdownSubContent.side",
+                    "type": "'top' | 'right' | 'bottom' | 'left' | 'inline-start' | 'inline-end'",
+                    "default": "right",
+                    "description": "Preferred side of the submenu trigger."
+                },
+                {
+                    "name": "DropdownSubContent.sideOffset",
+                    "type": "number | (data) => number",
+                    "default": 0,
+                    "description": "Gap between the trigger and submenu in pixels."
                 }
             ],
             "source": "shadcn",
@@ -1136,10 +1456,33 @@
             "justification": "Loads scoped attachment bytes and renders supported media inline without exposing host credentials or weakening the Solution sandbox."
         },
         {
+            "name": "Form",
+            "category": "Form",
+            "introduction": "Renders a native form for grouping fields and handling submission.",
+            "guidance": "Use <Form onSubmit={form.onSubmit} noValidate> with a useForm schema. Omit noValidate to keep browser validation enabled. Use form.register for native inputs and Controller for controlled inputs. Set the Solution path and HTTP method in useForm, not as native form action attributes.",
+            "keywords": ["submit", "validation", "schema"],
+            "properties": [
+                { "name": "children", "type": "ReactNode", "description": "Form fields and actions." },
+                {
+                    "name": "onSubmit",
+                    "type": "FormEventHandler<HTMLFormElement>",
+                    "description": "Handles a native submit event. Pass form.onSubmit to validate and submit through useForm."
+                },
+                {
+                    "name": "noValidate",
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Skips browser constraint validation so submission can reach the schema."
+                }
+            ],
+            "source": "custom",
+            "justification": "Preserves native form behavior while leaving scoped write configuration to useForm."
+        },
+        {
             "name": "Controller",
             "category": "Form",
             "introduction": "Connects a controlled input to React Hook Form without a LongLink field adapter.",
-            "guidance": "Use form.register for native inputs and textareas. Use Controller for controlled selection controls: pass value={field.value}, onValueChange={field.onChange}, and ref={field.ref}; boolean controls use checked and onCheckedChange. Pass error={fieldState.error?.message} for accessible feedback. Use form.reset() to restore defaults.",
+            "guidance": "Use form.register for native inputs and textareas. Use Controller for controlled selection controls: pass value={field.value}, onValueChange={field.onChange}, and ref={field.ref}; boolean controls use checked and onCheckedChange. Pass error={fieldState.error?.message} for accessible feedback. Use form.reset() to restore defaults. Controller uses form.control and does not require Form.",
             "properties": [
                 { "name": "name", "type": "FieldPath", "description": "Registered form value path." },
                 { "name": "control", "type": "Control", "description": "The control returned by useForm." },
@@ -1237,7 +1580,7 @@
             "members": [
                 {
                     "name": "useForm(path, options?)",
-                    "description": "React Hook Form with scoped Solution submission. Options: schema (Zod), defaultValues, method (POST by default; also PUT, PATCH, DELETE), onSuccess, onError. Bind a native form with onSubmit={form.onSubmit}; use register for native inputs and Controller for composite controls. Existing React Hook Form APIs remain available. Await form.submit(values) or form.submit(formData) for direct actions; form.submit() submits current values or an empty payload when no fields are configured. A schema validates and supplies parsed values before submission. Invalid values reject submission and populate field errors. Submission failures reject unless onError handles them; omit onError when a confirmation must stay open on failure. Read pending state from formState.isSubmitting, field errors from formState.errors, and submission errors from formState.errors.root. Strings stay strings; numbers and booleans become strings; File and Blob remain binary. Arrays create repeated multipart entries, nullish values are omitted, and nested objects are unsupported. With a schema, FormData fields become scalars for single entries and arrays for repeated entries; submit an object to preserve single-item arrays. Successful writes refresh cached View data before onSuccess. Drafts remain until reset; validate and authorize again on the server."
+                    "description": "React Hook Form with scoped Solution submission. Options: schema (Zod), defaultValues, method (POST by default; also PUT, PATCH, DELETE), onSuccess, onError. Use <Form onSubmit={form.onSubmit} noValidate> with a schema; use register for native inputs and Controller for composite controls. Existing React Hook Form APIs remain available. Await form.submit(values) or form.submit(formData) for direct actions; form.submit() submits current values or an empty payload when no fields are configured. A schema validates and supplies parsed values before submission. Invalid values reject submission and populate field errors. Submission failures reject unless onError handles them; omit onError when a confirmation must stay open on failure. Read pending state from formState.isSubmitting, field errors from formState.errors, and submission errors from formState.errors.root. Strings stay strings; numbers and booleans become strings; File and Blob remain binary. Arrays create repeated multipart entries, nullish values are omitted, and nested objects are unsupported. With a schema, FormData fields become scalars for single entries and arrays for repeated entries; submit an object to preserve single-item arrays. Successful writes refresh cached View data before onSuccess. Drafts remain until reset; validate and authorize again on the server."
                 },
                 {
                     "name": "useState(initial)",
@@ -2068,9 +2411,9 @@
             "name": "Editing form",
             "description": "Collect intent through named fields and persist changes through a validated Solution route.",
             "keywords": ["edit form", "editing form", "create form", "form", "record editor"],
-            "components": ["Controller", "Input", "Select", "Hooks"],
+            "components": ["Form", "Controller", "Input", "Select", "Hooks"],
             "steps": [
-                "Call useForm(path, { schema, defaultValues, onSuccess }); bind a native form with onSubmit={form.onSubmit}.",
+                "Call useForm(path, { schema, defaultValues, onSuccess }) and render <Form onSubmit={form.onSubmit} noValidate>.",
                 "Use register for native inputs and Controller for composite controls, choosing fields that match the server schema.",
                 "Read pending state from formState.isSubmitting and display formState.errors, including errors.root for submission failures. The Solution route must validate input and enforce authorization."
             ]

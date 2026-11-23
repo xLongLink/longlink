@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { FormExample } from './views/form';
 import { TextExample } from './views/text';
 import { FrameExample } from './views/frame';
 import { InputExample } from './views/input';
@@ -20,6 +21,7 @@ import { DataGridExample } from './views/data-grid';
 import { FileTypeExample } from './views/file-type';
 import { Button } from '@/components/shadcn/button';
 import { ChartExample } from './views/chart-example';
+import { SeparatorExample } from './views/separator';
 import { TimestampExample } from './views/timestamp';
 import { PaginationExample } from './views/pagination';
 import { Box } from '@/components/longlink/layout/box';
@@ -59,7 +61,7 @@ const article = {
         ...categories.map(({ category, anchor }) => ({ id: anchor.slice(1), label: category, level: 2 }))
     ],
     lastUpdated: '2026-10-02',
-    editUrl: 'https://github.com/xLongLink/longlink/edit/main/sdk/longlink/.static/jsx/frontend.d.ts',
+    editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/sdk/views.tsx',
     title: 'Views | LongLink Documentation'
 };
 
@@ -135,6 +137,7 @@ const previews: Record<string, ReactNode> = {
             </CardContent>
         </Card>
     ),
+    Form: <FormExample />,
     Frame: <FrameExample />,
     Grid: (
         <Grid columns={2} gap={2}>
@@ -199,6 +202,7 @@ const previews: Record<string, ReactNode> = {
     Progress: <ProgressExample />,
     RadioGroup: <RadioGroupExample />,
     Select: <SelectExample />,
+    Separator: <SeparatorExample />,
     Combobox: <ComboboxExample />,
     Slider: <SliderExample />,
     Stack: (
@@ -231,7 +235,6 @@ const previews: Record<string, ReactNode> = {
     Timestamp: <TimestampExample />
 };
 
-/** Renders the native JSX catalog generated from the shared editor declarations. */
 export default function DocsArticleRoute() {
     return (
         <DocumentationArticle article={article}>
