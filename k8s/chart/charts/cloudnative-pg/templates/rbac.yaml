@@ -36,7 +36,7 @@ metadata:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: {{ include "cloudnative-pg.fullname" . }}
+  name: {{ include "cloudnative-pg.clusterResourceName" . }}
   labels:
     {{- include "cloudnative-pg.labels" . | nindent 4 }}
   {{- with .Values.commonAnnotations }}
@@ -45,12 +45,18 @@ metadata:
   {{- end }}
 rules:
 {{- include "cloudnative-pg.clusterwideRules" . }}
+{{/*
+If we're doing a clusterWide installation (default)
+we add ALL the necessary rules for the operator to the ClusterRole
+*/}}
+{{- if .Values.config.clusterWide }}
 {{- include "cloudnative-pg.commonRules" . }}
+{{- end }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: {{ include "cloudnative-pg.fullname" . }}
+  name: {{ include "cloudnative-pg.clusterResourceName" . }}
   labels:
     {{- include "cloudnative-pg.labels" . | nindent 4 }}
   {{- with .Values.commonAnnotations }}
@@ -60,18 +66,67 @@ metadata:
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: {{ include "cloudnative-pg.fullname" . }}
+  name: {{ include "cloudnative-pg.clusterResourceName" . }}
 subjects:
 - kind: ServiceAccount
   name: {{ include "cloudnative-pg.serviceAccountName" . }}
   namespace: {{ include "cloudnative-pg.namespace" . }}
+{{/*
+If we're doing a single-namespace installation
+we create a Role with the common rules for the operator,
+and a RoleBinding. We already created the ClusterRole above with the
+required cluster-wide rules
+*/}}
+{{- if eq .Values.config.clusterWide false }}
+{{- range $namespace := include "cloudnative-pg.roleNamespaces" . | fromJsonArray }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "cloudnative-pg.fullname" $ }}
+  namespace: {{ $namespace }}
+  labels:
+    {{- include "cloudnative-pg.labels" $ | nindent 4 }}
+  {{- with $.Values.commonAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+rules:
+{{- include "cloudnative-pg.commonRules" $ }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "cloudnative-pg.fullname" $ }}
+  namespace: {{ $namespace }}
+  labels:
+    {{- include "cloudnative-pg.labels" $ | nindent 4 }}
+  {{- with $.Values.commonAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ include "cloudnative-pg.fullname" $ }}
+subjects:
+- kind: ServiceAccount
+  name: {{ include "cloudnative-pg.serviceAccountName" $ }}
+  namespace: {{ include "cloudnative-pg.namespace" $ }}
+{{- end }}
+{{- end }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: {{ include "cloudnative-pg.fullname" . }}-view
+  name: {{ include "cloudnative-pg.clusterResourceName" . }}-view
   labels:
     {{- include "cloudnative-pg.labels" . | nindent 4 }}
+    {{- if .Values.rbac.aggregateClusterRoles }}
+    rbac.authorization.k8s.io/aggregate-to-view: "true"
+    rbac.authorization.k8s.io/aggregate-to-edit: "true"
+    rbac.authorization.k8s.io/aggregate-to-admin: "true"
+    {{- end }}
 rules:
 - apiGroups:
   - postgresql.cnpg.io
@@ -96,9 +151,13 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: {{ include "cloudnative-pg.fullname" . }}-edit
+  name: {{ include "cloudnative-pg.clusterResourceName" . }}-edit
   labels:
     {{- include "cloudnative-pg.labels" . | nindent 4 }}
+    {{- if .Values.rbac.aggregateClusterRoles }}
+    rbac.authorization.k8s.io/aggregate-to-edit: "true"
+    rbac.authorization.k8s.io/aggregate-to-admin: "true"
+    {{- end }}
 rules:
 - apiGroups:
   - postgresql.cnpg.io

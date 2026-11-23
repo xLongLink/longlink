@@ -1,20 +1,37 @@
-{{/* Shared LongLink Compute namespace. */}}
+{{/*
+Allow the release namespace to be overridden for multi-namespace deployments in combined charts
+*/}}
 {{- define "cloudnative-pg.namespace" -}}
-cnpg-system
+  {{- if .Values.namespaceOverride -}}
+    {{- .Values.namespaceOverride -}}
+  {{- else -}}
+    {{- .Release.Namespace -}}
+  {{- end -}}
 {{- end -}}
 
 {{/*
-Shared LongLink Compute label name.
+Expand the name of the chart.
 */}}
 {{- define "cloudnative-pg.name" -}}
-cloudnative-pg
+{{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
-Shared LongLink Compute controller name.
+Create a default fully qualified app name.
+We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
+If release name contains chart name it will be used as a full name.
 */}}
 {{- define "cloudnative-pg.fullname" -}}
-cnpg-controller-manager
+{{- if .Values.fullnameOverride }}
+{{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
+{{- else }}
+{{- $name := default .Chart.Name .Values.nameOverride }}
+{{- if contains $name .Release.Name }}
+{{- .Release.Name | trunc 63 | trimSuffix "-" }}
+{{- else }}
+{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" }}
+{{- end }}
+{{- end }}
 {{- end }}
 
 {{/*
@@ -41,8 +58,65 @@ Selector labels
 */}}
 {{- define "cloudnative-pg.selectorLabels" -}}
 app.kubernetes.io/name: {{ include "cloudnative-pg.name" . }}
-app.kubernetes.io/instance: cnpg
+app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
+
+{{/*
+Cluster-scoped resource name, unique per namespace when clusterWide is false.
+*/}}
+{{- define "cloudnative-pg.clusterResourceName" -}}
+{{- if not .Values.config.clusterWide -}}
+{{- printf "%s-%s" (include "cloudnative-pg.fullname" .) (include "cloudnative-pg.namespace" .) -}}
+{{- else -}}
+{{- include "cloudnative-pg.fullname" . -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+JSON list of the namespaces watched by the operator, empty when it watches all
+of them: the WATCH_NAMESPACE list from config.data, otherwise the release
+namespace when clusterWide is false.
+*/}}
+{{- define "cloudnative-pg.watchedNamespaces" -}}
+{{- $namespaces := list -}}
+{{- if .Values.config.create -}}
+{{- range splitList "," ((.Values.config.data | default dict).WATCH_NAMESPACE | default "") -}}
+{{- if trim . -}}
+{{- $namespaces = append $namespaces (trim .) -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+{{- if and (not $namespaces) (not .Values.config.clusterWide) -}}
+{{- $namespaces = list (include "cloudnative-pg.namespace" .) -}}
+{{- end -}}
+{{- toJson ($namespaces | uniq) -}}
+{{- end -}}
+
+{{/*
+JSON list of the namespaces receiving the operator Role when clusterWide is
+false: the release namespace, plus the watched ones.
+*/}}
+{{- define "cloudnative-pg.roleNamespaces" -}}
+{{- $namespaces := list (include "cloudnative-pg.namespace" .) -}}
+{{- $namespaces = concat $namespaces (include "cloudnative-pg.watchedNamespaces" . | fromJsonArray) -}}
+{{- toJson ($namespaces | uniq) -}}
+{{- end -}}
+
+{{/*
+namespaceSelector restricting a webhook to the watched namespaces.
+*/}}
+{{- define "cloudnative-pg.webhookNamespaceSelector" -}}
+{{- if not .Values.config.clusterWide -}}
+namespaceSelector:
+  matchExpressions:
+  - key: kubernetes.io/metadata.name
+    operator: In
+    values:
+    {{- range include "cloudnative-pg.watchedNamespaces" . | fromJsonArray }}
+    - {{ . | quote }}
+    {{- end }}
+{{- end -}}
+{{- end -}}
 
 {{/*
 Create the name of the service account to use
@@ -149,6 +223,7 @@ namespace scope or clusterwide
   - leases
   verbs:
   - create
+  - delete
   - get
   - list
   - update
