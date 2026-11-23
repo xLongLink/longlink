@@ -9,13 +9,13 @@ from longlink.cli.main import main
 from longlink.database import migrations as database_migrations
 
 
-@pytest.mark.parametrize("folder", [".", "sample-solution"])
-def test_init_copies_github_project_scaffold_with_custom_name(tmp_path: Path, folder: str) -> None:
+@pytest.mark.parametrize(("folder", "project_name"), [(".", "sample"), ("sample-solution", "a"), ("numeric", "7")])
+def test_init_copies_github_project_scaffold_with_custom_name(tmp_path: Path, folder: str, project_name: str) -> None:
     """Copy the project scaffold with requested GitHub workflows and package name."""
 
     with chdir(tmp_path):
         # Act
-        main(["init", "--folder", folder, "--ci", "github", "--name", "sample"])
+        main(["init", "--folder", folder, "--ci", "github", "--name", project_name])
 
         # Assert
         target = Path.cwd() / folder
@@ -34,7 +34,7 @@ def test_init_copies_github_project_scaffold_with_custom_name(tmp_path: Path, fo
         pyproject = (target / "pyproject.toml").read_text(encoding="utf-8")
 
         # Generated project metadata is ready for the documented CLI workflow.
-        assert 'name = "sample"' in pyproject
+        assert f'name = "{project_name}"' in pyproject
         assert "[tool.longlink]" in pyproject
         assert 'environments = "src.envs:Env"' in pyproject
         assert not (target / "uv.lock").exists()
@@ -167,7 +167,10 @@ def test_init_refuses_conflicting_folder(tmp_path: Path, capsys: pytest.CaptureF
     assert not (target / "main.py").exists()
 
 
-def test_init_rejects_invalid_project_name_without_creating_folder(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+@pytest.mark.parametrize("project_name", ["../invalid", "sample-", "sample.", "sample_", "-sample", ".", "_"])
+def test_init_rejects_invalid_project_name_without_creating_folder(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], project_name: str
+) -> None:
     """Reject invalid project metadata before creating the requested scaffold."""
 
     # Arrange
@@ -175,11 +178,11 @@ def test_init_rejects_invalid_project_name_without_creating_folder(tmp_path: Pat
 
     # Act
     with pytest.raises(SystemExit) as failure:
-        main(["init", "--folder", str(target), "--name", "../invalid"])
+        main(["init", "--folder", str(target), f"--name={project_name}"])
 
     # Assert
     assert failure.value.code == 1
-    assert "Invalid project name: ../invalid" in capsys.readouterr().err
+    assert f"Invalid project name: {project_name}" in capsys.readouterr().err
     assert not target.exists()
 
 

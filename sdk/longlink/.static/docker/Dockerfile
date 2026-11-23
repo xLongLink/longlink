@@ -9,11 +9,10 @@ RUN apt-get update \
     && apt-get install --yes --no-install-recommends ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Install the benchmarked Astral build at a path preserved in the runtime image.
-ENV UV_PYTHON=3.12.13
+# Match the build-time inspector at a path preserved in the runtime image.
+ENV UV_PYTHON={python_version}
 ENV UV_PYTHON_INSTALL_DIR=/opt/python
-ENV UV_PYTHON_CPYTHON_BUILD=20260807
-RUN uv python install 3.12.13
+RUN uv python install {python_version}
 ENV UV_PYTHON_DOWNLOADS=never
 
 COPY ["pyproject.toml", "uv.lock", "/workspace/"]
