@@ -5,9 +5,9 @@ import { it, expect, vi } from 'vitest';
 import type { ContextType } from 'react';
 import { ApiErrorContext } from '@/lib/errors';
 import { ReportedError } from '@/lib/reported';
-import { Controller, Form, useForm } from '@/views';
 import userEvent from '@testing-library/user-event';
 import { RequestContext } from '@/lib/view-capabilities';
+import { Controller, Form, useForm } from '@/components/longlink';
 
 it('submits a controlled field through a public View form', async () => {
     // Arrange

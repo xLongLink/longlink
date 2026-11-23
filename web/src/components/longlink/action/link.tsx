@@ -4,6 +4,7 @@ import { ReportedError } from '@/lib/reported';
 import { isCanceledRequest } from '@/lib/errors';
 import { Spinner } from '@/components/shadcn/spinner';
 import { buttonVariants } from '@/components/shadcn/button';
+import { useMergedRefs } from '@base-ui/utils/useMergedRefs';
 import type { VariantProps } from 'class-variance-authority';
 import { LinkNavigationContext } from '@/lib/view-capabilities';
 import { useConfirmAction } from '@/lib/hooks/use-confirm-action';
@@ -12,7 +13,6 @@ import { resolveExternalUrl, resolveScopedNavigationUrl } from '@/lib/url';
 import {
     useContext,
     useRef,
-    useCallback,
     useTransition,
     type Ref,
     type RefCallback,
@@ -60,13 +60,7 @@ export function Link(props: LinkProps) {
         isExternalLink = false,
         ...link
     } = props;
-    const elementRef = useCallback(
-        (element: HTMLElement | null) => {
-            if (typeof ref === 'function') return ref(element);
-            if (ref) ref.current = element;
-        },
-        [ref]
-    );
+    const elementRef = useMergedRefs(ref, undefined) ?? undefined;
     const className = cn(
         buttonVariants({ variant, size }),
         'align-baseline whitespace-normal aria-disabled:pointer-events-none aria-disabled:opacity-50',

@@ -2,9 +2,9 @@
 import { act } from 'react';
 import * as React from 'react';
 import { transform } from 'sucrase';
-import * as components from '@/views';
 import { withMounted } from '../../render';
 import * as mapcn from '@/components/mapcn/map';
+import * as components from '@/components/longlink';
 import userEvent from '@testing-library/user-event';
 import { it, expect, vi, beforeEach } from 'vitest';
 import { StreetMap } from '@/components/longlink/maps/street';

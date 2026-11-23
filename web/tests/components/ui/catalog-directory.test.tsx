@@ -2,9 +2,9 @@ import { act } from 'react';
 // @vitest-environment happy-dom
 import * as React from 'react';
 import { transform } from 'sucrase';
-import * as components from '@/views';
 import { expect, it, vi } from 'vitest';
 import { withMounted } from '../../render';
+import * as components from '@/components/longlink';
 import userEvent from '@testing-library/user-event';
 import { RequestContext } from '@/lib/view-capabilities';
 import source from '../../../../sdk/longlink/.static/new/src/views/list.jsx?raw';

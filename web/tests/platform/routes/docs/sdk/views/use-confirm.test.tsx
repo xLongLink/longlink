@@ -1,9 +1,9 @@
 // @vitest-environment happy-dom
 import * as React from 'react';
 import { transform } from 'sucrase';
-import * as components from '@/views';
 import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../../../../render';
+import * as components from '@/components/longlink';
 import userEvent from '@testing-library/user-event';
 import { RequestContext } from '@/lib/view-capabilities';
 import UseConfirmPage from '@/platform/routes/docs/sdk/views/use-confirm';

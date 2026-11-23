@@ -30,8 +30,7 @@ export default function PaymentMethods({ base, canManage }: { base: string; canM
                 // Redirect only after validating the API's hosted URL.
                 window.location.assign(response.url);
             } catch (cause) {
-                const error = cause instanceof Error ? cause : new Error('Submission failed', { cause });
-                if (!(error instanceof ReportedError)) reportError(error);
+                if (!(cause instanceof ReportedError)) reportError(cause);
             }
         });
     }

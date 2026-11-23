@@ -38,8 +38,7 @@ export default function InvitationsSection({ base, role }: { base: string; role:
                 await api.delete(`${base}/invitations/${id}`);
                 await invalidateInvitations();
             } catch (cause) {
-                const error = cause instanceof Error ? cause : new Error('Submission failed', { cause });
-                if (!(error instanceof ReportedError)) reportError(error);
+                if (!(cause instanceof ReportedError)) reportError(cause);
             }
         });
     }
