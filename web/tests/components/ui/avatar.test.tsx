@@ -52,8 +52,10 @@ it('defers artwork until failure, uses the latest profile, and retries a newly s
             await act(async () => image?.dispatchEvent(new Event('error')));
             expect(serialize).toHaveBeenCalledOnce();
             expect(output.querySelector('img')?.getAttribute('src')).toBe(generated);
+            expect(output.querySelector('img')).toBe(image);
             await act(async () => buttons[1]?.click());
             expect(output.querySelector('img')?.getAttribute('src')).toBe('https://images.example/second.png');
+            expect(output.querySelector('img')).toBe(image);
             expect(document.activeElement).toBe(root);
         });
     } finally {

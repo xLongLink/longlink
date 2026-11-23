@@ -1,14 +1,9 @@
 import { useEffect, useRef } from 'react';
-import { industryGroups, sharedUseCaseGroups } from '@/lib/industries';
-
-const industries = industryGroups.flatMap((group) => group.industries);
+import { industries, sharedUseCases } from '@/lib/industries';
 
 const industryNames = [...new Set(industries.flatMap((industry) => industry.name.split(' & ')))];
 
-const useCases = [
-    ...industries.flatMap((industry) => industry.useCases),
-    ...sharedUseCaseGroups.flatMap((group) => group.useCases)
-];
+const useCases = [...industries.flatMap((industry) => industry.useCases), ...sharedUseCases];
 
 const copies = [0, 1, 2];
 

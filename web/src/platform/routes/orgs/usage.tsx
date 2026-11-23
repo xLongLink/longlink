@@ -238,14 +238,7 @@ function CapacityEditor({
     });
     const submit = useSubmit(
         async (capacity: Capacity) => {
-            const allocation = {
-                compute_cpu_millicores: usage.compute_cpu_millicores,
-                compute_ram_bytes: usage.compute_ram_bytes,
-                storage_bytes: usage.storage_bytes,
-                database_cpu_millicores: usage.database_cpu_millicores,
-                database_ram_bytes: usage.database_ram_bytes,
-                database_storage_bytes: usage.database_storage_bytes
-            };
+            const allocation = { ...usage };
             for (const { key, scale } of resources) {
                 const field = fields[key];
                 if (field) allocation[field] = capacity[key] * scale;

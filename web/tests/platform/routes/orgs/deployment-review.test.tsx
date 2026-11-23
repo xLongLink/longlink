@@ -124,8 +124,12 @@ describe('DeploymentReview', () => {
                 await act(async () => user.type(input('NEW_SECRET'), 'new-fixture-value'));
                 await act(async () => user.keyboard('{Enter}'));
                 expect(submissions).toEqual([]);
-                await act(async () => form.requestSubmit());
+                await act(async () => {
+                    form.requestSubmit();
+                    form.requestSubmit();
+                });
                 expect(document.body.textContent).not.toContain('REQUIRED_SECRET');
+                expect(submissions).toEqual([]);
                 await act(async () => user.type(input('OPTIONAL_SECRET'), 'replacement-fixture-value'));
                 await act(async () => user.click(label('Remove OPTIONAL_SECRET')));
                 await act(async () => user.click(button('Back')));

@@ -62,7 +62,6 @@ export function Avatar({ className, src, name, size = 'md', children, shape = 'c
             )}
         >
             <AvatarPrimitive.Image
-                key={imageSrc}
                 data-slot="avatar-image"
                 className="aspect-square size-full rounded-[inherit] object-cover"
                 src={imageSrc}
