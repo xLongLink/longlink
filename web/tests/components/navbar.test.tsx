@@ -164,6 +164,7 @@ it('closes the mobile drawer at the desktop breakpoint and keeps it closed on re
             window.dispatchEvent(new Event('resize'));
         });
         expect(open.getAttribute('aria-expanded')).toBe('true');
+        const restoreFocus = vi.spyOn(open, 'focus');
 
         await act(async () => {
             window.innerWidth = 640;
@@ -173,6 +174,7 @@ it('closes the mobile drawer at the desktop breakpoint and keeps it closed on re
         // Assert
         expect(open.getAttribute('aria-expanded')).toBe('false');
         await vi.waitFor(() => expect(document.querySelector('[role="dialog"]')).toBeNull());
+        expect(restoreFocus).not.toHaveBeenCalled();
 
         await act(async () => {
             window.innerWidth = 390;

@@ -1,7 +1,5 @@
 import type { RouteConfig } from '@react-router/dev/routes';
-import { brandingPages, documentationPaths, legalPages } from './publications';
-
-const documentationIndexes = new Set(['/docs', '/docs/sdk', '/docs/sdk/views', '/docs/api']);
+import { brandingPages, documentationPages, legalPages } from './publications';
 
 export default [
     {
@@ -23,15 +21,11 @@ export default [
     {
         file: './layouts/documentation.tsx',
         children: [
-            ...documentationPaths.map((path) => {
-                const index = documentationIndexes.has(path);
-
-                return {
-                    path: path.slice(1),
-                    ...(index ? { index: true as const } : {}),
-                    file: `./routes${path}${index && path !== '/docs/sdk/views' ? '/index' : ''}.tsx`
-                };
-            }),
+            ...documentationPages.map(({ path, file, index }) => ({
+                path: path.slice(1),
+                file,
+                ...(index ? { index } : {})
+            })),
             { path: 'docs/*', file: '../components/layouts/not-found.tsx', id: 'docs-not-found' }
         ]
     },

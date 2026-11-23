@@ -30,7 +30,7 @@ async function requestPreviewFile() {
 }
 
 /** Demonstrates the real attachment lifecycle using a public sample PDF. */
-export function FileViewerExample() {
+function FileViewerExample() {
     // Scope the sample request capability to this example.
     return (
         <RequestContext value={{ request: requestPreviewFile }}>

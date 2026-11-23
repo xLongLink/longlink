@@ -26,7 +26,7 @@ export default function BadgePage() {
 }
 
 /** Renders the page's badge example for documentation and the catalog. */
-export function BadgeExample() {
+function BadgeExample() {
     // Show each variant at its default size in a wrapping row.
     return (
         <Stack direction="horizontal" wrap="wrap" align="center" justify="center" gap={2}>

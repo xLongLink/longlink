@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { ExternalLink, Menu } from 'lucide-react';
 import { Link as RouterLink } from 'react-router';
 import { Wordmark } from '@/components/ui/wordmark';
+import { useMediaQuery } from '@/lib/hooks/use-media-query';
 import { Button, buttonVariants } from '@/components/shadcn/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/shadcn/sheet';
 
@@ -25,19 +26,13 @@ export function Navbar({
 }) {
     const [scrolled, setScrolled] = useState(false);
     const [menuOpen, setMenuOpen] = useState(false);
+    const isDesktop = useMediaQuery('(min-width: 640px)');
 
     // Close the mobile drawer when switching to desktop navigation.
     useEffect(() => {
-        const desktop = window.matchMedia('(min-width: 640px)');
-
-        const onChange = () => {
-            if (desktop.matches) setMenuOpen(false);
-        };
-
-        desktop.addEventListener('change', onChange);
-
-        return () => desktop.removeEventListener('change', onChange);
-    }, []);
+        // oxlint-disable-next-line react/set-state-in-effect -- Synchronize drawer dismissal with the viewport.
+        if (isDesktop) setMenuOpen(false);
+    }, [isDesktop]);
 
     // Expand the landing navigation only while the page is at the top.
     useEffect(() => {
@@ -87,10 +82,7 @@ export function Navbar({
                             </div>
                         </div>
                     </nav>
-                    <SheetContent
-                        className="min-h-0"
-                        finalFocus={() => !window.matchMedia('(min-width: 640px)').matches}
-                    >
+                    <SheetContent className="min-h-0" finalFocus={!isDesktop}>
                         <SheetHeader className="shrink-0 pr-12">
                             <SheetTitle>Navigation</SheetTitle>
                         </SheetHeader>

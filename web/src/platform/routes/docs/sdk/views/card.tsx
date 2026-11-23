@@ -70,7 +70,7 @@ export default function CardPage() {
 }
 
 /** Shows a chart card whose header action changes the range and footer summary. */
-export function CardExample() {
+function CardExample() {
     const [months, setMonths] = useState(6);
     const data = requests.slice(-months);
     const total = data.reduce((sum, row) => sum + row.requests, 0);

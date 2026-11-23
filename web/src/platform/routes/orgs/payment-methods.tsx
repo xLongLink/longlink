@@ -1,8 +1,8 @@
 import { api } from '@/lib/api';
-import { useTransition } from 'react';
+import { useApiError } from '@/lib/errors';
 import { useApi } from '@/lib/hooks/use-api';
 import { ApiBoundary } from '@/components/api';
-import { useSubmit } from '@/lib/hooks/use-submit';
+import { ReportedError } from '@/lib/reported';
 import { Text } from '@/components/longlink/display/text';
 import { Separator } from '@/components/shadcn/separator';
 import { Stack } from '@/components/longlink/layout/stack';
@@ -10,6 +10,7 @@ import { Badge } from '@/components/longlink/display/badge';
 import { Empty } from '@/components/longlink/display/empty';
 import { Button } from '@/components/longlink/action/button';
 import { Heading } from '@/components/longlink/display/heading';
+import { useConfirmAction } from '@/lib/hooks/use-confirm-action';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { Table, TableBody, TableRow, TableCell } from '@/components/longlink/display/table';
 
@@ -17,18 +18,23 @@ import { Table, TableBody, TableRow, TableCell } from '@/components/longlink/dis
 export default function PaymentMethods({ base, canManage }: { base: string; canManage: boolean }) {
     const [usage] = useApi(`${base}/usage`, schemas.zOrganizationUsage);
 
-    const [pending, startTransition] = useTransition();
+    const reportError = useApiError();
+    const { isPending: pending, run } = useConfirmAction();
 
     /** Opens owner-authorized Stripe card registration without an immediate payment. */
-    const registerCard = useSubmit<void>(
-        async () => {
-            const response = await api.post(`${base}/cards/checkout`).json(schemas.zPaymentRedirect);
+    function registerCard() {
+        run(async () => {
+            try {
+                const response = await api.post(`${base}/cards/checkout`).json(schemas.zPaymentRedirect);
 
-            // Redirect only after validating the API's hosted URL.
-            window.location.assign(response.url);
-        },
-        { onError: () => {} }
-    );
+                // Redirect only after validating the API's hosted URL.
+                window.location.assign(response.url);
+            } catch (cause) {
+                const error = cause instanceof Error ? cause : new Error('Submission failed', { cause });
+                if (!(error instanceof ReportedError)) reportError(error);
+            }
+        });
+    }
 
     return (
         <Stack gap={0}>
@@ -38,16 +44,7 @@ export default function PaymentMethods({ base, canManage }: { base: string; canM
                         Payment Methods
                     </Heading>
                     {usage.stripe_enabled && canManage && (
-                        <Button
-                            size="sm"
-                            disabled={pending}
-                            aria-busy={pending || undefined}
-                            onClick={() => {
-                                startTransition(async () => {
-                                    await registerCard();
-                                });
-                            }}
-                        >
+                        <Button size="sm" disabled={pending} aria-busy={pending || undefined} onClick={registerCard}>
                             Add card
                         </Button>
                     )}

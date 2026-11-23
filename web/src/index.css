@@ -2,7 +2,7 @@
 
 @layer components {
     .shell-content {
-        --shell-height: calc(100dvh - var(--_app-shell-header-height, 0px));
+        --shell-height: 100dvh;
         --surface-content-height: calc(var(--shell-height) - var(--platform-toolbar-height, 0px) - var(--spacing) * 4);
     }
 

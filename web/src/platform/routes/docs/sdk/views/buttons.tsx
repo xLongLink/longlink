@@ -84,7 +84,7 @@ export default function ButtonsPage() {
 }
 
 /** Showcases button variants, sizes, disabled states, and grouping. */
-export function ButtonExample() {
+function ButtonExample() {
     // Wrap each row so all variants remain reachable on narrow screens.
     return (
         <Stack gap={4}>

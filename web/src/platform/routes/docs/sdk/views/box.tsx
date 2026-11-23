@@ -35,7 +35,7 @@ export default function BoxPage() {
 }
 
 /** Shows each semantic background with its inherited foreground color. */
-export function BoxExample() {
+function BoxExample() {
     return (
         <Box width={320} maxWidth="100%">
             <Grid columns={2} gap={3}>

@@ -49,7 +49,7 @@ export default function IconsPage() {
 }
 
 /** Renders the page's icon example for documentation and the catalog. */
-export function IconExample() {
+function IconExample() {
     const icons = [
         'search',
         'info',

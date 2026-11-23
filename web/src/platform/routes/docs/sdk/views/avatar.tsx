@@ -39,7 +39,7 @@ export default function AvatarPage() {
 }
 
 /** Renders the page's avatar example for documentation and the catalog. */
-export function AvatarExample() {
+function AvatarExample() {
     return (
         <Stack direction="horizontal" gap={6} align="center">
             <AvatarGroup>

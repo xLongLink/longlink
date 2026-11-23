@@ -107,8 +107,6 @@ export type RequestOptions = Omit<RequestCommand, 'type' | 'id' | 'path' | 'meth
 
 export type DownloadCommand = z.output<typeof downloadSchema>;
 
-export type IconCommand = z.output<typeof iconSchema>;
-
 // Replies contain only backend JSON or binary responses, never arbitrary runtime objects.
 export const responseSchema = z.union([z.json(), z.instanceof(Blob)]);
 

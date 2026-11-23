@@ -9,6 +9,7 @@ import { Link } from '@/components/longlink/action/link';
 import { Stack } from '@/components/longlink/layout/stack';
 import { Dialog } from '@/components/longlink/layout/dialog';
 import { Heading } from '@/components/longlink/display/heading';
+import { IllustratedForm } from '@/platform/components/illustrated-form';
 import { Field, FieldError, FieldLabel } from '@/components/shadcn/field';
 import { zOrganizationCreate } from '@/lib/generated/platform-api-v1/zod.gen';
 
@@ -39,8 +40,8 @@ export default function CreateOrganization({
 
     return (
         <Dialog open showHeader={false} bodyPadding={false} onOpenChange={onOpenChange} title="New organization">
-            <form
-                className="grid min-h-full grid-cols-1 items-center sm:grid-cols-2"
+            <IllustratedForm
+                image={{ src: '/images/new-organization.png', width: 768, height: 768 }}
                 onSubmit={form.handleSubmit(submit)}
                 noValidate
                 aria-busy={form.formState.isSubmitting}
@@ -71,24 +72,7 @@ export default function CreateOrganization({
                         </Button>
                     </Stack>
                 </fieldset>
-                <Stack
-                    direction="horizontal"
-                    gap={0}
-                    align="center"
-                    justify="center"
-                    padding={6}
-                    className="h-full bg-black/10 dark:bg-black/20"
-                >
-                    <img
-                        src="/images/new-organization.png"
-                        alt=""
-                        width={768}
-                        height={768}
-                        decoding="async"
-                        className="w-full max-w-72 object-contain invert dark:invert-0"
-                    />
-                </Stack>
-            </form>
+            </IllustratedForm>
         </Dialog>
     );
 }

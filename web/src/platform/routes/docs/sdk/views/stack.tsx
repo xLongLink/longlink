@@ -36,7 +36,7 @@ export default function StackPage() {
 }
 
 /** Renders the page's stack example for documentation and the catalog. */
-export function StackExample() {
+function StackExample() {
     // Arrange presentation-only items with consistent spacing.
     return (
         <Box width={320} maxWidth="100%">

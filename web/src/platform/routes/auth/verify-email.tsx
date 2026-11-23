@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { TextField } from './field';
+import type { ReactNode } from 'react';
 import { api, ApiError } from '@/lib/api';
 import { useForm } from 'react-hook-form';
 import { AuthLayout } from './auth-layout';
@@ -90,53 +91,41 @@ export default function VerifyEmail() {
         ? `/auth/register?${new URLSearchParams({ email: verifiedEmail })}`
         : '/auth/register';
 
-    const pageMetadata = <title>Verify Your Email | LongLink</title>;
+    let title: ReactNode = 'Verify your email';
+    let description: string | null = 'Request a new registration link to continue.';
+    let headingSize: 3 | undefined;
+    let body: ReactNode;
 
     // Invalid credentials require a replacement registration link.
     if (verification?.status === 'error') {
-        return (
-            <AuthLayout title="Verify your email" description="Request a new registration link to continue.">
-                {pageMetadata}
-                <Stack gap={3}>
-                    <Link href={recoveryRegisterHref} variant="primary">
-                        Request a new registration link
-                    </Link>
-                </Stack>
-            </AuthLayout>
-        );
-    }
-
-    // Wait for the server to authenticate the signed email claim.
-    if (verification?.status !== 'verified') {
-        return (
-            <AuthLayout title="Verify your email" description="Verifying your email...">
-                {pageMetadata}
-                <Button disabled aria-busy="true">
-                    Verifying your email...
-                </Button>
-            </AuthLayout>
-        );
-    }
-
-    // Account races cannot succeed by resubmitting the same form.
-    if (form.formState.errors.root?.accountConflict) {
-        return (
-            <AuthLayout title="Complete your account" description="Request a new registration link to continue.">
-                {pageMetadata}
+        body = (
+            <Stack gap={3}>
                 <Link href={recoveryRegisterHref} variant="primary">
                     Request a new registration link
                 </Link>
-            </AuthLayout>
+            </Stack>
         );
-    }
-
-    return (
-        <AuthLayout
-            description={null}
-            headingSize={3}
-            title={<span className="block text-nowrap">Welcome to LongLink</span>}
-        >
-            {pageMetadata}
+    } else if (verification?.status !== 'verified') {
+        // Wait for the server to authenticate the signed email claim.
+        description = 'Verifying your email...';
+        body = (
+            <Button disabled aria-busy="true">
+                Verifying your email...
+            </Button>
+        );
+    } else if (form.formState.errors.root?.accountConflict) {
+        // Account races cannot succeed by resubmitting the same form.
+        title = 'Complete your account';
+        body = (
+            <Link href={recoveryRegisterHref} variant="primary">
+                Request a new registration link
+            </Link>
+        );
+    } else {
+        title = <span className="block text-nowrap">Welcome to LongLink</span>;
+        description = null;
+        headingSize = 3;
+        body = (
             <Stack gap={3}>
                 <Separator />
                 <form noValidate onSubmit={form.handleSubmit(save)} aria-busy={form.formState.isSubmitting}>
@@ -167,6 +156,13 @@ export default function VerifyEmail() {
                     <Link href="/terms/">Terms of Service</Link> and <Link href="/privacy/">Privacy Policy</Link>.
                 </Text>
             </Stack>
+        );
+    }
+
+    return (
+        <AuthLayout title={title} description={description} headingSize={headingSize}>
+            <title>Verify Your Email | LongLink</title>
+            {body}
         </AuthLayout>
     );
 }

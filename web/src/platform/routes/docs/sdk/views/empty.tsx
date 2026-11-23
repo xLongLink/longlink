@@ -28,7 +28,7 @@ export default function EmptyPage() {
 }
 
 /** Renders the page's empty-state example for documentation and the catalog. */
-export function EmptyExample() {
+function EmptyExample() {
     // Show the project empty state with its actions.
     return (
         <Empty

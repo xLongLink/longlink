@@ -35,8 +35,7 @@ export default function TabsSection({ base, tags, canMaintain }: { base: string;
     // Keep moves pending until the shared navigation and table rows refresh.
     const move = useMutation({
         mutationFn: async ({ tag, direction }: { tag: Tag; direction: 'up' | 'down' }) => {
-            const json = schemas.zOrganizationTagMove.parse({ direction });
-            await api.post(`${base}/tags/${tag.id}/move`, { json });
+            await api.post(`${base}/tags/${tag.id}/move`, { json: { direction } });
             await queryClient.invalidateQueries({ queryKey: ['api', `${base}/tags`], exact: true });
         },
         onError: reportError,
