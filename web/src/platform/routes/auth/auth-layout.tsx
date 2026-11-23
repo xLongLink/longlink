@@ -11,7 +11,7 @@ export function AuthLayout({
     headingSize = 1
 }: {
     children: ReactNode;
-    description: ReactNode;
+    description: string | null;
     title: ReactNode;
     headingSize?: 1 | 3;
 }) {
@@ -33,12 +33,10 @@ export function AuthLayout({
                     <Heading level={1} size={headingSize} align="center">
                         {title}
                     </Heading>
-                    {typeof description === 'string' ? (
+                    {description !== null && (
                         <Text as="p" size="sm" weight="normal" tone="muted" align="center">
                             {description}
                         </Text>
-                    ) : (
-                        description
                     )}
                 </Stack>
                 {children}

@@ -115,26 +115,30 @@ export default function ViewLayout({
     if (!component) throw new Error(`Missing View documentation: ${name}`);
     const runtime = component.category === 'Runtime';
 
-    const catalogComponent = viewCatalog.components.find((entry) => entry.name === name);
+    const references = runtime
+        ? []
+        : [name, ...(relatedComponents ?? [])].map((referenceName) => ({
+              name: referenceName,
+              component: viewCatalog.components.find((entry) => entry.name === referenceName)
+          }));
+    const catalogComponent = references[0]?.component;
 
     // Prepare property tables for the reference tab.
     const groups = new Map<string, ViewProperty[]>();
 
-    if (!runtime) {
-        for (const referenceName of [name, ...(relatedComponents ?? [])]) {
-            const reference = viewCatalog.components.find((entry) => entry.name === referenceName);
-            const referenceProperties = reference?.properties ?? (referenceName === name ? properties : undefined);
-            for (const property of referenceProperties ?? []) {
-                const separator = /^[A-Z]/.test(property.name) ? property.name.indexOf('.') : -1;
-                const group = separator < 0 ? referenceName : property.name.slice(0, separator);
+    for (const reference of references) {
+        const referenceProperties =
+            reference.component?.properties ?? (reference.name === name ? properties : undefined);
+        for (const property of referenceProperties ?? []) {
+            const separator = /^[A-Z]/.test(property.name) ? property.name.indexOf('.') : -1;
+            const group = separator < 0 ? reference.name : property.name.slice(0, separator);
 
-                const row = { ...property, name: separator < 0 ? property.name : property.name.slice(separator + 1) };
+            const row = { ...property, name: separator < 0 ? property.name : property.name.slice(separator + 1) };
 
-                const properties = groups.get(group);
+            const properties = groups.get(group);
 
-                if (properties) properties.push(row);
-                else groups.set(group, [row]);
-            }
+            if (properties) properties.push(row);
+            else groups.set(group, [row]);
         }
     }
 
@@ -180,13 +184,10 @@ export default function ViewLayout({
                             {children}
                         </TabsContent>
                         <TabsContent value="properties" className="flex flex-col gap-5">
-                            {catalogComponent && 'guidance' in catalogComponent && <p>{catalogComponent.guidance}</p>}
-                            {relatedComponents?.map((relatedName) => {
-                                const related = viewCatalog.components.find((entry) => entry.name === relatedName);
-                                return related && 'guidance' in related ? (
-                                    <p key={relatedName}>{related.guidance}</p>
-                                ) : null;
-                            })}
+                            {references.map(
+                                ({ name, component }) =>
+                                    component && 'guidance' in component && <p key={name}>{component.guidance}</p>
+                            )}
                             {catalogComponent && 'reference' in catalogComponent && (
                                 <a href={catalogComponent.reference} className="underline underline-offset-4">
                                     {component.label} upstream reference

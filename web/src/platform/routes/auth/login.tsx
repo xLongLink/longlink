@@ -18,8 +18,8 @@ import { emailSchema, passwordSchema } from './validation';
 import { Stack } from '@/components/longlink/layout/stack';
 import { FieldSeparator } from '@/components/shadcn/field';
 import { useCurrentUser } from '@/platform/hooks/use-user';
+import { Link, Navigate, useSearchParams } from 'react-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Link, Navigate, useNavigate, useSearchParams } from 'react-router';
 import { zOAuthAvailability } from '@/lib/generated/platform-api-v1/zod.gen';
 
 const loginSchema = z.object({ email: emailSchema, password: passwordSchema });
@@ -35,7 +35,6 @@ const oauthProviders = [
 export default function Login() {
     const [isPasswordVisible, setIsPasswordVisible] = useState(false);
     const [searchParams] = useSearchParams();
-    const navigate = useNavigate();
     const queryClient = useQueryClient();
     const reportApiError = useApiError();
     const oauthError = searchParams.get('oauth_error') === '1';
@@ -73,8 +72,7 @@ export default function Login() {
         async (payload: LoginValues) => {
             await api('/api/v1/auth/password/login', { json: payload, method: 'POST' });
             await clearSessionQueries(queryClient);
-            await refetch();
-            void navigate(destination, { replace: true });
+            await refetch({ throwOnError: true });
         },
         { onError: (error) => form.setError('root', { message: error.message }) }
     );
