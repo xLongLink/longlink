@@ -4,15 +4,15 @@ import { ArrowRight } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { Input } from '@/components/shadcn/input';
 import { useSubmit } from '@/lib/hooks/use-submit';
-import { useEffect, useId, useState } from 'react';
 import { Checkbox } from '@/components/shadcn/checkbox';
 import { Text } from '@/components/longlink/display/text';
 import { Stack } from '@/components/longlink/layout/stack';
+import { useEffect, useId, useRef, useState } from 'react';
 import { Button } from '@/components/longlink/action/button';
 import { Dialog } from '@/components/longlink/layout/dialog';
 import { Heading } from '@/components/longlink/display/heading';
-import { Controller, useForm, useWatch } from 'react-hook-form';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
+import { Controller, useForm, useWatch, type ResolverResult } from 'react-hook-form';
 import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/shadcn/field';
 
 type DeploymentReviewProps = {
@@ -20,6 +20,8 @@ type DeploymentReviewProps = {
     onOpenChange: (open: boolean) => void;
     onSuccess: () => void | Promise<void>;
 };
+
+type DeploymentDraft = { envs: Record<string, { value?: string; removed?: boolean }> };
 
 /** Abbreviates digest references for release comparison while preserving tag-only images. */
 function imageDigest(image: string) {
@@ -31,12 +33,7 @@ function imageDigest(image: string) {
 export default function DeploymentReview({ item, onSuccess, onOpenChange }: DeploymentReviewProps) {
     const formId = useId();
     const [step, setStep] = useState(0);
-
-    const form = useForm<{ envs: Record<string, { value?: string; removed?: boolean }> }>({
-        defaultValues: { envs: {} }
-    });
-
-    const envs = useWatch({ control: form.control, name: 'envs' });
+    const advancing = useRef(false);
 
     // Keep inspection attempt-local, cancel on unmount, and never refresh beneath an edited draft.
     const path = `/api/v1/solutions/${item.id}/update`;
@@ -56,16 +53,40 @@ export default function DeploymentReview({ item, onSuccess, onOpenChange }: Depl
     });
 
     // Preserve configured required secrets, and require values for new required environments.
-    function isMissingRequired(environment: z.output<typeof schemas.zEnvironmentMetadata>, value: string | undefined) {
+    function isMissingRequired(
+        environment: z.output<typeof schemas.zEnvironmentMetadata>,
+        draft: DeploymentDraft['envs'][string] | undefined
+    ) {
         return (
             environment.required &&
-            (envs[environment.name]?.removed === true ||
-                (!candidate?.configured_envs.includes(environment.name) && !value?.trim()))
+            (draft?.removed === true ||
+                (!candidate?.configured_envs.includes(environment.name) && !draft?.value?.trim()))
         );
     }
 
+    const form = useForm<DeploymentDraft>({
+        defaultValues: { envs: {} },
+        resolver: (values): ResolverResult<DeploymentDraft> => {
+            const errors = Object.fromEntries(
+                (candidate?.metadata.environments ?? [])
+                    .filter((environment) => isMissingRequired(environment, values.envs[environment.name]))
+                    .map(
+                        (environment) =>
+                            [
+                                environment.name,
+                                { value: { type: 'required', message: 'Please complete this field.' } }
+                            ] as const
+                    )
+            );
+            return Object.keys(errors).length ? { values: {}, errors: { envs: errors } } : { values, errors: {} };
+        }
+    });
+    const envs = useWatch({ control: form.control, name: 'envs' });
+    const requiredFieldPaths = (candidate?.metadata.environments ?? [])
+        .filter((environment) => environment.required)
+        .map((environment) => `envs.${environment.name}.value` as const);
     const missingRequired = (candidate?.metadata.environments ?? []).some((environment) =>
-        isMissingRequired(environment, envs[environment.name]?.value)
+        isMissingRequired(environment, envs[environment.name])
     );
     const environments = (candidate?.metadata.environments ?? []).filter((environment) =>
         step === 1 ? environment.required : !environment.required
@@ -79,34 +100,18 @@ export default function DeploymentReview({ item, onSuccess, onOpenChange }: Depl
         if (invalid) form.setFocus(`envs.${invalid.name}.value`);
     }, [step, candidate, form]);
 
-    function validateRequired() {
-        let valid = true;
-        for (const environment of candidate?.metadata.environments ?? []) {
-            if (!environment.required) continue;
-            if (!isMissingRequired(environment, form.getValues(`envs.${environment.name}.value`))) {
-                form.clearErrors(`envs.${environment.name}.value`);
-                continue;
-            }
-            form.setError(
-                `envs.${environment.name}.value`,
-                { message: 'Please complete this field.' },
-                { shouldFocus: valid }
-            );
-            valid = false;
+    const hasChanges =
+        candidate?.metadata.image !== candidate?.current_image ||
+        Object.values(envs).some(({ value, removed }) => removed === true || value !== undefined);
+
+    async function updateSolution(values: DeploymentDraft) {
+        if (!candidate) return;
+        const edits: [string, string | null][] = [];
+        for (const [name, { value, removed }] of Object.entries(values.envs)) {
+            if (removed === true) edits.push([name, null]);
+            else if (value !== undefined) edits.push([name, value]);
         }
-        if (!valid) setStep(1);
-        return valid;
-    }
-
-    const edits: [string, string | null][] = [];
-    for (const [name, { value, removed }] of Object.entries(envs)) {
-        if (removed === true) edits.push([name, null]);
-        else if (value !== undefined) edits.push([name, value]);
-    }
-    const hasChanges = candidate?.metadata.image !== candidate?.current_image || edits.length > 0;
-
-    async function updateSolution() {
-        if (!candidate || missingRequired || !hasChanges) return;
+        if (candidate.metadata.image === candidate.current_image && edits.length === 0) return;
         await api.post(path, {
             json: schemas.zSolutionPatch.parse({
                 envs: Object.fromEntries(edits),
@@ -136,19 +141,21 @@ export default function DeploymentReview({ item, onSuccess, onOpenChange }: Depl
                         <form
                             id={formId}
                             className="flex min-h-0 flex-col gap-4"
-                            onSubmit={(event) => {
+                            onSubmit={async (event) => {
                                 event.preventDefault();
-                                if (form.formState.isSubmitting) return;
-                                if (step === 0) {
-                                    setStep(1);
-                                    return;
+                                if (advancing.current || form.formState.isSubmitting) return;
+                                advancing.current = true;
+                                try {
+                                    if (step === 0) {
+                                        setStep(1);
+                                    } else if (step === 1) {
+                                        if (await form.trigger(requiredFieldPaths, { shouldFocus: true })) setStep(2);
+                                    } else {
+                                        await form.handleSubmit(submit, () => setStep(1))(event);
+                                    }
+                                } finally {
+                                    advancing.current = false;
                                 }
-                                if (!validateRequired()) return;
-                                if (step === 1) {
-                                    setStep(2);
-                                    return;
-                                }
-                                void form.handleSubmit(submit, () => setStep(1))(event);
                             }}
                             noValidate
                             aria-busy={form.formState.isSubmitting}
@@ -186,11 +193,6 @@ export default function DeploymentReview({ item, onSuccess, onOpenChange }: Depl
                                                 <Controller
                                                     name={`envs.${environment.name}.value`}
                                                     control={form.control}
-                                                    rules={{
-                                                        validate: (value) =>
-                                                            !isMissingRequired(environment, value) ||
-                                                            'Please complete this field.'
-                                                    }}
                                                     render={({ field, fieldState }) => (
                                                         <Field
                                                             className="min-w-0"

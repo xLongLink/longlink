@@ -7,21 +7,7 @@ import type { ComponentProps, CSSProperties, ReactNode } from 'react';
 /* -------------------------------------------------------------------------- */
 
 /** The family a type belongs to. It picks the glyph and the default color. */
-type FileTypeCategory =
-    | 'archive'
-    | 'audio'
-    | 'code'
-    | 'design'
-    | 'document'
-    | 'empty'
-    | 'executable'
-    | 'file'
-    | 'folder'
-    | 'font'
-    | 'image'
-    | 'presentation'
-    | 'spreadsheet'
-    | 'video';
+type FileTypeCategory = keyof typeof FILE_TYPE_CATEGORIES;
 
 type FileTypeExtension = {
     category: FileTypeCategory;
@@ -46,39 +32,21 @@ const NEUTRAL =
  * under 3:1 until the 700 step. */
 const YELLOW = 'text-yellow-500 [--file-type-foreground:var(--color-yellow-950)]';
 
-/** The family colors, which a format without a brand color of its own takes. */
-const CATEGORY_COLORS: Record<FileTypeCategory, string> = {
-    archive: NEUTRAL,
-    audio: 'text-pink-600',
-    code: 'text-blue-600',
-    design: 'text-purple-600',
-    document: 'text-blue-600',
-    empty: NEUTRAL,
-    executable: NEUTRAL,
-    file: NEUTRAL,
-    folder: 'text-violet-600',
-    font: NEUTRAL,
-    image: 'text-violet-600',
-    presentation: 'text-red-600',
-    spreadsheet: 'text-green-600',
-    video: 'text-blue-600'
-};
-
-const CATEGORY_NAMES: Record<FileTypeCategory, string> = {
-    archive: 'Archive',
-    audio: 'Audio file',
-    code: 'Code file',
-    design: 'Design file',
-    document: 'Document',
-    empty: 'File',
-    executable: 'Application',
-    file: 'File',
-    folder: 'Folder',
-    font: 'Font file',
-    image: 'Image',
-    presentation: 'Presentation',
-    spreadsheet: 'Spreadsheet',
-    video: 'Video'
+const FILE_TYPE_CATEGORIES = {
+    archive: { color: NEUTRAL, name: 'Archive' },
+    audio: { color: 'text-pink-600', name: 'Audio file' },
+    code: { color: 'text-blue-600', name: 'Code file' },
+    design: { color: 'text-purple-600', name: 'Design file' },
+    document: { color: 'text-blue-600', name: 'Document' },
+    empty: { color: NEUTRAL, name: 'File' },
+    executable: { color: NEUTRAL, name: 'Application' },
+    file: { color: NEUTRAL, name: 'File' },
+    folder: { color: 'text-violet-600', name: 'Folder' },
+    font: { color: NEUTRAL, name: 'Font file' },
+    image: { color: 'text-violet-600', name: 'Image' },
+    presentation: { color: 'text-red-600', name: 'Presentation' },
+    spreadsheet: { color: 'text-green-600', name: 'Spreadsheet' },
+    video: { color: 'text-blue-600', name: 'Video' }
 };
 
 /**
@@ -275,27 +243,10 @@ const FILE_TYPE_EXTENSIONS = {
     woff2: { category: 'font' }
 } satisfies Record<string, FileTypeExtension>;
 
-/** The families that can be passed as a `type` on their own, glyph only. */
-const FILE_TYPE_CATEGORIES = [
-    'archive',
-    'audio',
-    'code',
-    'design',
-    'document',
-    'empty',
-    'executable',
-    'folder',
-    'font',
-    'image',
-    'presentation',
-    'spreadsheet',
-    'video'
-] as const satisfies readonly FileTypeCategory[];
-
 type FileTypeExtensionName = keyof typeof FILE_TYPE_EXTENSIONS;
 
 /** Every type the table knows. Any other string renders as a neutral file. */
-type FileTypeName = FileTypeExtensionName | (typeof FILE_TYPE_CATEGORIES)[number];
+type FileTypeName = FileTypeExtensionName | Exclude<FileTypeCategory, 'file'>;
 
 /* -------------------------------------------------------------------------- */
 /*                                 Resolution                                 */
@@ -316,15 +267,15 @@ function has(record: object, key: string) {
     return Object.prototype.hasOwnProperty.call(record, key);
 }
 
-function isCategory(value: string): value is FileTypeCategory {
-    return (FILE_TYPE_CATEGORIES as readonly string[]).includes(value);
+function isCategory(value: string): value is Exclude<FileTypeCategory, 'file'> {
+    return value !== 'file' && has(FILE_TYPE_CATEGORIES, value);
 }
 
 function resolveFileType(type?: string): ResolvedFileType {
     const key = (type ?? '').trim().toLowerCase().replace(/^\.+/, '');
 
     if (!key || key === 'empty') {
-        return { type: 'empty', category: 'empty', color: CATEGORY_COLORS.empty };
+        return { type: 'empty', category: 'empty', color: FILE_TYPE_CATEGORIES.empty.color };
     }
 
     const extension = has(extensions, key) ? extensions[key] : null;
@@ -333,15 +284,15 @@ function resolveFileType(type?: string): ResolvedFileType {
             type: key,
             category: extension.category,
             label: extension.label ?? key.toUpperCase(),
-            color: extension.color ?? CATEGORY_COLORS[extension.category]
+            color: extension.color ?? FILE_TYPE_CATEGORIES[extension.category].color
         };
     }
 
     if (isCategory(key)) {
-        return { type: key, category: key, color: CATEGORY_COLORS[key] };
+        return { type: key, category: key, color: FILE_TYPE_CATEGORIES[key].color };
     }
 
-    return { type: key, category: 'file', label: key.toUpperCase(), color: CATEGORY_COLORS.file };
+    return { type: key, category: 'file', label: key.toUpperCase(), color: FILE_TYPE_CATEGORIES.file.color };
 }
 
 /* -------------------------------------------------------------------------- */
@@ -586,7 +537,7 @@ function FileType({ type, variant = 'outline', size = 'md', label, glyph, icon, 
     const hasText = text !== undefined && text !== null && text !== '';
     // The name spells out a key its label shortens (DOCKERFILE, not DOCK).
     const spelled = resolved.label ? resolved.type.toUpperCase() : undefined;
-    const typeName = spelled ? `${spelled} file` : CATEGORY_NAMES[resolved.category];
+    const typeName = spelled ? `${spelled} file` : FILE_TYPE_CATEGORIES[resolved.category].name;
     // A custom string label is part of what the icon says ("V3, DOCX file").
     const custom = typeof label === 'string' ? label.toUpperCase() : '';
     const name =
