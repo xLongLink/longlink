@@ -196,8 +196,9 @@ jobs:
                   from importlib.resources import files
 
                   assets = files("longlink").joinpath(".static")
-                  for path in ("web/index.html", "jsx/frontend.d.ts", "jsx/frontend.native.d.ts"):
+                  for path in ("web/index.html", "jsx/frontend.d.ts"):
                       assert assets.joinpath(path).is_file(), path
+                  assert not assets.joinpath("jsx/frontend.native.d.ts").is_file()
                   PY
 
             - name: Build scaffold image with SDK distribution
