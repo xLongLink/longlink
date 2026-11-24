@@ -211,6 +211,7 @@ export const zEnvironmentMetadata = z.object({
  */
 export const zLongLinkMetadata = z.object({
     image: z.string(),
+    banner: z.string().max(2048).nullish(),
     version: z.string().nullish(),
     description: z.string().nullish(),
     permissions: zCatalog.nullish(),
@@ -651,6 +652,7 @@ export const zOrganizationSolutionSummary = z.object({
     status: zStatus,
     deployment_pending: z.boolean(),
     desired_revision_id: z.uuid().nullable(),
+    banner: z.string().nullish(),
     deployed_version: z.string().nullish()
 });
 
@@ -696,6 +698,7 @@ export const zPublicSolution = z.object({
     description: z.string().nullable(),
     status: zStatus,
     public: z.boolean(),
+    banner: z.string().nullish(),
     deployed_version: z.string().nullable(),
     organization: zPublicOrganization
 });
@@ -722,6 +725,7 @@ export const zSolutionResponse = z.object({
     status: zStatus,
     deployment_pending: z.boolean(),
     desired_revision_id: z.uuid().nullable(),
+    banner: z.string().nullish(),
     deployed_version: z.string().nullish(),
     organization: zOrganizationIdentity,
     image_desired: z.string(),

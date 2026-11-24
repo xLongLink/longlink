@@ -30,6 +30,7 @@ IMMUTABLE_REVISION_FIELDS = [
     ("id", uuid4()),
     ("solution_id", uuid4()),
     ("image", "ghcr.io/longlink/dashboard@sha256:replacement"),
+    ("banner", "https://example.com/replacement.png"),
     ("version", "2.0.0"),
     ("envs", {"KEY": "replacement"}),
     ("created_at", datetime.now(UTC)),

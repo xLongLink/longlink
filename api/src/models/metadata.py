@@ -1,6 +1,6 @@
 from pydantic import Field, BaseModel
 from src.models.types import Image
-from longlink.metadata import EnvironmentMetadata
+from longlink.metadata import Banner, EnvironmentMetadata
 from longlink.permissions import Catalog
 
 
@@ -11,6 +11,7 @@ class LongLinkMetadata(BaseModel):
     image: Image
 
     # Metadata
+    banner: Banner | None = None
     version: str | None = None
     description: str | None = None
 

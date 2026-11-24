@@ -40,6 +40,7 @@ class OrganizationSolutionSummary(BaseModel):
     desired_revision_id: UUID | None
 
     # Deployed release
+    banner: str | None = None
     deployed_version: str | None = Field(
         default=None, description="Recorded image version of the last successfully deployed revision, when available."
     )

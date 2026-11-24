@@ -86,6 +86,7 @@ async def test_inspect_image_returns_declared_metadata(
     assert response.status_code == 200
     assert response.json() == {
         "image": "ghcr.io/longlink/dashboard@sha256:test",
+        "banner": None,
         "version": None,
         "description": None,
         "permissions": None,

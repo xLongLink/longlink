@@ -125,6 +125,7 @@ class PublicSolution(BaseModel):
     # State
     status: Status
     public: bool
+    banner: str | None = None
     deployed_version: str | None
 
     # Organization

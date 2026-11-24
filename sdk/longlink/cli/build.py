@@ -450,6 +450,15 @@ def build_solution(root: Path, build_context: Path, *, pyproject_data: Mapping[s
 
     # Resolve build paths using the project metadata prepared by the command.
     _, project_version, project_description = read_project_metadata(pyproject_data)
+    tool_data = pyproject_data.get("tool")
+    longlink_data = tool_data.get("longlink") if isinstance(tool_data, dict) else None
+    banner = longlink_data.get("banner") if isinstance(longlink_data, dict) else None
+    if isinstance(longlink_data, dict) and "banner" in longlink_data:
+        banner_adapter = TypeAdapter(metadata.Banner)
+        try:
+            banner = banner_adapter.validate_python(banner)
+        except ValidationError as error:
+            raise errors.Error("[tool.longlink].banner must be an HTTPS URL without credentials (maximum 2048 characters)") from error
     source_root, local_source_paths, project_manifests = resolve_docker_paths(root, pyproject_data)
 
     # Require the authoritative lockfile before importing Solution code or copying source files.
@@ -476,6 +485,8 @@ def build_solution(root: Path, build_context: Path, *, pyproject_data: Mapping[s
     labels = [f"LABEL org.opencontainers.image.version={json.dumps(version if version is not None else project_version)}"]
     if project_description is not None:
         labels.append(f"LABEL org.opencontainers.image.description={json.dumps(project_description)}")
+    if banner is not None:
+        labels.append(f"LABEL dev.longlink.banner={json.dumps(banner)}")
     environments = read_env_spec(root, pyproject_data)
     if environments:
         environment_labels = [environment.model_dump(exclude_none=True) for environment in environments]

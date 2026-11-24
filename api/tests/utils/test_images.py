@@ -37,7 +37,10 @@ async def test_metadata_fetches_digest_image_references(
     # Arrange
     image = "ghcr.io/longlink/dashboard@sha256:deadbeef"
     expected_metadata = LongLinkMetadata(
-        image=Image(image), description="Demo app", environments=[EnvironmentMetadata(name="API_KEY", required=True)]
+        image=Image(image),
+        banner="https://example.com/banner.png",
+        description="Demo app",
+        environments=[EnvironmentMetadata(name="API_KEY", required=True)],
     )
     captured: list[httpx2.Request] = []
 
@@ -54,7 +57,13 @@ async def test_metadata_fetches_digest_image_references(
         return httpx2.Response(
             200,
             json={
-                "config": {"Labels": {"org.opencontainers.image.description": "Demo app", "dev.longlink.environments": environment_label}}
+                "config": {
+                    "Labels": {
+                        "dev.longlink.banner": "https://example.com/banner.png",
+                        "org.opencontainers.image.description": "Demo app",
+                        "dev.longlink.environments": environment_label,
+                    }
+                }
             },
         )
 
@@ -292,6 +301,10 @@ async def test_metadata_accepts_config_without_labels(monkeypatch: pytest.Monkey
         pytest.param({"config": []}, id="invalid-image-config"),
         pytest.param({"config": {"Labels": []}}, id="invalid-labels"),
         pytest.param({"config": {"Labels": {"org.opencontainers.image.description": 1}}}, id="invalid-label-value"),
+        pytest.param({"config": {"Labels": {"dev.longlink.banner": "http://example.com/banner.png"}}}, id="http-banner"),
+        pytest.param({"config": {"Labels": {"dev.longlink.banner": "https://user:pass@example.com/banner.png"}}}, id="credential-banner"),
+        pytest.param({"config": {"Labels": {"dev.longlink.banner": "https://example.com/" + "a" * 2048}}}, id="oversized-banner"),
+        pytest.param({"config": {"Labels": {"dev.longlink.banner": ""}}}, id="empty-banner"),
         pytest.param({"config": {"Labels": {"dev.longlink.environments": "not-json"}}}, id="invalid-environments-json"),
         # The environment declaration must be a list of typed entries.
         pytest.param({"config": {"Labels": {"dev.longlink.environments": "{}"}}}, id="invalid-environments-shape"),

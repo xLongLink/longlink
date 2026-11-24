@@ -22,6 +22,7 @@ from src.models.metadata import LongLinkMetadata
 from src.models.statuses import Status
 from longlink.permissions import Catalog
 from src.database.session import session_scope
+from src.database.services import solutions
 from src.models.operations import OperationKind
 from src.database.models.users import User
 from src.database.models.solutions import Revision, Solution
@@ -311,11 +312,13 @@ async def test_create_solution_accepts_duplicate_name_with_separate_lifecycle_wo
     assert new_operations[0].target_id == duplicate.desired_revision_id
 
 
+@pytest.mark.parametrize("banner", [None, "https://example.com/deployed.png"])
 async def test_solution_responses_do_not_expose_environment_secrets(
     client: AsyncClient,
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
     monkeypatch: pytest.MonkeyPatch,
+    banner: str | None,
 ) -> None:
     """Redact persisted Solution environment values from every response surface."""
 
@@ -323,7 +326,27 @@ async def test_solution_responses_do_not_expose_environment_secrets(
     owner = users[0]
     organization = await create_organization(owner)
     image = "ghcr.io/longlink/dashboard@sha256:first"
-    await create_solution(organization, image=image, envs={"TOKEN": "runtime-secret", "API_KEY": "private-value"})
+    solution = await create_solution(organization, image=image, envs={"TOKEN": "runtime-secret", "API_KEY": "private-value"})
+    async with session_scope() as session:
+        current = await solutions.access(session, solution.id, owner.id)
+        await solutions.deploy(
+            session,
+            current,
+            owner.id,
+            LongLinkMetadata(image=Image(image), banner=banner, permissions=Catalog(endpoints=[])),
+            {"TOKEN": "runtime-secret", "API_KEY": "private-value"},
+            registry_connection_id=None,
+        )
+        current.deployed_revision_id = current.desired_revision_id
+        await solutions.deploy(
+            session,
+            current,
+            owner.id,
+            LongLinkMetadata(image=Image(image), banner="https://example.com/pending.png", permissions=Catalog(endpoints=[])),
+            {"TOKEN": "runtime-secret", "API_KEY": "private-value"},
+            registry_connection_id=None,
+        )
+        await session.commit()
 
     # Resolve update metadata at the external boundary without registry I/O.
     async def metadata(image: Image, _connection: object | None = None) -> LongLinkMetadata:
@@ -343,6 +366,8 @@ async def test_solution_responses_do_not_expose_environment_secrets(
     assert organization_response.status_code == 200
     list_solutions = list_response.json()["items"]
     organization_solutions = organization_response.json()
+    assert list_solutions[0]["banner"] == banner
+    assert organization_solutions[0]["banner"] == banner
     assert all("secrets" not in item and "envs" not in item for item in list_solutions)
     assert all("secrets" not in item and "envs" not in item for item in organization_solutions)
     assert "runtime-secret" not in list_response.text
@@ -375,11 +400,13 @@ async def test_solution_responses_do_not_expose_environment_secrets(
     public_response = await client.get(f"/api/v1/public/solutions/{solution_id}")
     assert public_response.status_code == 200
     assert public_response.json()["public"] is True
+    assert public_response.json()["banner"] == banner
     assert {"secrets", "envs", "image_desired", "desired_revision_id", "deployed_revision_id"}.isdisjoint(public_response.json())
     assert "runtime-secret" not in public_response.text
     assert "private-value" not in public_response.text
     page = (await client.get("/api/v1/public/solutions?page_size=1")).json()
     assert [item["id"] for item in page["items"]] == [solution_id]
+    assert page["items"][0]["banner"] == banner
     assert page["total"] == 1
     await clients[0].patch(f"/api/v1/solutions/{solution_id}/visibility", json={"public": False})
     assert (await client.get(f"/api/v1/public/solutions/{solution_id}")).status_code == 404
