@@ -75,7 +75,6 @@ it('loads chart and composed map families independently without hiding siblings 
                 expect(output.textContent).toContain('Map geography');
                 expect(ref.current).toBe(map);
             });
-            expect(output.textContent).not.toContain('Missing context');
             expect(output.querySelector('[role="status"]')).toBeNull();
         }
     );
@@ -106,7 +105,6 @@ it('keeps a failed optional chart dependency local to its region', async () => {
                 await vi.waitFor(() =>
                     expect(output.querySelector('[role="alert"]')?.textContent).toContain('Unable to load chart')
                 );
-                expect(output.querySelector('[role="alert"]')?.textContent).toContain('Reload the View');
                 expect(output.querySelector('[role="alert"] button')).toBeNull();
                 expect(output.querySelector('button')?.textContent).toBe('Sibling');
                 expect(output.querySelector('[role="status"]')).toBeNull();

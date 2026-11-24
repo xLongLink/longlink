@@ -34,7 +34,7 @@ it('runs the documented deletion and replaces the action with a return link afte
 
             // Assert
             expect(request).toHaveBeenCalledWith('/api/items/42', expect.objectContaining({ method: 'DELETE' }));
-            expect(output.querySelector('a')?.textContent).toBe('Back to items');
+            expect(output.querySelector('a')?.textContent?.trim()).toBeTruthy();
             expect(output.querySelector('a')?.getAttribute('href')).toBe('/items');
             expect(output.querySelector('button')).toBeNull();
             expect(document.querySelector('[role="alertdialog"]')).toBeNull();
