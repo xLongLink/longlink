@@ -12,6 +12,7 @@ PRINCIPLES:
 STRUCTURE:
 ```t
 ├── src/
+│   ├── assets/       # Repository static assets (JSON, files, loogs, ...)
 │   ├── models/       # SQLModel database tables - One file per model
 │   ├── views/        # View (UI) files
 │   ├── routes/       # API routes - One file per resource
@@ -29,7 +30,6 @@ RULES:
 - USE `UserRelationship()` to save users into a table.
 - USE `ctx.user` to access the current user informations
 - DO run formatting, linting, type checking, and relevant existing tests.
-- After verification, DO review the implementation for further simplification.
 
 UTILS:
 - USE `src/utils/` for reusable helpers and integrations, with one module per domain or service (`dates.py`, `mail.py`, `s3.py`); AVOID catch-all modules.
