@@ -3,7 +3,7 @@ import ViewLayout from './view-layout';
 import { Input, Stack, Button, Dialog } from '@/components/longlink';
 
 /** Shows the same owned dialog API in centered and fullscreen layouts. */
-export function DialogExample({ fullscreen = false }: { fullscreen?: boolean }) {
+function DialogExample({ fullscreen = false }: { fullscreen?: boolean }) {
     const [open, setOpen] = useState(false);
 
     return (

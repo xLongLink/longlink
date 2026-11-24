@@ -262,13 +262,8 @@ type ResolvedFileType = {
 
 const extensions: Record<string, FileTypeExtension> = FILE_TYPE_EXTENSIONS;
 
-/** `Object.hasOwn` would fail to typecheck in an app below the ES2022 lib. */
-function has(record: object, key: string) {
-    return Object.prototype.hasOwnProperty.call(record, key);
-}
-
 function isCategory(value: string): value is Exclude<FileTypeCategory, 'file'> {
-    return value !== 'file' && has(FILE_TYPE_CATEGORIES, value);
+    return value !== 'file' && Object.hasOwn(FILE_TYPE_CATEGORIES, value);
 }
 
 function resolveFileType(type?: string): ResolvedFileType {
@@ -278,7 +273,7 @@ function resolveFileType(type?: string): ResolvedFileType {
         return { type: 'empty', category: 'empty', color: FILE_TYPE_CATEGORIES.empty.color };
     }
 
-    const extension = has(extensions, key) ? extensions[key] : null;
+    const extension = Object.hasOwn(extensions, key) ? extensions[key] : null;
     if (extension) {
         return {
             type: key,

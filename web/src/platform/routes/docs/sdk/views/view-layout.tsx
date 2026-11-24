@@ -1,4 +1,3 @@
-import { Circle } from 'lucide-react';
 import { Card } from '@/components/shadcn/card';
 import { useState, type ReactNode } from 'react';
 import { Switch } from '@/components/shadcn/switch';
@@ -47,12 +46,7 @@ function ExampleWindow({ example, isMap }: { example: ViewExample; isMap: boolea
         <Card className="py-0" style={{ height: 480 }}>
             <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden">
                 <div className="shrink-0 border-b border-border bg-card p-2">
-                    <Stack direction="horizontal" justify="between" align="center" gap={3} paddingInline={2}>
-                        <Stack direction="horizontal" gap={2} aria-hidden="true" className="shrink-0">
-                            <Circle size={12} fill="currentColor" className="text-red-500 dark:text-red-400" />
-                            <Circle size={12} fill="currentColor" className="text-amber-500 dark:text-amber-400" />
-                            <Circle size={12} fill="currentColor" className="text-green-500 dark:text-green-400" />
-                        </Stack>
+                    <Stack direction="horizontal" justify="end" align="center" gap={3} paddingInline={2}>
                         <Switch
                             size="sm"
                             aria-label="Show code"
@@ -177,9 +171,7 @@ export default function ViewLayout({
                             <TabsTrigger value="properties">Properties</TabsTrigger>
                         </TabsList>
                         <TabsContent value="example" className="flex min-w-0 flex-col gap-5">
-                            {example && (
-                                <ExampleWindow key={name} example={example} isMap={component.category === 'Maps'} />
-                            )}
+                            {example && <ExampleWindow example={example} isMap={component.category === 'Maps'} />}
                             {!example && !children && <p>No standalone example is available for this component.</p>}
                             {children}
                         </TabsContent>

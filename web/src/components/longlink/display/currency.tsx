@@ -1,4 +1,3 @@
-import { cn } from 'cn';
 import type { ComponentPropsWithoutRef } from 'react';
 
 /** Formats amounts using standard internationalization instead of custom formatting callbacks. */
@@ -17,7 +16,7 @@ export function Currency({
     locale?: string;
 }) {
     return (
-        <span data-slot="currency" {...props} className={cn(className)}>
+        <span data-slot="currency" {...props} className={className}>
             {new Intl.NumberFormat(locale, { style: 'currency', currency }).format(value)}
         </span>
     );
