@@ -198,10 +198,10 @@ function PdfPage({ document, page, title }: { document: PDFDocumentProxy; page: 
         let cancelled = false;
         let task: RenderTask | undefined;
 
-        async function render() {
+        const render = async () => {
             try {
                 const loaded = await document.getPage(page);
-                if (cancelled || !element) return;
+                if (cancelled) return;
                 const original = loaded.getViewport({ scale: 1 });
                 const ratio = Math.min(window.devicePixelRatio || 1, 2);
                 const viewport = loaded.getViewport({ scale: width / original.width });
@@ -222,7 +222,7 @@ function PdfPage({ document, page, title }: { document: PDFDocumentProxy; page: 
             } catch {
                 if (!cancelled) setFailed(true);
             }
-        }
+        };
 
         void render();
         return () => {

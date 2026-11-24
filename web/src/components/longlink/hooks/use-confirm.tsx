@@ -33,38 +33,38 @@ export type ConfirmOptions = {
  * @category Runtime @group Hooks
  */
 export function useConfirm() {
-    const [options, setOptions] = useState<ConfirmOptions | null>(null);
+    const [confirmation, setConfirmation] = useState<{ options: ConfirmOptions; error: string | null } | null>(null);
     const { isPending, inFlight: pending, run } = useConfirmAction();
-    const [error, setError] = useState<string | null>(null);
 
     // A running server operation cannot be canceled by dismissing or replacing its dialog.
     const show = useCallback(
         (next: ConfirmOptions) => {
             if (pending.current) return;
-            setError(null);
-            setOptions(next);
+            setConfirmation({ options: next, error: null });
         },
         [pending]
     );
 
     const hide = useCallback(() => {
         if (pending.current) return;
-        setOptions(null);
-        setError(null);
+        setConfirmation(null);
     }, [pending]);
 
     /** Closes only after success and retains failed confirmations for retry. */
     function submit() {
-        if (!options) return;
+        if (!confirmation) return;
         run(async () => {
-            setError(null);
+            setConfirmation({ ...confirmation, error: null });
             // Scoped request failures are already reported by the host.
             try {
-                await options.onAction();
-                setOptions(null);
+                await confirmation.options.onAction();
+                setConfirmation(null);
             } catch (failure) {
                 if (!(failure instanceof ReportedError)) {
-                    setError(failure instanceof Error ? failure.message : 'The action failed. Please try again.');
+                    setConfirmation({
+                        ...confirmation,
+                        error: failure instanceof Error ? failure.message : 'The action failed. Please try again.'
+                    });
                 }
             }
         });
@@ -74,12 +74,12 @@ export function useConfirm() {
     return {
         show,
         hide,
-        isOpen: options !== null,
-        element: options ? (
+        isOpen: confirmation !== null,
+        element: confirmation ? (
             <ConfirmationDialog
-                options={options}
+                options={confirmation.options}
                 isPending={isPending}
-                error={error}
+                error={confirmation.error}
                 onCancel={hide}
                 onAction={submit}
             />
@@ -116,7 +116,7 @@ function ConfirmationDialog({
         <AlertDialog
             open
             onOpenChange={(open) => {
-                if (!open && !isPending) onCancel();
+                if (!open) onCancel();
             }}
         >
             <AlertDialogContent
@@ -143,9 +143,7 @@ function ConfirmationDialog({
                         variant="ghost"
                         disabled={isPending}
                         focusableWhenDisabled
-                        onClick={() => {
-                            if (!isPending) onCancel();
-                        }}
+                        onClick={onCancel}
                     >
                         {options.cancelLabel ?? 'Cancel'}
                     </Button>
