@@ -46,7 +46,7 @@ async def fetch(session: AsyncSession, pagination: Pagination, search: str = "")
             ),
             defer(attr(Solution.secrets)),
             selectinload(attr(Solution.desired_revision)).load_only(attr(Revision.image), attr(Revision.failed), raiseload=True),
-            selectinload(attr(Solution.deployed_revision)).load_only(attr(Revision.version), raiseload=True),
+            selectinload(attr(Solution.deployed_revision)).load_only(attr(Revision.banner), attr(Revision.version), raiseload=True),
             selectinload(attr(Solution.tag_assignments)),
         )
         # Use the identity as a tie-breaker for stable pagination.
@@ -195,6 +195,7 @@ async def deploy(
         solution_id=solution.id,
         image=metadata.image,
         version=metadata.version,
+        banner=metadata.banner,
         envs=environment,
         created_id=user_id,
         registry_connection_id=registry_connection_id,

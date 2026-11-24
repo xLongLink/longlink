@@ -16,6 +16,7 @@ const pageSize = 25;
 /** Lists public Solutions with their live display metadata. */
 export default function ExploreSolutions() {
     const [page, setPage] = useState(1);
+    const [failedBanners, setFailedBanners] = useState<string[]>([]);
     const path = `/api/v1/public/solutions?page=${page}&page_size=${pageSize}`;
     const { data, isPending, isError, refetch } = useQuery(apiQueryOptions(path, zPagePublicSolution));
     const solutions = isError ? [] : (data?.items ?? []);
@@ -88,54 +89,77 @@ export default function ExploreSolutions() {
             ) : (
                 <>
                     <ul className="flex min-w-0 flex-col gap-4">
-                        {solutions.map((solution) => (
-                            <li key={solution.id} className="min-w-0">
-                                <Link
-                                    to={`/explore/solutions/${solution.id}`}
-                                    className="group flex min-w-0 flex-col gap-4 border border-border bg-card p-6 text-foreground hover:border-foreground/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-                                >
-                                    <Stack
-                                        direction="horizontal"
-                                        align="start"
-                                        justify="between"
-                                        gap={4}
-                                        className="min-w-0"
+                        {solutions.map((solution) => {
+                            const { banner } = solution;
+
+                            return (
+                                <li key={solution.id} className="min-w-0">
+                                    <Link
+                                        to={`/orgs/${solution.organization.id}/solutions/${solution.id}`}
+                                        className="group flex min-w-0 flex-col overflow-hidden border border-border bg-card text-foreground hover:border-foreground/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                                     >
-                                        <Stack gap={1} className="min-w-0 flex-1">
-                                            <h2 className="text-xl leading-snug font-semibold tracking-tight [overflow-wrap:anywhere] group-hover:underline group-focus-visible:underline">
-                                                {solution.name}
-                                            </h2>
-                                            <Stack direction="horizontal" align="center" gap={2} className="min-w-0">
-                                                <Avatar
-                                                    shape="rounded"
-                                                    size="sm"
-                                                    name={solution.organization.name}
-                                                    aria-hidden
-                                                />
-                                                <p className="min-w-0 text-sm leading-normal text-muted-foreground [overflow-wrap:anywhere]">
-                                                    {solution.organization.name}
-                                                </p>
-                                            </Stack>
-                                        </Stack>
-                                        {solution.deployed_version && (
-                                            <Badge
-                                                variant="outline"
-                                                render={<span className="h-auto max-w-1/3 min-h-5" />}
-                                            >
-                                                <span className="min-w-0 text-muted-foreground tabular-nums whitespace-normal [overflow-wrap:anywhere]">
-                                                    v{solution.deployed_version.replace(/^v/, '')}
-                                                </span>
-                                            </Badge>
+                                        {banner && !failedBanners.includes(banner) && (
+                                            <img
+                                                src={banner}
+                                                alt=""
+                                                loading="lazy"
+                                                referrerPolicy="no-referrer"
+                                                className="max-h-64 w-full object-contain"
+                                                onError={() => {
+                                                    setFailedBanners((banners) => [...banners, banner]);
+                                                }}
+                                            />
                                         )}
-                                    </Stack>
-                                    {solution.description && (
-                                        <p className="text-sm leading-relaxed text-foreground/80 [overflow-wrap:anywhere]">
-                                            {solution.description}
-                                        </p>
-                                    )}
-                                </Link>
-                            </li>
-                        ))}
+                                        <div className="flex min-w-0 flex-col gap-4 p-4 sm:p-6">
+                                            <Stack
+                                                direction="horizontal"
+                                                align="start"
+                                                justify="between"
+                                                gap={4}
+                                                className="min-w-0"
+                                            >
+                                                <Stack gap={1} className="min-w-0 flex-1">
+                                                    <h2 className="text-xl leading-snug font-semibold tracking-tight [overflow-wrap:anywhere] group-hover:underline group-focus-visible:underline">
+                                                        {solution.name}
+                                                    </h2>
+                                                    <Stack
+                                                        direction="horizontal"
+                                                        align="center"
+                                                        gap={2}
+                                                        className="min-w-0"
+                                                    >
+                                                        <Avatar
+                                                            shape="rounded"
+                                                            size="sm"
+                                                            name={solution.organization.name}
+                                                            aria-hidden
+                                                        />
+                                                        <p className="min-w-0 text-sm leading-normal text-muted-foreground [overflow-wrap:anywhere]">
+                                                            {solution.organization.name}
+                                                        </p>
+                                                    </Stack>
+                                                </Stack>
+                                                {solution.deployed_version && (
+                                                    <Badge
+                                                        variant="outline"
+                                                        render={<span className="h-auto max-w-1/3 min-h-5" />}
+                                                    >
+                                                        <span className="min-w-0 text-muted-foreground tabular-nums whitespace-normal [overflow-wrap:anywhere]">
+                                                            v{solution.deployed_version.replace(/^v/, '')}
+                                                        </span>
+                                                    </Badge>
+                                                )}
+                                            </Stack>
+                                            {solution.description && (
+                                                <p className="text-sm leading-relaxed text-foreground/80 [overflow-wrap:anywhere]">
+                                                    {solution.description}
+                                                </p>
+                                            )}
+                                        </div>
+                                    </Link>
+                                </li>
+                            );
+                        })}
                     </ul>
                     {total > pageSize && (
                         <Pagination page={page} pageSize={pageSize} totalItems={total} onPageChange={setPage} />

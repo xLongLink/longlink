@@ -155,7 +155,6 @@ async def test_downgrade_rejects_allocation_invoices_without_losing_charges(
             await asyncio.to_thread(command.downgrade, config, "20261120_0020")
 
         # Assert
-        await asyncio.to_thread(command.check, config)
         async with engine.connect() as connection:
             result = await connection.execute(invoices.select())
             retained = result.mappings().one()
@@ -163,6 +162,10 @@ async def test_downgrade_rejects_allocation_invoices_without_losing_charges(
             assert retained["cpu_millicores"] == 500
             assert retained["ram_bytes"] == 512 * 1024**2
             assert retained["storage_bytes"] == 2 * 1024**3
+
+        # Later migrations may already have rolled back before the allocation guard refuses.
+        await asyncio.to_thread(command.upgrade, config, "head")
+        await asyncio.to_thread(command.check, config)
     finally:
         await engine.dispose()
 

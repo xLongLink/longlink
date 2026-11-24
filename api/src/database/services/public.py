@@ -31,7 +31,7 @@ def _metadata_query() -> Select[Solution]:
                 raiseload=True,
             ),
             contains_eager(attr(Solution.organization)).load_only(attr(Organization.id), attr(Organization.name), raiseload=True),
-            selectinload(attr(Solution.deployed_revision)).load_only(attr(Revision.version), raiseload=True),
+            selectinload(attr(Solution.deployed_revision)).load_only(attr(Revision.banner), attr(Revision.version), raiseload=True),
         )
     )
 

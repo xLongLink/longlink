@@ -53,6 +53,7 @@ version = "1.2.0"
 description = "Order workflow service"
 
 [tool.longlink]
+banner = "https://example.com/banner.webp"
 environments = "src.envs:Env"
 `}
                         language="toml"
@@ -71,6 +72,7 @@ environments = "src.envs:Env"
                         </TableHeader>
                         <TableBody>
                             {[
+                                { metadata: 'banner (HTTPS URL)', label: 'dev.longlink.banner' },
                                 { metadata: 'description', label: 'org.opencontainers.image.description' },
                                 { metadata: 'environments', label: 'dev.longlink.environments' }
                             ].map((row) => (

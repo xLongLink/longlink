@@ -409,7 +409,10 @@ def test_read_permission_spec_rejects_roles_that_change_between_fresh_imports(bu
     assert counter.read_text(encoding="utf-8") == "2"
 
 
-def test_build_solution_generates_docker_artifacts_from_project_metadata(chdir_project: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.mark.parametrize("banner", [None, "https://example.com/banner.png?version=1&size=large"])
+def test_build_solution_generates_docker_artifacts_from_project_metadata(
+    chdir_project: Path, monkeypatch: pytest.MonkeyPatch, banner: str | None
+) -> None:
     """Generate Docker instructions and ignore rules from project metadata."""
 
     # Arrange
@@ -436,6 +439,9 @@ def test_build_solution_generates_docker_artifacts_from_project_metadata(chdir_p
     monkeypatch.setattr(build, "package_version", missing_package_version)
 
     # Read project metadata before rendering the build artifacts.
+    if banner is not None:
+        project = chdir_project / "pyproject.toml"
+        project.write_text(project.read_text(encoding="utf-8") + f"banner = {json.dumps(banner)}\n", encoding="utf-8")
     pyproject_data = build.read_pyproject(chdir_project)
 
     # Act
@@ -450,6 +456,10 @@ def test_build_solution_generates_docker_artifacts_from_project_metadata(chdir_p
     assert "USER 10001:10001\n" in dockerfile
     assert 'ENV SETUPTOOLS_SCM_PRETEND_VERSION_FOR_LONGLINK="0.0.0"' in dockerfile
     assert 'LABEL org.opencontainers.image.description="Demo Solution"' in dockerfile
+    if banner is None:
+        assert "dev.longlink.banner" not in dockerfile
+    else:
+        assert f"LABEL dev.longlink.banner={json.dumps(banner)}" in dockerfile
     assert 'LABEL dev.longlink.environments="[{\\"name\\":\\"API_KEY\\",\\"required\\":true}]"' in dockerfile
     dockerignore = build_context.joinpath(".dockerignore").read_text(encoding="utf-8")
     assert dockerignore.splitlines() == ["Dockerfile", ".dockerignore"]

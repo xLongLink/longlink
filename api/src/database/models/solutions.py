@@ -89,6 +89,12 @@ class Solution(AuditTable, table=True):
         return [assignment.tag_id for assignment in self.tag_assignments]
 
     @property
+    def banner(self) -> str | None:
+        """Expose the last successfully deployed image's banner."""
+
+        return self.deployed_revision.banner if self.deployed_revision is not None else None
+
+    @property
     def deployed_version(self) -> str | None:
         """Expose the last successfully deployed image's recorded version."""
 
@@ -125,6 +131,7 @@ class Revision(AuditTable, table=True):
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     solution_id: UUID = Field(foreign_key="solutions.id", ondelete="CASCADE")
     image: str = Field(max_length=512)
+    banner: str | None = Field(default=None, max_length=2048)
     version: str | None = Field(default=None, sa_column=Column(Text, nullable=True))
     registry_connection_id: UUID | None = Field(default=None, foreign_key="registry_connections.id")
     envs: dict[str, str] = Field(sa_column=Column(EncryptedType(env.ENCRYPTION_KEY), nullable=False))
@@ -142,6 +149,6 @@ def protect_snapshot(_mapper: Mapper[Revision], _connection: Connection, revisio
     state = inspect(revision)
     if any(
         state.attrs[name].history.has_changes()
-        for name in ("id", "solution_id", "image", "version", "envs", "registry_connection_id", "created_at", "created_id")
+        for name in ("id", "solution_id", "image", "banner", "version", "envs", "registry_connection_id", "created_at", "created_id")
     ):
         raise ValueError("Revision snapshots are immutable")

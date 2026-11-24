@@ -221,6 +221,7 @@ async def inspect(client: httpx2.AsyncClient, image: Image, connection: Registry
         # Validate the complete image metadata before returning it to release workflows.
         return LongLinkMetadata(
             image=Image(f"{image.registry}/{image.repository}@{digest}"),
+            banner=labels.get("dev.longlink.banner"),
             version=labels.get("org.opencontainers.image.version", "").strip() or None,
             description=labels.get("org.opencontainers.image.description"),
             environments=pydantic_core.from_json(environments) if environments is not None else [],

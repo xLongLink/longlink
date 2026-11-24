@@ -5053,6 +5053,18 @@
             "type": "string",
             "title": "Image"
           },
+          "banner": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2048
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Banner"
+          },
           "version": {
             "anyOf": [
               {
@@ -5495,6 +5507,17 @@
               }
             ],
             "title": "Desired Revision Id"
+          },
+          "banner": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Banner"
           },
           "deployed_version": {
             "anyOf": [
@@ -6109,6 +6132,17 @@
             "type": "boolean",
             "title": "Public"
           },
+          "banner": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Banner"
+          },
           "deployed_version": {
             "anyOf": [
               {
@@ -6519,6 +6553,17 @@
               }
             ],
             "title": "Desired Revision Id"
+          },
+          "banner": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Banner"
           },
           "deployed_version": {
             "anyOf": [
