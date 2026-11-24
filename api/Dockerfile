@@ -28,7 +28,7 @@ ENV PYTHONDONTWRITEBYTECODE="1"
 # Refresh certificate trust and remove unused pip, system utilities, and their unused libraries.
 RUN /usr/local/bin/python -m pip uninstall --yes pip \
     && apt-get update \
-    && apt-get install --yes --no-install-recommends ca-certificates \
+    && apt-get install --yes --no-install-recommends ca-certificates zlib1g \
     && apt-get remove --yes --no-auto-remove --allow-remove-essential \
         libblkid1 liblastlog2-2 libmount1 libsmartcols1 mount ncurses-bin util-linux \
     && rm -rf /var/lib/apt/lists/*
