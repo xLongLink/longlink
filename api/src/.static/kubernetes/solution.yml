@@ -111,8 +111,8 @@ spec:
                       httpGet:
                           path: /health
                           port: 8000
-                      periodSeconds: 5
-                      failureThreshold: 60
+                      periodSeconds: 1
+                      failureThreshold: 300
                   livenessProbe:
                       httpGet:
                           path: /health
