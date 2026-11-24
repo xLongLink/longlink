@@ -105,7 +105,7 @@ export type {
     MapGeography,
     MapControlsOptions
 } from '@/components/longlink/maps/types';
-export type { ChartSeries, SankeyNode, SankeyLink, ChartConfig } from '@/components/longlink/charts/types';
+export type { ChartSeries, SankeyNode, SankeyLink } from '@/components/longlink/charts/types';
 
 export {
     useTable,

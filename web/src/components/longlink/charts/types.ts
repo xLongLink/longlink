@@ -1,7 +1,5 @@
 import type { ComponentPropsWithoutRef } from 'react';
 
-export type { ChartConfig } from '@/components/shadcn/chart';
-
 export type ChartKey<Row> = Extract<keyof Row, string>;
 
 export type ChartValueKey<Row> = {

@@ -1,39 +1,24 @@
-import { act } from 'react';
 // @vitest-environment happy-dom
+import { z } from 'zod';
+import { act } from 'react';
 import * as React from 'react';
-import { transform } from 'sucrase';
 import { expect, it, vi } from 'vitest';
 import { withMounted } from '../../render';
-import * as components from '@/components/longlink';
+import { compileView } from '@/views/compiler';
 import userEvent from '@testing-library/user-event';
 import { RequestContext } from '@/lib/view-capabilities';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import source from '../../../../sdk/longlink/.static/new/src/views/list.jsx?raw';
 import modelSource from '../../../../sdk/longlink/.static/new/src/views/models.jsx?raw';
 import geographyFixture from '../../../../sdk/longlink/.static/new/src/assets/world.json';
 import analyticsFixture from '../../../../sdk/longlink/.static/new/src/assets/analytics.json';
 
-// Exercise the shipped View against the real shared components and scoped download boundary.
-const code = transform(source, {
-    transforms: ['jsx', 'imports'],
-    jsxRuntime: 'classic',
-    jsxPragma: '__jsx',
-    production: true
-}).code;
-
-const bindings = { __jsx: React.createElement, ...components };
-
-const module = { exports: {} };
-
-// oxlint-disable-next-line typescript/no-implied-eval -- Evaluate the bundled View with its sandbox's explicit bindings.
-const evaluate = new Function('module', 'exports', ...Object.keys(bindings), `${code}\nreturn module.exports.default;`);
-
-// SAFETY: The source is the repository-owned starter View, not an external module.
-const List = evaluate(module, module.exports, ...Object.values(bindings)) as React.ComponentType;
+const List = compileView(source);
 
 it('normalizes file searches, restores empty results, and preserves sorting while filtering', async () => {
     const user = userEvent.setup();
 
-    await withMounted(<List />, async (output) => {
+    await withMounted(<List params={{}} />, async (output) => {
         const search = output.querySelector<HTMLInputElement>('input[aria-label="Search files"]');
 
         if (!search) throw new Error('Expected file search');
@@ -73,7 +58,7 @@ it('normalizes file searches, restores empty results, and preserves sorting whil
 it('returns to the first page when a search narrows results from a later file page', async () => {
     const user = userEvent.setup();
 
-    await withMounted(<List />, async (output) => {
+    await withMounted(<List params={{}} />, async (output) => {
         const size = output.querySelector<HTMLButtonElement>('[aria-label="Rows per page"]');
 
         if (!size) throw new Error('Expected page size control');
@@ -120,7 +105,7 @@ it('wires filtered file rows to scoped previews with their own asset path and ti
 
     await withMounted(
         <RequestContext value={request}>
-            <List />
+            <List params={{}} />
         </RequestContext>,
         async (output) => {
             expect(request).not.toHaveBeenCalled();
@@ -157,31 +142,8 @@ it('switches the shipped usage period with keyboard controls and clears stale re
         gemini: (index + 1) * 60000
     }));
     const analytics = { ...analyticsFixture, usage: data };
-    const modelBindings = {
-        ...bindings,
-        useApi: (path: string) => [path === '/assets/analytics.json' ? analytics : geographyFixture]
-    };
-    const modelModule = { exports: {} };
-    const modelCode = transform(modelSource, {
-        transforms: ['jsx', 'imports'],
-        jsxRuntime: 'classic',
-        jsxPragma: '__jsx',
-        jsxFragmentPragma: 'Fragment',
-        production: true
-    }).code;
-
-    // oxlint-disable-next-line typescript/no-implied-eval -- Exercise the repository-owned starter View with scoped data bindings.
-    const evaluateModels = new Function(
-        'module',
-        'exports',
-        ...Object.keys(modelBindings),
-        `${modelCode}\nreturn module.exports.default;`
-    );
-    const Models = evaluateModels(
-        modelModule,
-        modelModule.exports,
-        ...Object.values(modelBindings)
-    ) as React.ComponentType;
+    const Models = compileView(modelSource);
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
 
     const bounds = vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (
         this: HTMLElement
@@ -190,42 +152,62 @@ it('switches the shipped usage period with keyboard controls and clears stale re
     });
 
     try {
-        await withMounted(<Models />, async (output) => {
-            const usageCard = output
-                .querySelector('[data-slot="card-header"] [role="group"][aria-label="Usage period"]')
-                ?.closest('[data-slot="card"]');
+        await withMounted(
+            <QueryClientProvider client={client}>
+                <RequestContext
+                    value={async (path) => {
+                        if (path === '/assets/analytics.json') return z.json().parse(analytics);
+                        if (path === '/assets/world.json') return z.json().parse(geographyFixture);
+                        throw new Error(`Unexpected request: ${path}`);
+                    }}
+                >
+                    <React.Suspense>
+                        <Models params={{}} />
+                    </React.Suspense>
+                </RequestContext>
+            </QueryClientProvider>,
+            async (output) => {
+                await vi.waitFor(() =>
+                    expect(output.querySelector('[role="group"][aria-label="Usage period"]')).not.toBeNull()
+                );
+                const usageCard = output
+                    .querySelector('[data-slot="card-header"] [role="group"][aria-label="Usage period"]')
+                    ?.closest('[data-slot="card"]');
 
-            if (!usageCard) throw new Error('Expected model usage card');
+                if (!usageCard) throw new Error('Expected model usage card');
 
-            await vi.waitFor(() =>
-                expect(usageCard.querySelector('[data-slot="chart"]')?.textContent).toContain('10-01')
-            );
-            expect(usageCard.querySelector('[data-slot="chart-legend"]')?.textContent).toContain('Claude3M');
+                await vi.waitFor(() =>
+                    expect(usageCard.querySelector('[data-slot="chart"]')?.textContent).toContain('10-01')
+                );
+                expect(usageCard.querySelector('[data-slot="chart-legend"]')?.textContent).toContain('Claude3M');
 
-            const option = [...usageCard.querySelectorAll<HTMLButtonElement>('button')].find(
-                (item) => item.textContent === 'Last 7 days'
-            );
+                const option = [...usageCard.querySelectorAll<HTMLButtonElement>('button')].find(
+                    (item) => item.textContent === 'Last 7 days'
+                );
 
-            if (!option) throw new Error('Expected seven-day control');
+                if (!option) throw new Error('Expected seven-day control');
 
-            await act(async () => user.click(option));
-            expect(option.getAttribute('aria-pressed')).toBe('true');
-            await vi.waitFor(() =>
-                expect(usageCard.querySelector('[data-slot="chart"]')?.textContent).toContain('10-24')
-            );
-            expect(usageCard.querySelector('[data-slot="chart"]')?.textContent).not.toContain('10-01');
-            option.focus();
-            await act(async () => user.keyboard('{Tab}{Enter}'));
-            expect(usageCard.querySelector('button[aria-pressed="true"]')?.textContent).toBe('Last 30 days');
-            await vi.waitFor(() =>
-                expect(usageCard.querySelector('[data-slot="chart"]')?.textContent).toContain('10-01')
-            );
-            analytics.usage = [];
-            await act(async () => user.click(option));
-            expect(usageCard.querySelector('[role="status"]')?.textContent).toBe('No data');
-            expect(usageCard.querySelector('[data-slot="chart-legend"]')?.textContent).toBe('Claude—GPT—Gemini—');
-        });
+                await act(async () => user.click(option));
+                expect(option.getAttribute('aria-pressed')).toBe('true');
+                await vi.waitFor(() =>
+                    expect(usageCard.querySelector('[data-slot="chart"]')?.textContent).toContain('10-24')
+                );
+                expect(usageCard.querySelector('[data-slot="chart"]')?.textContent).not.toContain('10-01');
+                option.focus();
+                await act(async () => user.keyboard('{Tab}{Enter}'));
+                expect(usageCard.querySelector('button[aria-pressed="true"]')?.textContent).toBe('Last 30 days');
+                await vi.waitFor(() =>
+                    expect(usageCard.querySelector('[data-slot="chart"]')?.textContent).toContain('10-01')
+                );
+                analytics.usage = [];
+                await act(async () => client.invalidateQueries({ queryKey: ['api', '/assets/analytics.json'] }));
+                await act(async () => user.click(option));
+                expect(usageCard.querySelector('[role="status"]')?.textContent).toBe('No data');
+                expect(usageCard.querySelector('[data-slot="chart-legend"]')?.textContent).toBe('Claude—GPT—Gemini—');
+            }
+        );
     } finally {
+        client.clear();
         bounds.mockRestore();
     }
 });

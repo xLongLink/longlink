@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import * as React from 'react';
-import { transform } from 'sucrase';
 import * as components from './index';
 import { CircleX } from 'lucide-react';
+import { compileView } from './compiler';
 import { createRoot } from 'react-dom/client';
 import { ReportedError } from '@/lib/reported';
 import { ErrorBoundary } from 'react-error-boundary';
@@ -259,41 +259,7 @@ function initialize(event: MessageEvent<unknown>): void {
 
     // Compilation and evaluation happen only in the sandbox, never in the Platform module graph.
     try {
-        const code = transform(parsed.data.source, {
-            transforms: ['jsx', 'imports'],
-            jsxRuntime: 'classic',
-            jsxPragma: '__jsx',
-            jsxFragmentPragma: '__fragment',
-            production: true
-        }).code;
-
-        const bindings = {
-            // Keep JSX compilation separate from the public View API.
-            __jsx: React.createElement,
-            __fragment: React.Fragment,
-            ...components
-        };
-
-        type ViewComponent = React.ComponentType<{ params: Readonly<Record<string, string>> }>;
-
-        const module = { exports: {} };
-
-        // oxlint-disable-next-line typescript/no-implied-eval -- This entry runs exclusively in the opaque-origin sandbox.
-        const evaluate = new Function(
-            'module',
-            'exports',
-            ...Object.keys(bindings),
-            `${code}\nreturn module.exports.default;`
-        );
-
-        // A callable export is the admission contract; React's error boundary handles invalid component rendering.
-        const component: unknown = evaluate(module, module.exports, ...Object.values(bindings));
-
-        if (!(component instanceof Function)) throw new Error('A View must export a component as default');
-
-        // SAFETY: Callable exports pass admission above; the error boundary handles invalid React rendering.
-        const View = component as ViewComponent;
-
+        const View = compileView(parsed.data.source);
         const params = Object.freeze(parsed.data.params);
         content = (
             <QueryClientProvider client={client}>

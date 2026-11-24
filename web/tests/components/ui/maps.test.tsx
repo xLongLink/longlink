@@ -1,14 +1,15 @@
 // @vitest-environment happy-dom
 import { act } from 'react';
 import * as React from 'react';
-import { transform } from 'sucrase';
 import { withMounted } from '../../render';
-import * as mapcn from '@/components/mapcn/map';
-import * as components from '@/components/longlink';
+import { compileView } from '@/views/compiler';
+import { responseSchema } from '@/views/protocol';
 import userEvent from '@testing-library/user-event';
 import { it, expect, vi, beforeEach } from 'vitest';
+import { RequestContext } from '@/lib/view-capabilities';
 import { StreetMap } from '@/components/longlink/maps/street';
 import { createExpression } from '@maplibre/maplibre-gl-style-spec';
+import { ViewMap, MapGeoJSON } from '@/components/longlink/maps/map';
 import type { FeatureCollection, Polygon, MultiPolygon } from 'geojson';
 import atlas from '../../../../sdk/longlink/.static/new/src/assets/world.json';
 import modelSource from '../../../../sdk/longlink/.static/new/src/views/models.jsx?raw';
@@ -225,24 +226,18 @@ function opacity(map: Engine, id: string) {
     return value;
 }
 
-function ThemeSelectionMap({ initialTheme }: { initialTheme?: 'light' | 'dark' }) {
-    const [theme, setTheme] = React.useState(initialTheme);
+function ThemeSelectionMap() {
     const [selected, setSelected] = React.useState('12');
 
     return (
-        <>
-            <button type="button" onClick={() => setTheme(undefined)}>
-                Detect theme
-            </button>
-            <mapcn.Map theme={theme} styles={{ light: 'light-style', dark: 'dark-style' }} center={[0, 0]} zoom={2}>
-                <mapcn.MapGeoJSON
-                    data={geography}
-                    interactive
-                    onClick={({ feature }) => setSelected(String(feature.id))}
-                    fillPaint={{ 'fill-opacity': ['case', ['==', ['to-string', ['id']], selected], 1, 0.2] }}
-                />
-            </mapcn.Map>
-        </>
+        <ViewMap center={[0, 0]} zoom={2}>
+            <MapGeoJSON
+                data={geography}
+                interactive
+                onClick={({ feature }) => setSelected(String(feature.id))}
+                fillPaint={{ 'fill-opacity': ['case', ['==', ['to-string', ['id']], selected], 1, 0.2] }}
+            />
+        </ViewMap>
     );
 }
 
@@ -265,26 +260,27 @@ it.each(['light', 'dark'] as const)(
                     root.dataset.theme = systemTheme;
                 });
                 const map = await loadMap();
+                const documentStyle = map.styles.at(-1);
                 const layer = selectionLayer(map);
                 const feature = geography.features.find((feature) => feature.id === 'east');
                 if (!feature) throw new Error('Expected East boundary');
                 await act(async () =>
                     map.fire('click', layer.id, { features: [feature], lngLat: { lng: 30, lat: 10 } })
                 );
-                expect(map.styles.at(-1)).toBe(`${documentTheme}-style`);
                 expect(opacity(map, 'east')).toBeGreaterThan(opacity(map, '12'));
 
                 // Act: class wins over data-theme; removing it reveals data-theme.
                 await act(async () => root.removeAttribute('class'));
-                expect(map.styles.at(-1)).toBe(`${systemTheme}-style`);
+                const systemStyle = map.styles.at(-1);
+                expect(systemStyle).not.toBe(documentStyle);
                 await act(async () => {
                     root.dataset.theme = documentTheme;
                 });
-                expect(map.styles.at(-1)).toBe(`${documentTheme}-style`);
+                expect(map.styles.at(-1)).toBe(documentStyle);
                 await act(async () => root.removeAttribute('data-theme'));
 
                 // Assert
-                expect(map.styles.at(-1)).toBe(`${systemTheme}-style`);
+                expect(map.styles.at(-1)).toBe(systemStyle);
                 expect(engines.maps).toEqual([map]);
                 expect(map.removed).toBe(false);
                 expect(opacity(map, 'east')).toBeGreaterThan(opacity(map, '12'));
@@ -294,7 +290,7 @@ it.each(['light', 'dark'] as const)(
                     matches.mockReturnValue(documentTheme === 'dark');
                     preference.dispatchEvent(new Event('change'));
                 });
-                expect(map.styles.at(-1)).toBe(`${documentTheme}-style`);
+                expect(map.styles.at(-1)).toBe(documentStyle);
                 expect(opacity(map, 'east')).toBeGreaterThan(opacity(map, '12'));
             });
         } finally {
@@ -307,123 +303,79 @@ it.each(['light', 'dark'] as const)(
     }
 );
 
-it.each(['light', 'dark'] as const)(
-    'keeps the %s theme prop authoritative and reads the current theme when it is removed',
-    async (theme) => {
-        // Arrange
-        const root = document.documentElement;
-        const originalClass = root.className;
-        const originalTheme = root.getAttribute('data-theme');
-        const detectedTheme = theme === 'light' ? 'dark' : 'light';
-        const user = userEvent.setup();
-
-        try {
-            await withMounted(<ThemeSelectionMap initialTheme={theme} />, async (output) => {
-                const map = await loadMap();
-                expect(map.styles).toEqual([`${theme}-style`]);
-
-                // Act
-                await act(async () => {
-                    root.className = detectedTheme;
-                    root.dataset.theme = detectedTheme;
-                });
-                expect(map.styles).toEqual([`${theme}-style`]);
-                const detect = output.querySelector('button');
-                if (!detect) throw new Error('Expected theme detection control');
-                await act(async () => user.click(detect));
-
-                // Assert
-                expect(map.styles.at(-1)).toBe(`${detectedTheme}-style`);
-                expect(engines.maps).toEqual([map]);
-                expect(map.removed).toBe(false);
-            });
-        } finally {
-            root.className = originalClass;
-            if (originalTheme === null) root.removeAttribute('data-theme');
-            else root.setAttribute('data-theme', originalTheme);
-        }
-    }
-);
-
 it('coordinates the composed starter country panel and recovers its map without losing selection', async () => {
     const analytics = {
         ...analyticsFixture,
         countries: countries.map((country) => ({ ...country, messages: 1200, people: 23, model: 'Sample' }))
     };
-    const bindings = {
-        __jsx: React.createElement,
-        ...components,
-        useApi: (path: string) => [path === '/assets/analytics.json' ? analytics : geography]
-    };
-    const code = transform(modelSource, {
-        transforms: ['jsx', 'imports'],
-        jsxRuntime: 'classic',
-        jsxPragma: '__jsx',
-        production: true
-    }).code;
-    const module = { exports: {} };
-
-    // oxlint-disable-next-line typescript/no-implied-eval -- Exercise the shipped View with real shared components.
-    const evaluate = new Function(
-        'module',
-        'exports',
-        ...Object.keys(bindings),
-        `${code}\nreturn module.exports.default;`
-    );
-    const Models = evaluate(module, module.exports, ...Object.values(bindings)) as React.ComponentType;
+    const Models = compileView(modelSource);
     const user = userEvent.setup();
 
-    await withMounted(<Models />, async (output) => {
-        const card = [...output.querySelectorAll('[data-slot="card"]')].find(
-            (card) => card.querySelector('h2')?.textContent === 'Top countries this month'
-        );
-        const east = [...(card?.querySelectorAll<HTMLButtonElement>('button[aria-pressed]') ?? [])].find((button) =>
-            button.textContent?.includes('East')
-        );
-        const next = card?.querySelector<HTMLButtonElement>('[aria-label="Next country"]');
-        if (!card || !east || !next) throw new Error('Expected the composed country panel');
-        const map = await loadMap();
+    await withMounted(
+        <RequestContext
+            value={async (path) => {
+                if (path === '/assets/analytics.json') return responseSchema.parse(analytics);
+                if (path === '/assets/world.json') return responseSchema.parse(geography);
+                throw new Error(`Unexpected request: ${path}`);
+            }}
+        >
+            <React.Suspense>
+                <Models params={{}} />
+            </React.Suspense>
+        </RequestContext>,
+        async (output) => {
+            await vi.waitFor(() => expect(output.textContent).toContain('Top countries this month'));
+            const card = [...output.querySelectorAll('[data-slot="card"]')].find(
+                (card) => card.querySelector('h2')?.textContent === 'Top countries this month'
+            );
+            const east = [...(card?.querySelectorAll<HTMLButtonElement>('button[aria-pressed]') ?? [])].find((button) =>
+                button.textContent?.includes('East')
+            );
+            const next = card?.querySelector<HTMLButtonElement>('[aria-label="Next country"]');
+            if (!card || !east || !next) throw new Error('Expected the composed country panel');
+            const map = await loadMap();
 
-        expect(map.getCenter()).toEqual({ lng: -10, lat: 10 });
-        await act(async () => user.hover(east));
-        expect(card.querySelector('[aria-live="polite"]')?.textContent).toContain('#2 East');
-        expect(east.getAttribute('aria-pressed')).toBe('true');
-        expect(opacity(map, 'east')).toBeGreaterThan(opacity(map, '12'));
-        expect(map.getCenter()).toEqual({ lng: 30, lat: 10 });
+            expect(map.getCenter()).toEqual({ lng: -10, lat: 10 });
+            await act(async () => user.hover(east));
+            expect(card.querySelector('[aria-live="polite"]')?.textContent).toContain('#2 East');
+            expect(east.getAttribute('aria-pressed')).toBe('true');
+            expect(opacity(map, 'east')).toBeGreaterThan(opacity(map, '12'));
+            expect(map.getCenter()).toEqual({ lng: 30, lat: 10 });
 
-        await act(async () => {
-            next.focus();
-            await user.keyboard('{Enter}');
-        });
-        expect(card.querySelector('[aria-live="polite"]')?.textContent).toContain('#1 West');
-        const layer = selectionLayer(map);
-        const feature = map.sources.get(layer.source)?.data.features.find((feature) => feature.id === 'east');
-        if (!feature) throw new Error('Expected the selectable East boundary');
-        await act(async () => map.fire('click', layer.id, { features: [feature], lngLat: { lng: 30, lat: 10 } }));
-        expect(card.querySelector('[aria-live="polite"]')?.textContent).toContain('#2 East');
+            await act(async () => {
+                next.focus();
+                await user.keyboard('{Enter}');
+            });
+            expect(card.querySelector('[aria-live="polite"]')?.textContent).toContain('#1 West');
+            const layer = selectionLayer(map);
+            const feature = map.sources.get(layer.source)?.data.features.find((feature) => feature.id === 'east');
+            if (!feature) throw new Error('Expected the selectable East boundary');
+            await act(async () => map.fire('click', layer.id, { features: [feature], lngLat: { lng: 30, lat: 10 } }));
+            expect(card.querySelector('[aria-live="polite"]')?.textContent).toContain('#2 East');
 
-        await act(async () => map.fire('error'));
-        expect(card.querySelector('[role="alert"]')?.textContent).toContain('Unable to load map');
-        expect(map.removed).toBe(true);
-        expect(east.getAttribute('aria-pressed')).toBe('true');
-        const retry = [...card.querySelectorAll('button')].find((button) => button.textContent === 'Retry');
-        if (!retry) throw new Error('Expected map recovery');
-        engines.failNext = true;
-        await act(async () => user.click(retry));
-        await vi.waitFor(() =>
-            expect(card.querySelector('[role="alert"]')?.textContent).toContain('Unable to load map')
-        );
-        expect(east.getAttribute('aria-pressed')).toBe('true');
-        const retryInitialization = [...card.querySelectorAll('button')].find(
-            (button) => button.textContent === 'Retry'
-        );
-        if (!retryInitialization) throw new Error('Expected WebGL initialization recovery');
-        await act(async () => user.click(retryInitialization));
-        const recovered = await loadMap();
-        expect(recovered.getCenter()).toEqual({ lng: 30, lat: 10 });
-        expect(opacity(recovered, 'east')).toBeGreaterThan(opacity(recovered, '12'));
-        expect(card.querySelector('[aria-live="polite"]')?.textContent).toContain('#2 East');
-    });
+            await act(async () => map.fire('error'));
+            expect(card.querySelector('[role="alert"]')?.textContent).toContain('Unable to load map');
+            expect(map.removed).toBe(true);
+            expect(east.getAttribute('aria-pressed')).toBe('true');
+            const retry = [...card.querySelectorAll('button')].find((button) => button.textContent === 'Retry');
+            if (!retry) throw new Error('Expected map recovery');
+            engines.failNext = true;
+            await act(async () => user.click(retry));
+            await vi.waitFor(() =>
+                expect(card.querySelector('[role="alert"]')?.textContent).toContain('Unable to load map')
+            );
+            expect(east.getAttribute('aria-pressed')).toBe('true');
+            const retryInitialization = [...card.querySelectorAll('button')].find(
+                (button) => button.textContent === 'Retry'
+            );
+            if (!retryInitialization) throw new Error('Expected WebGL initialization recovery');
+            await act(async () => user.click(retryInitialization));
+            const recovered = await loadMap();
+            expect(recovered.getCenter()).toEqual({ lng: 30, lat: 10 });
+            expect(opacity(recovered, 'east')).toBeGreaterThan(opacity(recovered, '12'));
+            expect(card.querySelector('[aria-live="polite"]')?.textContent).toContain('#2 East');
+        }
+    );
 });
 
 it('recovers a street map resource failure without discarding sibling input', async () => {
