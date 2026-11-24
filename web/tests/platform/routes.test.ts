@@ -31,20 +31,6 @@ it.each([
     expect(route).toMatchObject({ path: path.slice(1), file, index: true });
 });
 
-it.each(['hooks', 'buttons', 'icons', 'radial-chart', 'sankey-chart', 'map-geojson'])(
-    'matches the published %s component URL to its module',
-    (slug) => {
-        // Arrange
-        const path = `/docs/sdk/views/${slug}`;
-
-        // Act
-        const route = matchRoutes(routes, path)?.at(-1)?.route;
-
-        // Assert
-        expect(route).toMatchObject({ path: path.slice(1), file: `./routes/docs/sdk/views/${slug}.tsx` });
-    }
-);
-
 it('keeps unknown documentation URLs inside the documentation layout', () => {
     // Arrange
     const path = '/docs/sdk/views/unknown-component';

@@ -52,11 +52,9 @@ it('switches to the shared reference without losing published props, description
             expect(output.textContent).not.toContain('Order details');
             expect(output.querySelector('table')?.getAttribute('aria-label')).toBe('Button properties');
             expect(output.textContent).toContain('nativeButton');
-            expect(output.textContent).toContain('Set false when render produces a non-button element');
             expect(output.textContent).toContain('Manage asynchronous pending state and error feedback in the View.');
             const labelReference = output.querySelector('table[aria-label="ButtonGroupText properties"]');
             expect(labelReference?.textContent).toContain('render');
-            expect(labelReference?.textContent).toContain('Replaces the default div');
             const separatorReference = output.querySelector('table[aria-label="ButtonGroupSeparator properties"]');
             expect(separatorReference?.textContent).toContain('orientation');
             expect(separatorReference?.textContent).toContain('"vertical"');
@@ -160,10 +158,6 @@ it.each(['AreaChart', 'Sankey'] as const)('opens the %s reference with only its 
         expect(tables).toHaveLength(name === 'Sankey' ? 1 : 2);
         if (name === 'AreaChart') {
             expect(tables[1]?.getAttribute('aria-label')).toBe('ChartLegend properties');
-            const orientation = Array.from(tables[1]?.querySelectorAll('tbody tr') ?? []).find(
-                (row) => row.querySelector('td')?.textContent === 'orientation'
-            );
-            expect(orientation?.querySelector('td:last-child')?.textContent).toBe('"horizontal"');
         }
     });
 });

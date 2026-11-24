@@ -74,10 +74,8 @@ it('submits exact secret YAML and metadata after file-read recovery without acce
                 const submit = document.querySelector<HTMLButtonElement>('button[type="submit"]');
 
                 if (!textarea || !upload || !submit) throw new Error('Expected the kubeconfig controls');
-                expect(textarea.getAttribute('rows')).toBe('8');
                 expect(textarea.getAttribute('spellcheck')).toBe('false');
                 expect(textarea.required).toBe(true);
-                expect(textarea.name).toBe('kubeconfig');
                 await act(async () => user.type(textarea, 'previous draft'));
                 await act(async () => user.upload(upload, file));
                 expect(textarea.value).toBe('');

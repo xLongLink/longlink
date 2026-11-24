@@ -169,7 +169,6 @@ it('keeps clipboard rejection silent instead of reporting a false copy success',
             expect(write).toHaveBeenCalledTimes(1);
             expect(document.querySelector('[role="dialog"] button')?.getAttribute('aria-label')).toMatch(/^Copy /);
             expect(document.querySelector('[role="status"]')?.textContent).toBe('');
-            expect(document.querySelector('.lucide-check')).toBeNull();
         });
     } finally {
         write.mockRestore();

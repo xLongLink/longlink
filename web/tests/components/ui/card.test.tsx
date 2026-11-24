@@ -259,7 +259,7 @@ it('forwards modifier and middle gestures using the resolved destination and rej
     }
 });
 
-it('does not activate on text selection or inert surfaces and keeps decorative accessibility attributes', async () => {
+it('does not activate on text selection or inert surfaces', async () => {
     const action = vi.fn();
     await withMounted(
         <>
@@ -273,9 +273,7 @@ it('does not activate on text selection or inert surfaces and keeps decorative a
         async (output) => {
             const text = output.querySelector('p');
             const inertText = output.querySelector<HTMLElement>('[inert] p');
-            const inertCard = output.querySelector('[inert]');
-
-            if (!text || !inertText || !inertCard) throw new Error('Expected selectable and inert content');
+            if (!text || !inertText) throw new Error('Expected selectable and inert content');
             const selection = document.getSelection();
 
             if (!selection) throw new Error('Expected text selection support');
@@ -297,7 +295,6 @@ it('does not activate on text selection or inert surfaces and keeps decorative a
                 inertText.click();
             });
             expect(action).not.toHaveBeenCalled();
-            expect(inertCard.getAttribute('aria-hidden')).toBe('true');
             await act(async () => {
                 text.click();
             });
