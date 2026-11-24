@@ -432,6 +432,199 @@ describe('SolutionPage', () => {
         expect(output.querySelector('iframe')).toBeNull();
     });
 
+    it.each(['source', 'runtime'])(
+        'overlaps source and runtime requests and waits for both when %s finishes first',
+        async (first) => {
+            // Arrange
+            const source = pendingResponse();
+            const script = pendingResponse();
+            const styles = pendingResponse();
+            const requests: string[] = [];
+            stubFetch(
+                (url) => {
+                    if (url.endsWith('/views.json')) return manifestResponse([{ path: 'home.jsx', route: '/home' }]);
+                    requests.push(new URL(url).pathname);
+
+                    return source.promise;
+                },
+                (url) => {
+                    const path = new URL(url).pathname;
+                    requests.push(path);
+
+                    return path.endsWith('.js') ? script.promise : styles.promise;
+                }
+            );
+
+            // Act
+            const output = await renderPage('/home');
+
+            // Assert
+            await vi.waitFor(() =>
+                expect(requests).toEqual(
+                    expect.arrayContaining(['/home.jsx', '/views/runtime.js', '/views/runtime.css'])
+                )
+            );
+            expect(output.querySelector('iframe')).toBeNull();
+            await act(async () => {
+                script.resolve(sourceResponse(''));
+                if (first === 'source') source.resolve(sourceResponse('export default () => null;'));
+                else styles.resolve(sourceResponse(''));
+            });
+            await vi.waitFor(() =>
+                expect(
+                    mountedClient?.getQueryState(
+                        first === 'source'
+                            ? ['api', 'solution-view', '/views.json', 'home.jsx']
+                            : ['view-runtime', '/', { version: createHash('sha256').update('\n').digest('hex') }]
+                    )?.status
+                ).toBe('success')
+            );
+            expect(output.querySelector('iframe')).toBeNull();
+            await act(async () => {
+                if (first === 'source') styles.resolve(sourceResponse(''));
+                else source.resolve(sourceResponse('export default () => null;'));
+            });
+            await vi.waitFor(() => expect(output.querySelector('iframe')?.srcdoc).toContain('Content-Security-Policy'));
+        }
+    );
+
+    it('aborts source and runtime requests when the page unmounts during startup', async () => {
+        // Arrange
+        const response = pendingResponse();
+        const requests: Request[] = [];
+        const pending = (_url: string, request: Request) => {
+            requests.push(request);
+
+            return response.promise;
+        };
+        stubFetch(
+            (url, request) =>
+                url.endsWith('/views.json')
+                    ? manifestResponse([{ path: 'home.jsx', route: '/home' }])
+                    : pending(url, request),
+            pending
+        );
+        const output = await renderPage('/home');
+        await vi.waitFor(() => expect(requests).toHaveLength(3));
+        expect(requests.every((request) => !request.signal.aborted)).toBe(true);
+
+        // Act
+        await act(async () => root?.unmount());
+        root = undefined;
+
+        // Assert
+        expect(requests.every((request) => request.signal.aborted)).toBe(true);
+        await act(async () => response.resolve(sourceResponse('')));
+        expect(output.querySelector('iframe')).toBeNull();
+    });
+
+    it('reuses verified runtime assets across View navigation', async () => {
+        // Arrange
+        const runtimeResponse = vi.fn(() => sourceResponse(''));
+        stubFetch(
+            (url) =>
+                url.endsWith('/views.json')
+                    ? manifestResponse([
+                          { path: 'home.jsx', route: '/home' },
+                          { path: 'settings.jsx', route: '/settings' }
+                      ])
+                    : sourceResponse('export default () => null;'),
+            runtimeResponse
+        );
+        const output = await renderPage('/home');
+        await vi.waitFor(() => expect(output.querySelector('iframe')).not.toBeNull());
+        const initialFrame = output.querySelector('iframe');
+        const link = output.querySelector<HTMLAnchorElement>('a[href="/settings"]');
+
+        if (!link) throw new Error('Missing settings navigation');
+
+        // Act
+        await act(async () => link.click());
+
+        // Assert
+        await vi.waitFor(() => {
+            expect(output.querySelector('[data-path]')?.getAttribute('data-path')).toBe('/settings');
+            expect(output.querySelector('iframe')).not.toBeNull();
+            expect(output.querySelector('iframe')).not.toBe(initialFrame);
+        });
+        expect(runtimeResponse).toHaveBeenCalledTimes(2);
+    });
+
+    it.each(['navigation', 'retry'])('recovers a failed runtime through %s', async (recovery) => {
+        // Arrange
+        let available = false;
+        const runtimeResponse = vi.fn(() => (available ? sourceResponse('') : new Response(null, { status: 503 })));
+        stubFetch(
+            (url) =>
+                url.endsWith('/views.json')
+                    ? manifestResponse([
+                          { path: 'home.jsx', route: '/home' },
+                          { path: 'settings.jsx', route: '/settings' }
+                      ])
+                    : sourceResponse('export default () => null;'),
+            runtimeResponse
+        );
+        const output = await renderPage('/home');
+        await vi.waitFor(() => expect(output.textContent).toContain('Unable to load this View'));
+        expect(output.querySelector('iframe')).toBeNull();
+        const failedRequests = runtimeResponse.mock.calls.length;
+        const control =
+            recovery === 'navigation'
+                ? output.querySelector<HTMLAnchorElement>('a[href="/settings"]')
+                : Array.from(output.querySelectorAll('button')).find((button) => button.textContent === 'Retry');
+
+        if (!control) throw new Error('Missing recovery control');
+
+        // Act
+        available = true;
+        await act(async () => control.click());
+
+        // Assert
+        await vi.waitFor(() => expect(output.querySelector('iframe')?.srcdoc).toContain('Content-Security-Policy'));
+        expect(runtimeResponse).toHaveBeenCalledTimes(failedRequests + 2);
+        if (recovery === 'navigation')
+            expect(output.querySelector('[data-path]')?.getAttribute('data-path')).toBe('/settings');
+    });
+
+    it('retries failed source and runtime together from the source error', async () => {
+        // Arrange
+        let available = false;
+        const sourceResponseForAttempt = vi.fn(() =>
+            available ? sourceResponse('export default () => null;') : new Response(null, { status: 503 })
+        );
+        const runtimeResponse = vi.fn(() => (available ? sourceResponse('') : new Response(null, { status: 503 })));
+        stubFetch(
+            (url) =>
+                url.endsWith('/views.json')
+                    ? manifestResponse([{ path: 'home.jsx', route: '/home' }])
+                    : sourceResponseForAttempt(),
+            runtimeResponse
+        );
+        const output = await renderPage('/home');
+        await vi.waitFor(async () => {
+            await act(async () => {});
+            expect(output.querySelector('h1')?.textContent).toBe('Unable to load this view');
+            expect(
+                mountedClient?.getQueryCache().find({ queryKey: ['view-runtime'], exact: false })?.state.status
+            ).toBe('error');
+        });
+        expect(output.querySelector('iframe')).toBeNull();
+        const failedRuntimeRequests = runtimeResponse.mock.calls.length;
+        const failedSourceRequests = sourceResponseForAttempt.mock.calls.length;
+        const retry = Array.from(output.querySelectorAll('button')).find((button) => button.textContent === 'Retry');
+
+        if (!retry) throw new Error('Missing source retry');
+
+        // Act
+        available = true;
+        await act(async () => retry.click());
+
+        // Assert
+        await vi.waitFor(() => expect(output.querySelector('iframe')?.srcdoc).toContain('Content-Security-Policy'));
+        expect(sourceResponseForAttempt).toHaveBeenCalledTimes(failedSourceRequests + 1);
+        expect(runtimeResponse).toHaveBeenCalledTimes(failedRuntimeRequests + 2);
+    });
+
     it('renders a startup failure when the isolated View never becomes ready', async () => {
         // Arrange
         vi.useFakeTimers();
@@ -769,4 +962,14 @@ function manifestResponse(
 /** Creates a source fetch response. */
 function sourceResponse(body: string): Response {
     return new Response(body, { headers: { 'Content-Type': 'text/plain' } });
+}
+
+/** Controls completion of an HTTP request independently of the other startup requests. */
+function pendingResponse() {
+    let resolve!: (response: Response) => void;
+    const promise = new Promise<Response>((finish) => {
+        resolve = finish;
+    });
+
+    return { promise, resolve };
 }

@@ -2,18 +2,18 @@ import * as host from '@/views/host';
 import type { ReactNode } from 'react';
 import { FileText } from 'lucide-react';
 import { startCase } from 'es-toolkit/compat';
-import { JsxView } from '@/views/host/jsx-view';
+import { resolveNavigationUrl } from '@/lib/url';
+import { useQuery } from '@tanstack/react-query';
 import { PageError } from '@/components/ui/utils';
 import { manifestSchema } from '@/views/manifest';
 import Platform from '@/components/layouts/platform';
 import type { IconName } from 'lucide-react/dynamic';
 import { Spinner } from '@/components/shadcn/spinner';
 import { Icon } from '@/components/longlink/display/icon';
-import { skipToken, useQuery } from '@tanstack/react-query';
+import { SolutionView } from '@/views/host/solution-view';
 import { Button } from '@/components/longlink/action/button';
 import { matchRoutes, Navigate, useParams } from 'react-router';
 import { PageContainer } from '@/components/layouts/page-container';
-import { RELATIVE_URL_ORIGIN, resolveNavigationUrl, resolveRequestUrl } from '@/lib/url';
 
 const EMPTY_VIEWS = [] as const;
 
@@ -44,11 +44,6 @@ export function SolutionPage({
     viewsUrl?: string;
 }) {
     const { '*': routePath = '' } = useParams();
-
-    // Resolve JSX requests beside the manifest without changing its URL form.
-    const viewsLocation = new URL(viewsUrl, RELATIVE_URL_ORIGIN);
-    const requestBaseLocation = new URL('.', viewsLocation);
-    const requestBaseUrl = viewsUrl.startsWith('/') ? requestBaseLocation.pathname : requestBaseLocation.toString();
 
     const {
         data: manifest,
@@ -89,23 +84,6 @@ export function SolutionPage({
 
     const isNotFound = manifest !== undefined && routePath.length > 0 && match == null;
 
-    const {
-        data: activeViewSource,
-        error: activeViewError,
-        refetch: refetchView
-    } = useQuery({
-        queryKey: ['api', 'solution-view', viewsUrl, activeView?.path],
-        queryFn: activeView
-            ? async ({ signal }) => {
-                  const viewUrl = resolveRequestUrl(requestBaseUrl, activeView.path);
-                  const body = await host.load(viewUrl, { headers: { Accept: 'text/plain' }, signal });
-
-                  return body.text();
-              }
-            : skipToken,
-        retry: false
-    });
-
     // Build one static navigation target per solution tab.
     const tabs = navigationTabs.map((view) => ({
         href: resolveNavigationUrl(navigationBaseUrl, view.route),
@@ -137,10 +115,11 @@ export function SolutionPage({
                 </Button>
             </PageError>
         );
-    } else if (activeViewSource !== undefined && activeView && match && manifest) {
+    } else if (activeView && match && manifest) {
         content = (
-            <JsxView
-                source={activeViewSource}
+            <SolutionView
+                path={activeView.path}
+                viewsUrl={viewsUrl}
                 key={JSON.stringify([
                     viewsUrl,
                     navigationBaseUrl,
@@ -153,7 +132,6 @@ export function SolutionPage({
                 params={Object.fromEntries(
                     Object.entries(match.params).filter((entry): entry is [string, string] => entry[1] != null)
                 )}
-                requestBaseUrl={requestBaseUrl}
                 runtime={manifest.runtime}
             />
         );
@@ -163,14 +141,6 @@ export function SolutionPage({
                 description="The solution did not expose any views to render."
                 title="Unexpected solution response"
             />
-        );
-    } else if (activeViewError) {
-        content = (
-            <PageError description="The view could not be loaded." title="Unable to load this view">
-                <Button type="button" variant="outline" onClick={() => void refetchView()}>
-                    Retry
-                </Button>
-            </PageError>
         );
     } else {
         content = (

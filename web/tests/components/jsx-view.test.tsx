@@ -20,14 +20,7 @@ it.each([
         // Arrange
         const script = '/* Capability lifecycle bootstrap */';
         const modules = chunked ? { 'entry.js': 'a'.repeat(64) } : undefined;
-        const version = createHash('sha256')
-            .update(`${script}\n${modules ? `\n${JSON.stringify(modules)}` : ''}`)
-            .digest('hex');
-        const load = vi.spyOn(host, 'load').mockImplementation(async (url) => {
-            if (url.includes('/views/runtime.js?')) return new Response(script);
-            if (url.includes('/views/runtime.css?')) return new Response('');
-            throw new Error('Unexpected asset request');
-        });
+        const version = 'a'.repeat(64);
         const NativeMessageChannel = globalThis.MessageChannel;
         const channels: MessageChannel[] = [];
         const closed: ReturnType<typeof vi.spyOn>[] = [];
@@ -50,6 +43,7 @@ it.each([
                         requestBaseUrl="/proxy/"
                         navigationBaseUrl="/"
                         runtime={{ version, modules }}
+                        kernel={{ script, styles: '' }}
                     />
                 </ApiErrorContext>,
                 async (mounted) => {
@@ -101,7 +95,6 @@ it.each([
             for (const close of closed) expect(close).toHaveBeenCalled();
         } finally {
             messageChannel.mockRestore();
-            load.mockRestore();
             for (const close of closed) close.mockRestore();
         }
     }
@@ -114,15 +107,11 @@ it('keeps execution isolated and transfers only verified Solution modules', asyn
     const module = 'export const value = "Solution-owned";';
     const digest = createHash('sha256').update(module).digest('hex');
     const modules = { 'entry.js': digest, 'stale.js': digest };
-    const version = createHash('sha256')
-        .update(`${script}\n${styles}\n${JSON.stringify(modules)}`)
-        .digest('hex');
+    const version = 'a'.repeat(64);
     const fetched: string[] = [];
     const load = vi.spyOn(host, 'load').mockImplementation(async (url) => {
         fetched.push(new URL(url).pathname);
 
-        if (url.includes('/views/runtime.js?')) return new Response(script);
-        if (url.includes('/views/runtime.css?')) return new Response(styles);
         if (url.includes('/views/entry.js?')) return new Response(module);
         if (url.includes('/views/stale.js?')) return new Response('export const value = "wrong deployment";');
         throw new Error('Unexpected asset request');
@@ -137,6 +126,7 @@ it('keeps execution isolated and transfers only verified Solution modules', asyn
                     requestBaseUrl="/proxy/"
                     navigationBaseUrl="/"
                     runtime={{ version, modules }}
+                    kernel={{ script, styles }}
                 />
             </ApiErrorContext>,
             async (mounted) => {
@@ -177,7 +167,7 @@ it('keeps execution isolated and transfers only verified Solution modules', asyn
                     expect(frame.srcdoc).toContain("frame-src 'none';");
                     expect(frame.srcdoc).not.toContain('https://unpkg.com');
                     expect(frame.srcdoc).not.toContain('private source');
-                    expect(fetched).toEqual(['/proxy/views/runtime.js', '/proxy/views/runtime.css']);
+                    expect(fetched).toEqual([]);
 
                     for (const [id, path, expected] of [
                         [0, 'entry.js', { id: 0, source: module }],
@@ -191,12 +181,7 @@ it('keeps execution isolated and transfers only verified Solution modules', asyn
                         await expect(reply).resolves.toEqual(expected);
                     }
 
-                    expect(fetched).toEqual([
-                        '/proxy/views/runtime.js',
-                        '/proxy/views/runtime.css',
-                        '/proxy/views/entry.js',
-                        '/proxy/views/stale.js'
-                    ]);
+                    expect(fetched).toEqual(['/proxy/views/entry.js', '/proxy/views/stale.js']);
 
                     const commands: unknown = ports[0];
                     if (!(commands instanceof workers.MessagePort)) throw new Error('Expected command transport');
@@ -269,87 +254,77 @@ it('keeps execution isolated and transfers only verified Solution modules', asyn
 it('accepts v0.9.6 navigation commands with newTab:false and navigates within the Solution', async () => {
     // Arrange
     const script = '/* v0.9.6 navigation bootstrap */';
-    const version = createHash('sha256').update(`${script}\n`).digest('hex');
-    const load = vi.spyOn(host, 'load').mockImplementation(async (url) => {
-        if (url.includes('/views/runtime.js?')) return new Response(script);
-        if (url.includes('/views/runtime.css?')) return new Response('');
-        throw new Error('Unexpected asset request');
-    });
+    const version = 'a'.repeat(64);
 
     function Location() {
         return <output>{useLocation().pathname}</output>;
     }
 
-    try {
-        await withMounted(
-            <ApiErrorContext value={() => undefined}>
-                <JsxView
-                    source=""
-                    params={{}}
-                    requestBaseUrl="/proxy/"
-                    navigationBaseUrl="/solutions/orders/"
-                    runtime={{ version }}
-                />
-                <Location />
-            </ApiErrorContext>,
-            async (mounted) => {
+    await withMounted(
+        <ApiErrorContext value={() => undefined}>
+            <JsxView
+                source=""
+                params={{}}
+                requestBaseUrl="/proxy/"
+                navigationBaseUrl="/solutions/orders/"
+                runtime={{ version }}
+                kernel={{ script, styles: '' }}
+            />
+            <Location />
+        </ApiErrorContext>,
+        async (mounted) => {
+            await vi.waitFor(async () => {
+                await act(async () => {});
+                expect(mounted.querySelector('iframe')).not.toBeNull();
+            });
+            const frame = mounted.querySelector('iframe');
+            const contentWindow = frame?.contentWindow;
+
+            if (!frame || !contentWindow) throw new Error('Expected prepared sandbox');
+            const session = /__VIEW_SESSION__=("[^"]+");/.exec(frame.srcdoc)?.[1];
+
+            if (!session) throw new Error('Expected bootstrap session');
+            const transfer = vi.spyOn(contentWindow, 'postMessage').mockImplementation(() => {});
+
+            try {
+                await act(async () => {
+                    window.dispatchEvent(
+                        new MessageEvent('message', {
+                            source: contentWindow,
+                            origin: 'null',
+                            data: JSON.parse(session) as unknown
+                        })
+                    );
+                });
+                const calls: readonly (readonly unknown[])[] = transfer.mock.calls;
+                const ports = calls[0]?.[2];
+                if (!Array.isArray(ports) || !(ports[0] instanceof workers.MessagePort)) {
+                    throw new Error('Expected command transport');
+                }
+
+                // Act
+                ports[0].postMessage({ type: 'navigate', path: '/invoices', newTab: false });
+
+                // Assert
                 await vi.waitFor(async () => {
                     await act(async () => {});
-                    expect(mounted.querySelector('iframe')).not.toBeNull();
+                    expect(mounted.querySelector('output')?.textContent).toBe('/solutions/orders/invoices');
                 });
-                const frame = mounted.querySelector('iframe');
-                const contentWindow = frame?.contentWindow;
-
-                if (!frame || !contentWindow) throw new Error('Expected prepared sandbox');
-                const session = /__VIEW_SESSION__=("[^"]+");/.exec(frame.srcdoc)?.[1];
-
-                if (!session) throw new Error('Expected bootstrap session');
-                const transfer = vi.spyOn(contentWindow, 'postMessage').mockImplementation(() => {});
-
-                try {
-                    await act(async () => {
-                        window.dispatchEvent(
-                            new MessageEvent('message', {
-                                source: contentWindow,
-                                origin: 'null',
-                                data: JSON.parse(session) as unknown
-                            })
-                        );
-                    });
-                    const calls: readonly (readonly unknown[])[] = transfer.mock.calls;
-                    const ports = calls[0]?.[2];
-                    if (!Array.isArray(ports) || !(ports[0] instanceof workers.MessagePort)) {
-                        throw new Error('Expected command transport');
-                    }
-
-                    // Act
-                    ports[0].postMessage({ type: 'navigate', path: '/invoices', newTab: false });
-
-                    // Assert
-                    await vi.waitFor(async () => {
-                        await act(async () => {});
-                        expect(mounted.querySelector('output')?.textContent).toBe('/solutions/orders/invoices');
-                    });
-                } finally {
-                    transfer.mockRestore();
-                }
+            } finally {
+                transfer.mockRestore();
             }
-        );
-    } finally {
-        load.mockRestore();
-    }
+        }
+    );
 });
 
 it('returns binary file replies without opening a host preview', async () => {
     // Arrange
     const script = '/* Preview bootstrap */';
-    const version = createHash('sha256').update(`${script}\n`).digest('hex');
+    const version = 'a'.repeat(64);
     const text = '<script>window.previewExecuted = true</script><img src=x onerror="alert(1)">';
     const fetch = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
         const path = new URL(input instanceof Request ? input.url : String(input)).pathname;
 
-        if (path === '/proxy/views/runtime.js') return new Response(script);
-        if (path === '/proxy/views/runtime.css') return new Response('');
         if (path === '/proxy/report') {
             return new Response(new Uint8Array([0x25, 0x50, 0x44, 0x46, 0xff]), {
                 headers: { 'Content-Type': 'application/pdf' }
@@ -363,7 +338,14 @@ it('returns binary file replies without opening a host preview', async () => {
     try {
         await withMounted(
             <ApiErrorContext value={reportError}>
-                <JsxView source="" params={{}} requestBaseUrl="/proxy/" navigationBaseUrl="/" runtime={{ version }} />
+                <JsxView
+                    source=""
+                    params={{}}
+                    requestBaseUrl="/proxy/"
+                    navigationBaseUrl="/"
+                    runtime={{ version }}
+                    kernel={{ script, styles: '' }}
+                />
             </ApiErrorContext>,
             async (mounted) => {
                 await vi.waitFor(async () => {

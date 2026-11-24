@@ -295,11 +295,13 @@ it('blocks disabled navigation and its callback until enabled', async () => {
 });
 
 it('commits callback state updates before the returned promise settles', async () => {
+    // Arrange
     let release = () => {};
 
     const pending = new Promise<void>((resolve) => {
         release = resolve;
     });
+    const action = vi.fn();
 
     function Action() {
         const [message, setMessage] = useState('Ready');
@@ -308,7 +310,8 @@ it('commits callback state updates before the returned promise settles', async (
             <>
                 <output>{message}</output>
                 <Link
-                    onClick={() => {
+                    onClick={(event) => {
+                        action(event.defaultPrevented);
                         setMessage('Saving');
 
                         return pending;
@@ -322,7 +325,17 @@ it('commits callback state updates before the returned promise settles', async (
 
     try {
         await withMounted(<Action />, async (output) => {
-            await act(async () => output.querySelector('button')?.click());
+            const control = output.querySelector('button');
+            if (!control) throw new Error('Expected action button');
+
+            // Act
+            await act(async () => {
+                control.click();
+                control.click();
+            });
+
+            // Assert
+            expect(action).toHaveBeenCalledExactlyOnceWith(false);
             expect(output.querySelector('output')?.textContent).toBe('Saving');
             expect(output.querySelector('button')?.getAttribute('aria-busy')).toBe('true');
             await act(async () => {

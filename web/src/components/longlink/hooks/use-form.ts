@@ -63,11 +63,14 @@ export function useForm<T extends forms.FieldValues = forms.FieldValues, U exten
     const schema = options?.schema;
     const resolver: forms.Resolver<T, unknown, U> = async (values, context, resolverOptions) => {
         try {
+            if (!schema) {
+                const input = supplied.current instanceof FormData ? values : (supplied.current ?? values);
+                return { values: input as unknown as U, errors: {} };
+            }
             const input =
                 supplied.current instanceof FormData
                     ? (formValues(supplied.current) as T)
                     : (supplied.current ?? values);
-            if (!schema) return { values: input as unknown as U, errors: {} };
             return await zodResolver(schema)(input, context, resolverOptions);
         } catch (cause) {
             const error = await fail(cause);

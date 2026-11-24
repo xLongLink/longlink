@@ -12,8 +12,6 @@ import { Link as RouterLink, useInRouterContext } from 'react-router';
 import { resolveExternalUrl, resolveScopedNavigationUrl } from '@/lib/url';
 import {
     useContext,
-    useRef,
-    useTransition,
     type Ref,
     type RefCallback,
     type DOMAttributes,
@@ -183,8 +181,7 @@ function ActionLink({
     className,
     ...props
 }: ActionLinkProps & { className: string }) {
-    const actionInFlight = useRef(false);
-    const [isPending, startTransition] = useTransition();
+    const { isPending, inFlight: actionInFlight, run } = useConfirmAction();
     const blocked = disabled || isPending;
 
     // Prevent duplicate actions before React commits the pending state.
@@ -196,27 +193,15 @@ function ActionLink({
             return;
         }
 
-        actionInFlight.current = true;
-
-        let result: unknown;
-
-        try {
-            result = onClick?.(event);
-        } catch (error) {
-            result = Promise.reject(error);
-        }
-
-        event.preventDefault();
-
-        startTransition(async () => {
+        run(async () => {
             try {
-                await result;
+                await onClick?.(event);
             } catch (error) {
                 if (!(error instanceof ReportedError) && !isCanceledRequest(error)) throw error;
-            } finally {
-                actionInFlight.current = false;
             }
         });
+
+        event.preventDefault();
     }
 
     return (

@@ -17,8 +17,6 @@ beforeAll(async () => {
 
 it('ignores a mismatched session and releases an admitted port when its mount is absent', async () => {
     // Arrange
-    const previousSession = window.__VIEW_SESSION__;
-    window.__VIEW_SESSION__ = 'runtime-test-session';
     const channel = new MessageChannel();
     const close = vi.spyOn(channel.port1, 'close');
 
@@ -53,7 +51,6 @@ it('ignores a mismatched session and releases an admitted port when its mount is
         channel.port1.close();
         channel.port2.close();
         close.mockRestore();
-        window.__VIEW_SESSION__ = previousSession;
     }
 }, 30_000);
 
