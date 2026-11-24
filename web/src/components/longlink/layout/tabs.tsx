@@ -1,5 +1,6 @@
 import * as tabs from '@/components/shadcn/tabs';
-import { type ComponentProps, type ReactNode } from 'react';
+import { Spinner } from '@/components/shadcn/spinner';
+import { Suspense, type ComponentProps, type ReactNode } from 'react';
 
 type TabItem = { value: string; label: ReactNode; content?: ReactNode; disabled?: boolean; keepMounted?: boolean };
 
@@ -43,7 +44,19 @@ export function Tabs({
             </tabs.TabsList>
             {items.map((item) => (
                 <tabs.TabsContent key={item.value} value={item.value} keepMounted={item.keepMounted}>
-                    {item.content}
+                    <Suspense
+                        fallback={
+                            <div className="grid min-h-24 place-items-center">
+                                <Spinner
+                                    role="status"
+                                    aria-label="Loading tab content"
+                                    className="motion-reduce:animate-none"
+                                />
+                            </div>
+                        }
+                    >
+                        {item.content}
+                    </Suspense>
                 </tabs.TabsContent>
             ))}
         </tabs.Tabs>
