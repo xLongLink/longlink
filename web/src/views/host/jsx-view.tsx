@@ -3,8 +3,8 @@ import * as icons from '@/lib/icons';
 import * as host from '@/views/host';
 import { useApiError } from '@/lib/errors';
 import { useNavigate } from 'react-router';
-import { useQuery } from '@tanstack/react-query';
 import type { Appearance } from '@/lib/appearance';
+import { sha256Hex } from '@/views/host/integrity';
 import type { ViewRuntime } from '@/views/manifest';
 import { useAppearance } from '@/lib/hooks/use-appearance';
 import { useScrollLock } from '@base-ui/utils/useScrollLock';
@@ -22,25 +22,21 @@ const STARTUP_FAILURES = {
     readiness: 'The isolated View did not become ready within 10 seconds.'
 } as const;
 
-async function sha256Hex(bytes: BufferSource): Promise<string> {
-    const digest = await crypto.subtle.digest('SHA-256', bytes);
-
-    return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
-}
-
 /** Renders Solution code only in a credential-free, opaque-origin sandbox. */
 export function JsxView({
     source,
     params,
     requestBaseUrl,
     navigationBaseUrl,
-    runtime
+    runtime,
+    kernel
 }: {
     source: string;
     params: Record<string, string>;
     requestBaseUrl: string;
     navigationBaseUrl: string;
     runtime: ViewRuntime;
+    kernel: { script: string; styles: string };
 }) {
     const frame = useRef<HTMLIFrameElement>(null);
 
@@ -112,44 +108,7 @@ export function JsxView({
         appearancePort.current?.postMessage({ type: 'appearance', appearance: currentAppearance.current });
     }, [theme]);
 
-    const { data: kernel, error: runtimeError } = useQuery({
-        queryKey: ['view-runtime', requestBaseUrl, runtime],
-        staleTime: Infinity,
-        retry: false,
-        queryFn: async ({ signal }) => {
-            // Load the declared runtime only within its Solution proxy.
-            const urls = ['views/runtime.js', 'views/runtime.css'].map((path) => {
-                const url = new URL(requestUrl(requestBaseUrl, path), window.location.origin);
-                url.searchParams.set('v', runtime.version);
-
-                return url.href;
-            });
-
-            const [script, styles] = await Promise.all(
-                urls.map(async (url) => {
-                    const body = await host.load(url, { signal });
-
-                    return body.text();
-                })
-            );
-
-            // Reject stale or mixed runtime assets instead of silently rendering with the wrong components.
-            const content = `${script}\n${styles}${runtime.modules ? `\n${JSON.stringify(runtime.modules)}` : ''}`;
-            const version = await sha256Hex(new TextEncoder().encode(content));
-
-            if (version !== runtime.version) throw new Error('The Solution View runtime does not match its manifest');
-
-            return { script, styles };
-        }
-    });
-
     useEffect(() => {
-        // Report only the failure stage and error type, never source or response data.
-        if (import.meta.env.DEV && runtimeError) console.error('View startup failed: assets', runtimeError.name);
-    }, [runtimeError]);
-
-    useEffect(() => {
-        if (!kernel) return;
         const { script, styles } = kernel;
         const controller = new AbortController();
         const channel = new MessageChannel();
@@ -389,12 +348,10 @@ export function JsxView({
         return dispose;
     }, [source, parameters, requestBaseUrl, navigationBaseUrl, navigate, reportError, kernel, runtime]);
 
-    if (runtimeError) return <PageError title="Unable to load this View" description={STARTUP_FAILURES.assets} />;
-
     if (bootstrapState.status === 'failed')
         return <PageError title="Unable to load this View" description={STARTUP_FAILURES[bootstrapState.stage]} />;
 
-    // Keep runtime fetching and document preparation visible before mounting the sandbox.
+    // Keep document preparation visible before mounting the sandbox.
     if (bootstrapState.status === 'preparing') return <PageLoading label="Preparing View" />;
 
     return (

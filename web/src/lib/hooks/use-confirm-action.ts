@@ -7,9 +7,17 @@ export function useConfirmAction() {
     function run(action: () => void | Promise<void>) {
         if (inFlight.current) return;
         inFlight.current = true;
+        let result: void | Promise<void>;
+
+        try {
+            result = action();
+        } catch (error) {
+            result = Promise.reject(error);
+        }
+
         startTransition(async () => {
             try {
-                await action();
+                await result;
             } finally {
                 inFlight.current = false;
             }

@@ -367,5 +367,3 @@ function initialize(event: MessageEvent<unknown>): void {
 
 // A fresh opaque-origin frame cannot read parent state, storage, or cookies.
 window.addEventListener('message', initialize);
-
-window.parent.postMessage(session, '*');

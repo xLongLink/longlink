@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { MapCoordinate, MapRoute } from './types';
 
-const coordinate = z.tuple([z.number().min(-180).max(180), z.number().min(-90).max(90)]).rest(z.number());
+const coordinate = z.tuple([z.number().min(-180).max(180), z.number().min(-90).max(90)]);
 
 /** Rejects nonfinite or out-of-range geographic coordinates before rendering. */
 export function coordinateError(coordinates: readonly MapCoordinate[]): string | undefined {
