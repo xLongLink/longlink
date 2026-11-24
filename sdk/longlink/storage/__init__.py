@@ -1,6 +1,5 @@
 import fsspec
 from pathlib import Path, PurePosixPath
-from longlink.storage import tls
 from longlink.storage.base import File, Storage, MissingFileError
 from longlink.utils.settings import Envs
 from longlink.storage.filesystem import Filesystem
@@ -39,7 +38,7 @@ def create_storage(settings: Envs) -> Storage:
             key=settings.STORAGE_USERNAME,
             secret=settings.STORAGE_PASSWORD,
             client_kwargs={"region_name": settings.STORAGE_REGION},
-            config_kwargs={"s3": {"addressing_style": "path"}, "http_session_cls": tls.Session},
+            config_kwargs={"s3": {"addressing_style": "path"}},
             skip_instance_cache=True,
         )
         filesystem = DirFileSystem(path=scope.as_posix() if scope else "", fs=backend, asynchronous=True, skip_instance_cache=True)

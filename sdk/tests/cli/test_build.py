@@ -9,6 +9,7 @@ import tarfile
 import subprocess
 from pathlib import Path
 from contextlib import chdir
+from dataclasses import dataclass
 from longlink.cli import build, errors
 from collections.abc import Callable
 from longlink.cli.main import main
@@ -45,18 +46,26 @@ def chdir_project(build_project: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     return build_project
 
 
+@dataclass
+class DockerCapture:
+    """Keep Docker commands and generated Dockerfiles available after context cleanup."""
+
+    commands: list[list[str]]
+    dockerfiles: list[str]
+
+
 @pytest.fixture
-def docker_commands(monkeypatch: pytest.MonkeyPatch) -> Callable[[tuple[str, int] | None], list[list[str]]]:
+def docker_commands(monkeypatch: pytest.MonkeyPatch) -> Callable[[tuple[str, int] | None], DockerCapture]:
     """Record Docker commands, optionally failing one, while keeping inspection real."""
 
     # Arrange
     run_process = subprocess.run
 
-    def configure(failure: tuple[str, int] | None = None) -> list[list[str]]:
+    def configure(failure: tuple[str, int] | None = None) -> DockerCapture:
         """Install the Docker boundary for one command scenario."""
 
         # Record only Docker commands; Solution inspection still runs in a real child.
-        commands: list[list[str]] = []
+        capture = DockerCapture(commands=[], dockerfiles=[])
 
         def run_docker(
             command: list[str], check: bool, capture_output: bool = False, text: bool = False
@@ -70,9 +79,9 @@ def docker_commands(monkeypatch: pytest.MonkeyPatch) -> Callable[[tuple[str, int
 
             # Check artifacts before the CLI releases its temporary directory.
             assert check is True
-            commands.append(command)
-            if command[1] != "push":
-                assert Path(command[-1], "Dockerfile").is_file()
+            capture.commands.append(command)
+            if command[1] == "build":
+                capture.dockerfiles.append(Path(command[-1], "Dockerfile").read_text(encoding="utf-8"))
             if failure is not None and command[1] == failure[0]:
                 raise subprocess.CalledProcessError(failure[1], command)
             return None
@@ -80,7 +89,7 @@ def docker_commands(monkeypatch: pytest.MonkeyPatch) -> Callable[[tuple[str, int
         # Replace only Docker discovery and process execution.
         monkeypatch.setattr(build.shutil, "which", lambda command: "/usr/bin/docker" if command == "docker" else None)
         monkeypatch.setattr(build.subprocess, "run", run_docker)
-        return commands
+        return capture
 
     return configure
 
@@ -946,7 +955,7 @@ BUILD_SUCCESS_CASES = [
 @pytest.mark.parametrize(("tag", "arguments", "expected_tags", "expected_pushes"), BUILD_SUCCESS_CASES)
 @pytest.mark.usefixtures("chdir_project")
 def test_build_command_reports_built_image(
-    docker_commands: Callable[[tuple[str, int] | None], list[list[str]]],
+    docker_commands: Callable[[tuple[str, int] | None], DockerCapture],
     capsys: pytest.CaptureFixture[str],
     tag: str,
     arguments: list[str],
@@ -956,14 +965,14 @@ def test_build_command_reports_built_image(
     """Build and report each image tag once, optionally publishing it in order."""
 
     # Arrange
-    commands = docker_commands(None)
+    capture = docker_commands(None)
 
     # Act
     main(["build", "--tag", tag, "--registry", "localhost:15000", *arguments])
 
     # Assert
-    temporary_context = Path(commands[0][-1])
-    assert commands == [
+    temporary_context = Path(capture.commands[0][-1])
+    assert capture.commands == [
         [
             "/usr/bin/docker",
             "build",
@@ -985,7 +994,7 @@ def test_build_command_reports_built_image(
 
 
 def test_build_version_override_changes_only_the_embedded_version(
-    chdir_project: Path, docker_commands: Callable[[tuple[str, int] | None], list[list[str]]], monkeypatch: pytest.MonkeyPatch
+    chdir_project: Path, docker_commands: Callable[[tuple[str, int] | None], DockerCapture]
 ) -> None:
     """Keep the project version, image tag, and embedded release version independent."""
 
@@ -995,30 +1004,21 @@ def test_build_version_override_changes_only_the_embedded_version(
     project = build.read_pyproject(chdir_project)["project"]
     assert isinstance(project, dict)
     assert project["version"] == "0.1.0"
-    commands = docker_commands(None)
-    run_process = subprocess.run
-    version_labels: list[str] = []
-
-    def inspect_dockerfile(
-        command: list[str], check: bool, capture_output: bool = False, text: bool = False
-    ) -> subprocess.CompletedProcess[str] | None:
-        """Inspect the generated version label before the build context is released."""
-
-        # Observe only Docker artifacts and retain real child inspection through the fixture.
-        if command[:2] == ["/usr/bin/docker", "build"]:
-            instructions = Path(command[-1], "Dockerfile").read_text(encoding="utf-8").splitlines()
-            version_labels.extend(line for line in instructions if line.startswith("LABEL org.opencontainers.image.version="))
-        return run_process(command, check=check, capture_output=capture_output, text=text)
-
-    monkeypatch.setattr(build.subprocess, "run", inspect_dockerfile)
+    capture = docker_commands(None)
 
     # Act
     main(["build", "--tag", "candidate", "--version", "release-2026"])
 
     # Assert
-    context = Path(commands[0][-1])
+    context = Path(capture.commands[0][-1])
+    version_labels = [
+        line
+        for dockerfile in capture.dockerfiles
+        for line in dockerfile.splitlines()
+        if line.startswith("LABEL org.opencontainers.image.version=")
+    ]
     assert version_labels == ['LABEL org.opencontainers.image.version="release-2026"']
-    assert commands == [
+    assert capture.commands == [
         ["/usr/bin/docker", "build", "--platform", "linux/amd64", "-f", str(context / "Dockerfile"), "-t", "demo:candidate", str(context)]
     ]
     assert project_file.read_bytes() == original_project
@@ -1032,7 +1032,7 @@ def test_build_version_override_changes_only_the_embedded_version(
 )
 @pytest.mark.usefixtures("chdir_project")
 def test_build_command_reports_docker_failure(
-    docker_commands: Callable[[tuple[str, int] | None], list[list[str]]],
+    docker_commands: Callable[[tuple[str, int] | None], DockerCapture],
     capsys: pytest.CaptureFixture[str],
     failed_command: str,
     exit_code: int,
@@ -1041,7 +1041,7 @@ def test_build_command_reports_docker_failure(
     """Translate Docker build and push failures into CLI errors in command order."""
 
     # Arrange
-    commands = docker_commands((failed_command, exit_code))
+    capture = docker_commands((failed_command, exit_code))
 
     # Act
     with pytest.raises(SystemExit) as failure:
@@ -1050,8 +1050,8 @@ def test_build_command_reports_docker_failure(
     # Assert
     assert failure.value.code == 1
     assert f"Docker command failed with exit code {exit_code}" in capsys.readouterr().err
-    assert [command[1] for command in commands] == expected_commands
-    assert not Path(commands[0][-1]).exists()
+    assert [command[1] for command in capture.commands] == expected_commands
+    assert not Path(capture.commands[0][-1]).exists()
 
 
 def test_generated_python_matches_inspector_and_is_available_in_uv_catalog(build_project: Path, tmp_path: Path) -> None:

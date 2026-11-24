@@ -6,7 +6,6 @@ from fastapi import FastAPI, APIRouter
 from fastmcp import FastMCP
 from pathlib import Path
 from longlink import views, permissions
-from pydantic import FilePath, BaseModel
 from contextlib import ExitStack, AsyncExitStack, asynccontextmanager
 from dataclasses import dataclass
 from collections.abc import Mapping, Callable, Awaitable, AsyncGenerator
@@ -26,16 +25,6 @@ from longlink.database.base import LOCAL_USER_ID, Database
 from longlink.utils.settings import Envs
 from fastmcp.server.dependencies import get_http_headers
 from longlink.middleware.identity import IdentityMiddleware
-
-
-class FrontendAssets(BaseModel):
-    """Validate the required frontend files packaged with this SDK."""
-
-    # Required frontend assets.
-    index: FilePath
-    script: FilePath
-    styles: FilePath
-    manifest: FilePath
 
 
 @dataclass(slots=True)
@@ -71,15 +60,14 @@ class LongLink(RouteDecorators, FastAPI):
 
         # Require the frontend and component runtime packaged with this SDK before loading Solution files.
         frontend_directory = ROOT / ".static" / "web"
-        frontend_assets = FrontendAssets(
-            index=frontend_directory / "index.html",
-            script=frontend_directory / "views" / "runtime.js",
-            styles=frontend_directory / "views" / "runtime.css",
-            manifest=frontend_directory / "views" / "runtime.json",
-        )
+        for asset in ("index.html", "views/runtime.js", "views/runtime.css", "views/runtime.json"):
+            asset_path = frontend_directory / asset
+            if not asset_path.is_file():
+                raise FileNotFoundError(f"Required frontend asset is missing: {asset_path}")
 
         # Validate the manifest's content version separately from file existence.
-        view_runtime = views.ViewRuntime.model_validate_json(frontend_assets.manifest.read_bytes())
+        manifest_path = frontend_directory / "views" / "runtime.json"
+        view_runtime = views.ViewRuntime.model_validate_json(manifest_path.read_bytes())
 
         # Solutions provide .jsx files in the generated source layout.
         views_directory = Path.cwd() / "src" / "views"
@@ -200,7 +188,7 @@ class LongLink(RouteDecorators, FastAPI):
         self.router.lifespan_context = lifespan
 
         # Serve the embedded frontend as low-priority routes so Solution routes take precedence.
-        self.frontend("/", directory=frontend_assets.index.parent)
+        self.frontend("/", directory=frontend_directory)
         self._runtime_routes = {id(route.original_route) for route in iter_route_contexts(self.routes)}
 
     def permission_routes(self) -> list[RouteContext]:

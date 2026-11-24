@@ -142,21 +142,26 @@ def test_readiness_fails_when_the_solution_database_is_unavailable(solution_sour
     assert ready_response.headers["cache-control"] == "no-store"
 
 
-def test_startup_rejects_a_missing_embedded_frontend(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    """Require the packaged frontend entry point during startup."""
+@pytest.mark.parametrize("missing_asset", ["index.html", "views/runtime.js", "views/runtime.css", "views/runtime.json"])
+def test_startup_rejects_a_missing_embedded_frontend(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, missing_asset: str) -> None:
+    """Require packaged frontend assets before loading Solution files or runtime services."""
 
-    # Point the runtime at a package root without the required frontend artifact.
+    # Arrange
     monkeypatch.setattr(longlink_app, "ROOT", tmp_path)
+    monkeypatch.chdir(tmp_path)
+    frontend_directory = tmp_path / ".static" / "web"
+    for asset in ("index.html", "views/runtime.js", "views/runtime.css", "views/runtime.json"):
+        asset_path = frontend_directory / asset
+        asset_path.parent.mkdir(parents=True, exist_ok=True)
+        if asset != missing_asset:
+            asset_path.touch()
 
-    # Reject startup with the missing artifact's exact location.
-    frontend_index = tmp_path / ".static" / "web" / "index.html"
-    with pytest.raises(ValidationError) as raised:
+    # Act
+    with pytest.raises(FileNotFoundError) as raised:
         LongLink()
 
-    # Report the missing entry point as a filesystem validation error.
-    assert raised.value.errors()[0]["loc"] == ("index",)
-    assert raised.value.errors()[0]["type"] == "path_not_file"
-    assert raised.value.errors()[0]["input"] == frontend_index
+    # Assert
+    assert str(raised.value) == f"Required frontend asset is missing: {frontend_directory / missing_asset}"
 
 
 def test_production_startup_rejects_incomplete_runtime_settings(monkeypatch: pytest.MonkeyPatch) -> None:

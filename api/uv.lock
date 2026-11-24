@@ -1488,7 +1488,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "aiobotocore", specifier = ">=2.25.1" },
+    { name = "aiobotocore", specifier = ">=3.10.0" },
     { name = "aiosqlite", specifier = ">=0.22.1" },
     { name = "alembic", specifier = ">=1.19.1" },
     { name = "anyio", specifier = ">=4.14.2" },
