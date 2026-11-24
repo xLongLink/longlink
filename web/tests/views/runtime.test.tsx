@@ -465,6 +465,75 @@ it('bounds request failures and retries the failed query instead of leaving its 
     }
 });
 
+it('loads tab data locally without hiding the View shell and reuses it on return', async () => {
+    // Arrange
+    const runtime = await initializeRuntime(`function History() {
+        const [data] = useApi('/api/order-history');
+        return <p>{data.message}</p>;
+    }
+    export default function View() {
+        return <>
+            <h1>Order details</h1>
+            <Tabs aria-label="Order" items={[
+                { value: 'details', label: 'Details', content: 'Order summary' },
+                { value: 'history', label: 'History', content: <History /> }
+            ]} />
+        </>;
+    }`);
+    const requests: number[] = [];
+    runtime.channel.port2.onmessage = (event: MessageEvent<unknown>) => {
+        const command = commandSchema.parse(event.data);
+        if (command.type === 'request' && command.path === '/api/order-history') requests.push(command.id);
+    };
+
+    try {
+        await vi.waitFor(() => expect(runtime.mount.textContent).toContain('Order summary'));
+        expect(requests).toHaveLength(0);
+        const heading = runtime.mount.querySelector('h1');
+        if (!heading) throw new Error('Expected order heading');
+        const navigation = runtime.mount.querySelector('[role="tablist"]');
+        if (!navigation) throw new Error('Expected order tab navigation');
+        const tabs = runtime.mount.querySelectorAll<HTMLButtonElement>('[role="tab"]');
+        if (!tabs[0] || !tabs[1]) throw new Error('Expected order tabs');
+        const user = userEvent.setup();
+
+        // Act
+        await user.click(tabs[1]);
+
+        // Assert
+        await vi.waitFor(() => expect(requests).toHaveLength(1));
+        await vi.waitFor(() => {
+            const progress = runtime.mount.querySelector('[role="tabpanel"] [role="status"]');
+            expect(progress?.getAttribute('aria-label')).toBe('Loading tab content');
+            expect(runtime.mount.querySelector('h1')).toBe(heading);
+            expect(runtime.mount.querySelector('[role="tablist"]')).toBe(navigation);
+            expect(heading.checkVisibility()).toBe(true);
+            expect(navigation.checkVisibility()).toBe(true);
+            expect(runtime.mount.querySelector('[aria-label="Loading View"]')).toBeNull();
+        });
+        expect(tabs[1].getAttribute('aria-selected')).toBe('true');
+        runtime.send({ id: requests[0], ok: true, data: { message: 'Order created yesterday' } });
+        await vi.waitFor(() =>
+            expect(runtime.mount.querySelector('[role="tabpanel"]')?.textContent).toBe('Order created yesterday')
+        );
+        expect(runtime.mount.querySelector('[aria-label="Loading tab content"]')).toBeNull();
+
+        await user.click(tabs[0]);
+        await vi.waitFor(() => expect(runtime.mount.textContent).toContain('Order summary'));
+        await user.click(tabs[1]);
+        expect(runtime.mount.querySelector('[aria-label="Loading View"]')).toBeNull();
+        await vi.waitFor(() =>
+            expect(runtime.mount.querySelector('[role="tabpanel"]')?.textContent).toBe('Order created yesterday')
+        );
+        expect(requests).toHaveLength(1);
+        expect(runtime.mount.querySelector('[role="status"]')).toBeNull();
+        expect(heading.checkVisibility()).toBe(true);
+        expect(navigation.checkVisibility()).toBe(true);
+    } finally {
+        runtime.close();
+    }
+});
+
 it('keeps a draft in a retained authored tab while selecting another panel', async () => {
     const runtime = await initializeRuntime(`export default function View() {
         return <Tabs aria-label="Order" items={[
