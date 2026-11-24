@@ -54,7 +54,7 @@ it('edits independent pools atomically, validates steps, and preserves failed ed
             });
         }
         saved = { ...saved, ...json };
-        return Response.json(saved);
+        return new Response(null, { status: 204 });
     });
     const events = userEvent.setup();
 

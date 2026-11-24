@@ -1,30 +1,14 @@
 // @vitest-environment happy-dom
 import * as React from 'react';
-import { transform } from 'sucrase';
 import { it, expect } from 'vitest';
 import { withMounted } from '../../render';
 import { ReportedError } from '@/lib/reported';
-import * as components from '@/components/longlink';
+import { compileView } from '@/views/compiler';
 import userEvent from '@testing-library/user-event';
 import { RequestContext } from '@/lib/view-capabilities';
 import source from '../../../../sdk/longlink/.static/new/src/views/tasks.jsx?raw';
 
-const code = transform(source, {
-    transforms: ['jsx', 'imports'],
-    jsxRuntime: 'classic',
-    jsxPragma: '__jsx',
-    production: true
-}).code;
-
-const bindings = { __jsx: React.createElement, ...components, useApi: () => [[]] };
-
-const module = { exports: {} };
-
-// oxlint-disable-next-line typescript/no-implied-eval -- Exercise the shipped SDK View with its explicit runtime bindings.
-const evaluate = new Function('module', 'exports', ...Object.keys(bindings), `${code}\nreturn module.exports.default;`);
-
-// SAFETY: The evaluated module is the repository-owned starter View and has a default React component.
-const Tasks = evaluate(module, module.exports, ...Object.values(bindings)) as React.ComponentType;
+const Tasks = compileView(source);
 
 it('validates the shipped task form, retains the file and draft on failure, and closes only after a successful retry', async () => {
     // Replace only the scoped transport, leaving the authored View, RHF, file control, and dialog real.
@@ -35,6 +19,7 @@ it('validates the shipped task form, retains the file and draft on failure, and 
     await withMounted(
         <RequestContext
             value={async (path, options) => {
+                if (path === '/api/tasks' && !options?.method) return [];
                 if (!options?.form) throw new Error('Expected a write request');
                 expect(path).toBe('/api/tasks');
                 expect(options.method).toBe('POST');
@@ -45,7 +30,9 @@ it('validates the shipped task form, retains the file and draft on failure, and 
                 return null;
             }}
         >
-            <Tasks />
+            <React.Suspense>
+                <Tasks params={{}} />
+            </React.Suspense>
         </RequestContext>,
         async (output) => {
             const add = [...output.querySelectorAll('button')].find((button) =>

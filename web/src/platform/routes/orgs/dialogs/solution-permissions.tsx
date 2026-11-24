@@ -114,7 +114,6 @@ function MemberPermissions({
 
                     return updated;
                 });
-                await client.invalidateQueries({ queryKey: ['api', path], exact: true });
             }
         },
         onError: reportError,

@@ -161,6 +161,79 @@ describe('DeploymentReview', () => {
         );
     });
 
+    it('retains drafts after a failed update and validates edits before retrying the reviewed revision', async () => {
+        // Arrange
+        const inspect = vi.fn(() => Response.json(secretCandidate));
+        const deploy = vi
+            .fn<() => Response>()
+            .mockImplementationOnce(() => Response.json({ detail: 'Try again' }, { status: 409 }))
+            .mockImplementation(() => new Response(null, { status: 204 }));
+        const onSuccess = vi.fn();
+
+        await withReview(
+            inspect,
+            async (submissions) => {
+                const user = userEvent.setup();
+
+                // Act
+                await act(async () => user.click(button('Next')));
+                await act(async () => user.type(input('NEW_SECRET'), 'first-value'));
+                await act(async () => user.click(button('Next')));
+                await act(async () => user.type(input('OPTIONAL_SECRET'), 'optional-value'));
+                await act(async () => user.click(button('Update solution')));
+
+                // Assert
+                await vi.waitFor(() =>
+                    expect(document.body.textContent).toContain('Could not update the Solution. Please try again.')
+                );
+                expect(input('OPTIONAL_SECRET').value).toBe('optional-value');
+                expect(onSuccess).not.toHaveBeenCalled();
+
+                // Act
+                await act(async () => user.click(button('Back')));
+                expect(input('NEW_SECRET').value).toBe('first-value');
+                expect(input('REQUIRED_SECRET').value).toBe('');
+                await act(async () => user.clear(input('NEW_SECRET')));
+                await act(async () => user.type(input('NEW_SECRET'), '   '));
+                await act(async () => user.click(button('Next')));
+
+                // Assert
+                expect(document.activeElement).toBe(input('NEW_SECRET'));
+                expect(input('NEW_SECRET').getAttribute('aria-invalid')).toBe('true');
+                expect(submissions).toHaveLength(1);
+
+                // Act
+                await act(async () => user.clear(input('NEW_SECRET')));
+                await act(async () => user.type(input('NEW_SECRET'), 'retry-value'));
+                await act(async () => user.click(button('Next')));
+                expect(input('OPTIONAL_SECRET').value).toBe('optional-value');
+                await act(async () => user.click(button('Update solution')));
+
+                // Assert
+                await vi.waitFor(() => expect(onSuccess).toHaveBeenCalledOnce());
+                expect(submissions).toEqual([
+                    {
+                        path: `/api/v1/solutions/${solutionId}/update`,
+                        body: {
+                            envs: { NEW_SECRET: 'first-value', OPTIONAL_SECRET: 'optional-value' },
+                            expected_revision_id: revisionId
+                        }
+                    },
+                    {
+                        path: `/api/v1/solutions/${solutionId}/update`,
+                        body: {
+                            envs: { NEW_SECRET: 'retry-value', OPTIONAL_SECRET: 'optional-value' },
+                            expected_revision_id: revisionId
+                        }
+                    }
+                ]);
+                expect(inspect).toHaveBeenCalledOnce();
+            },
+            onSuccess,
+            deploy
+        );
+    });
+
     it('deploys an environment-only change and retains the edit when removal is toggled off', async () => {
         // Arrange
         await withReview(
@@ -202,7 +275,8 @@ describe('DeploymentReview', () => {
     async function withReview(
         inspect: () => Response,
         check: (submissions: { path: string; body: unknown }[]) => Promise<void>,
-        onSuccess: () => void = () => {}
+        onSuccess: () => void = () => {},
+        deploy: () => Response = () => new Response(null, { status: 204 })
     ) {
         const submissions: { path: string; body: unknown }[] = [];
         const transport = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, init) => {
@@ -215,7 +289,7 @@ describe('DeploymentReview', () => {
             if (request.method === 'POST') {
                 submissions.push({ path, body: await request.json() });
 
-                return new Response(null, { status: 204 });
+                return deploy();
             }
 
             return inspect();

@@ -1,9 +1,10 @@
 import type { ComponentPropsWithoutRef } from 'react';
-import type { MapControlsProps } from '@/components/mapcn/map';
+import type { MapControlsProps, MapViewport } from '@/components/mapcn/map';
 import type { FeatureCollection, Polygon, MultiPolygon, GeoJsonProperties } from 'geojson';
 
+export type { MapViewport } from '@/components/mapcn/map';
+
 export type MapCoordinate = [longitude: number, latitude: number];
-export type MapViewport = { center: MapCoordinate; zoom: number; bearing: number; pitch: number };
 export type MapMarker = { id: string; coordinates: MapCoordinate; label: string; description?: string };
 export type MapRoute = { id: string; coordinates: MapCoordinate[]; label?: string };
 export type MapArc = { id: string; from: MapCoordinate; to: MapCoordinate };

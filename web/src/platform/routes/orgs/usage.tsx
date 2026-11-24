@@ -244,7 +244,7 @@ function CapacityEditor({
                 if (field) allocation[field] = capacity[key] * scale;
             }
             const json = schemas.zOrganizationUsageUpdate.parse(allocation);
-            await api.patch(`${base}/usage`, { json }).json(schemas.zOrganizationUsage);
+            await api.patch(`${base}/usage`, { json });
             await onSaved();
             onClose();
         },

@@ -119,11 +119,11 @@ it('retries only the outstanding member draft after a partially successful save'
         { id: '00000000-0000-4000-8000-000000000004', name: 'Casey' }
     ];
     const writes: { memberId: string; body: unknown }[] = [];
-    const savedRoles = new Map<string, string | null>(members.map(({ id }) => [id, 'read']));
     const close = vi.fn();
     const reportError = vi.fn();
     const user = userEvent.setup();
     let failed = false;
+    const assignmentReads: string[] = [];
 
     const transport = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, options) => {
         const request = input instanceof Request ? input : new Request(input, options);
@@ -146,7 +146,10 @@ it('retries only the outstanding member draft after a partially successful save'
         if (!member) throw new Error(`Unexpected request: ${request.method} ${path}`);
 
         if (request.method === 'GET') {
-            return Response.json({ role: savedRoles.get(member.id), revision_id: revision });
+            assignmentReads.push(member.id);
+            if (writes.length > 0) return Response.json({ detail: 'Unavailable' }, { status: 503 });
+
+            return Response.json({ role: 'read', revision_id: revision });
         }
 
         if (request.method === 'PUT') {
@@ -158,7 +161,6 @@ it('retries only the outstanding member draft after a partially successful save'
                 return Response.json({ detail: 'Try again' }, { status: 409 });
             }
 
-            savedRoles.set(member.id, member.id === members[0].id ? 'write' : null);
             return new Response(null, { status: 204 });
         }
 
@@ -210,6 +212,7 @@ it('retries only the outstanding member draft after a partially successful save'
                 expect(output.querySelector('[aria-label="Role for Alex"]')?.textContent).toBe('write');
                 expect(output.querySelector('[aria-label="Role for Blair"]')?.textContent).toBe('No access');
                 expect(output.querySelector('[aria-label="Role for Casey"]')?.textContent).toBe('read');
+                expect(assignmentReads).toHaveLength(members.length);
 
                 // Act
                 await act(async () => user.click(save));
@@ -221,6 +224,7 @@ it('retries only the outstanding member draft after a partially successful save'
                     { memberId: members[1].id, body: { role: null, revision_id: revision } },
                     { memberId: members[1].id, body: { role: null, revision_id: revision } }
                 ]);
+                expect(assignmentReads).toHaveLength(members.length);
             }
         );
     } finally {
