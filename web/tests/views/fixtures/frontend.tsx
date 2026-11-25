@@ -16,6 +16,8 @@ const valid = (
             {text.data}
         </Text>
         <Image src="/api/photo" alt="Photo" ratio={2} />
+        <Logo src={null} alt="Supplier" />
+        <Logo src="/api/logo" alt="Supplier" variant="detail" />
         <Map
             center={[0, 20]}
             zoom={2}
@@ -34,6 +36,16 @@ const missingAlt = <Image src="/api/photo" />;
 const imageStyle = <Image src="/api/photo" alt="" className="hidden" />;
 // @ts-expect-error Alternate network sources are not supported.
 const imageSource = <Image src="/api/photo" alt="" srcSet="/elsewhere" />;
+// @ts-expect-error Logo dimensions are fixed.
+const logoWidth = <Logo src="/api/logo" alt="Supplier" width={64} />;
+// @ts-expect-error Logo dimensions are fixed.
+const logoHeight = <Logo alt="Supplier" height={64} />;
+// @ts-expect-error Accessible logo descriptions are required.
+const logoAlt = <Logo />;
+// @ts-expect-error Logo styling is fixed.
+const logoStyle = <Logo alt="Supplier" style={{ width: 64 }} />;
+// @ts-expect-error Logo variants use fixed supported sizes.
+const logoVariant = <Logo alt="Supplier" variant="large" />;
 // @ts-expect-error Map centers must be coordinates.
 const mapCenter = <Map center="wrong" />;
 // @ts-expect-error Map zoom must be numeric.
@@ -59,6 +71,11 @@ void [
     missingAlt,
     imageStyle,
     imageSource,
+    logoWidth,
+    logoHeight,
+    logoAlt,
+    logoStyle,
+    logoVariant,
     mapCenter,
     mapZoom,
     mapClass,
