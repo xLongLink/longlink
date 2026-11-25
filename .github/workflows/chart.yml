@@ -55,13 +55,13 @@ jobs:
                   title: 'chore: refresh vendored CloudNativePG chart'
                   labels: improvement
                   body: |
-                      Refresh the full vendored chart from the official CloudNativePG Helm repository, preserving self-contained packaging and pinning the matching operator image by digest.
+                      Refresh the unchanged chart archive from the official CloudNativePG Helm repository, preserving self-contained packaging and pinning the matching operator image by digest.
 
                       Validation: helm lint, helm template with the matching immutable operator image, and helm package without dependency downloads. Existing checks must pass before merging.
                   add-paths: |
                       k8s/chart/Chart.yaml
                       k8s/chart/values.yaml
-                      k8s/chart/charts/cloudnative-pg
+                      k8s/chart/charts/cloudnative-pg-*.tgz
 
             - name: Run checks on the update branch
               if: steps.pull-request.outputs.pull-request-operation == 'created' || steps.pull-request.outputs.pull-request-operation == 'updated'
