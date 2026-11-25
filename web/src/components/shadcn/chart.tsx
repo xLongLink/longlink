@@ -166,11 +166,12 @@ function ChartTooltipContent({
                     .map((item, index) => {
                         const key = String(nameKey ?? item.name ?? item.dataKey ?? 'value');
                         const itemConfig = getPayloadConfigFromPayload(config, item, key);
-                        const indicatorColor = color ?? item.color;
+                        const indicatorColor = color ?? z.string().safeParse(item.payload?.fill).data ?? item.color;
 
                         return (
                             <div
-                                key={`${key}:${String(item.name)}`}
+                                // oxlint-disable-next-line react/no-array-index-key -- Recharts entries can share names and data keys.
+                                key={index}
                                 className={cn(
                                     'flex w-full flex-wrap items-stretch gap-2 [&>svg]:h-2.5 [&>svg]:w-2.5 [&>svg]:text-muted-foreground',
                                     indicator === 'dot' && 'items-center'
@@ -195,10 +196,12 @@ function ChartTooltipContent({
                                                             'my-0.5': nestLabel && indicator === 'dashed'
                                                         }
                                                     )}
-                                                    style={{
-                                                        backgroundColor: indicatorColor,
-                                                        borderColor: indicatorColor
-                                                    }}
+                                                    style={
+                                                        {
+                                                            '--color-bg': indicatorColor,
+                                                            '--color-border': indicatorColor
+                                                        } as React.CSSProperties
+                                                    }
                                                 />
                                             )
                                         )}
@@ -258,13 +261,14 @@ function ChartLegendContent({
         >
             {payload
                 .filter((item) => item.type !== 'none')
-                .map((item) => {
+                .map((item, index) => {
                     const key = String(nameKey ?? item.dataKey ?? 'value');
                     const itemConfig = getPayloadConfigFromPayload(config, item, key);
 
                     return (
                         <div
-                            key={`${key}:${String(item.value)}`}
+                            // oxlint-disable-next-line react/no-array-index-key -- Recharts entries can share names and data keys.
+                            key={index}
                             className={cn(
                                 'flex items-center gap-1.5 [&>svg]:h-3 [&>svg]:w-3 [&>svg]:text-muted-foreground'
                             )}
