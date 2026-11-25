@@ -1971,6 +1971,31 @@
             "justification": "Coordinates failed image states and scoped attachment preview capabilities."
         },
         {
+            "name": "Logo",
+            "category": "Display",
+            "introduction": "Displays supplier and organization logos in fixed compact or detail frames.",
+            "properties": [
+                {
+                    "name": "src",
+                    "type": "string | null",
+                    "description": "Optional scoped Solution image path, or image data/blob URL. Missing, empty, and failed sources show a missing-image icon."
+                },
+                {
+                    "name": "alt",
+                    "type": "string",
+                    "description": "Required accessible description of the logo; use an empty string for decorative artwork."
+                },
+                {
+                    "name": "variant",
+                    "type": "'table' | 'detail'",
+                    "default": "table",
+                    "description": "Optional fixed size: table is 40×40 for tables; detail is 72×72 for item headers."
+                }
+            ],
+            "source": "custom",
+            "justification": "Provides consistent logo sizing and missing-image fallbacks through scoped image capabilities."
+        },
+        {
             "name": "Link",
             "category": "Action",
             "source": "custom",

@@ -14,6 +14,7 @@ import { Link as RouterLink } from 'react-router';
 import { CheckboxExample } from './views/checkbox';
 import { ComboboxExample } from './views/combobox';
 import { DropdownExample } from './views/dropdown';
+import { LongLinkLogoExample } from './views/logo';
 import { ProgressExample } from './views/progress';
 import { TextareaExample } from './views/textarea';
 import { FileText, ImageIcon } from 'lucide-react';
@@ -173,6 +174,7 @@ const previews: Record<string, ReactNode> = {
             <ImageIcon className="size-10 text-muted-foreground" aria-hidden="true" />
         </Card>
     ),
+    Logo: <LongLinkLogoExample />,
     Input: <InputExample />,
     Link: <span className="underline">Link</span>,
     // Show only the navigation in the thumbnail; the full Menu has a fixed-width sidebar and content panel.
