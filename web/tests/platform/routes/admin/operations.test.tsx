@@ -50,7 +50,9 @@ it('advances again while the previous result page is still loading', async () =>
             </Suspense>,
             async (output) => {
                 await vi.waitFor(() => expect(output.textContent).toContain('Resource unavailable'));
-                const next = output.querySelector<HTMLButtonElement>('[aria-label="Go to next page"]');
+                const next = [...output.querySelectorAll('button')].find(
+                    (button) => button.textContent === 'Go to next page'
+                );
 
                 if (!next) throw new Error('Expected operations pagination');
                 await act(async () => user.click(next));
@@ -99,7 +101,7 @@ it('opens failed operation metadata with its failure reason and creation and com
             async (output) => {
                 await vi.waitFor(() => expect(output.querySelector('tbody')?.textContent).toContain('Orders'));
                 const metadata = [...output.querySelectorAll('button')].find(
-                    (button) => button.textContent === 'Metadata'
+                    (button) => button.getAttribute('aria-label') === 'Metadata'
                 );
 
                 if (!metadata) throw new Error('Expected metadata action');
@@ -117,6 +119,57 @@ it('opens failed operation metadata with its failure reason and creation and com
                     '2026-10-16T12:01:00.000Z'
                 ]);
                 expect(output.querySelector('tbody time')?.getAttribute('datetime')).toBe('2026-10-16T12:01:00.000Z');
+            },
+            '/admin/operations'
+        );
+    } finally {
+        transport.mockRestore();
+    }
+});
+
+it('keeps metadata accessible for the last operation on a full server page', async () => {
+    // Arrange
+    const actor = userEvent.setup();
+    const operations = Array.from({ length: 25 }, (_, index) =>
+        zOperationResponse.parse({
+            id: `00000000-0000-4000-8000-${String(index + 1).padStart(12, '0')}`,
+            kind: 'solution.deploy',
+            target_id: '00000000-0000-4000-8000-000000000099',
+            resource_name: `Deployment ${index + 1}`,
+            status: 'scheduled',
+            failed: null,
+            created_at: '2026-10-16T12:00:00Z',
+            finished_at: null
+        })
+    );
+    const transport = vi.spyOn(globalThis, 'fetch').mockResolvedValue(Response.json({ items: operations, total: 50 }));
+
+    try {
+        await withMounted(
+            <ApiProvider platformSession>
+                <ApiBoundary>
+                    <Page />
+                </ApiBoundary>
+            </ApiProvider>,
+            async (output) => {
+                await vi.waitFor(() => expect(output.querySelector('tbody')?.textContent).toContain('Deployment 25'));
+                const row = [...output.querySelectorAll('tbody tr')].find((row) =>
+                    row.textContent?.includes('Deployment 25')
+                );
+                const metadata = row?.querySelector('button');
+                if (!metadata) throw new Error('Expected last operation metadata action');
+
+                // Act
+                await act(async () => actor.click(metadata));
+
+                // Assert
+                const dialog = document.querySelector('[role="dialog"]');
+                if (!dialog) throw new Error('Expected operation metadata dialog');
+                expect(dialog.textContent).toContain(operations[24].id);
+                const request = transport.mock.calls[0][0];
+                const url = new URL(request instanceof Request ? request.url : String(request), location.origin);
+                expect(url.searchParams.get('page')).toBe('1');
+                expect(url.searchParams.get('page_size')).toBe('25');
             },
             '/admin/operations'
         );
@@ -162,13 +215,11 @@ it('resets pagination when searching and restores unfiltered results and input f
             </Suspense>,
             async (output) => {
                 await vi.waitFor(() => expect(output.textContent).toContain('Unfiltered page 1'));
-                const next = output.querySelector<HTMLButtonElement>('[aria-label="Go to next page"]');
-
-                const label = Array.from(output.querySelectorAll('label')).find(
-                    (element) => element.textContent === 'Search operations'
+                const next = [...output.querySelectorAll('button')].find(
+                    (button) => button.textContent === 'Go to next page'
                 );
 
-                const input = label ? output.querySelector<HTMLInputElement>(`#${label.htmlFor}`) : null;
+                const input = output.querySelector<HTMLInputElement>('input[aria-label="Search operations"]');
 
                 if (!next || !input) throw new Error('Expected labeled search and pagination');
                 await act(async () => user.click(next));

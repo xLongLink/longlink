@@ -71,9 +71,7 @@ for (const { name, Page, item } of [
                     if (name === 'organizations') {
                         expect(output.querySelector(`a[href="/orgs/${item.id}"]`)?.textContent).toBe(item.name);
                     }
-                    const metadata = [...output.querySelectorAll('button')].find(
-                        (button) => button.textContent === 'Metadata'
-                    );
+                    const metadata = output.querySelector<HTMLButtonElement>('button[aria-label="Metadata"]');
                     const refresh = [...output.querySelectorAll('button')].find(
                         (button) => button.textContent === 'Refresh rows'
                     );
@@ -101,9 +99,7 @@ for (const { name, Page, item } of [
                     expect(document.querySelector('[role="dialog"]')).toBeNull();
                     expect(document.querySelector('[role="alertdialog"]')).toBeNull();
 
-                    const restoredMetadata = [...output.querySelectorAll('button')].find(
-                        (button) => button.textContent === 'Metadata'
-                    );
+                    const restoredMetadata = output.querySelector<HTMLButtonElement>('button[aria-label="Metadata"]');
 
                     if (!restoredMetadata) throw new Error('Expected restored metadata action');
                     await act(async () => actor.click(restoredMetadata));
