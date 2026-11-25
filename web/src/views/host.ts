@@ -42,7 +42,7 @@ export async function request(base: string, command: RequestCommand, signal: Abo
     if (command.binary) {
         const body = await response.blob();
         const media = body.type.split(';', 1)[0].trim().toLowerCase();
-        const type = previewKind(media) !== undefined ? media : 'application/octet-stream';
+        const type = media === 'image/svg+xml' || previewKind(media) !== undefined ? media : 'application/octet-stream';
 
         return body.slice(0, body.size, type);
     }
