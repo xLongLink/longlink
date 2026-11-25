@@ -178,6 +178,7 @@ jobs:
                   tags: |
                       ghcr.io/xlonglink/longlink:${{ github.ref_name }}
                       ghcr.io/xlonglink/longlink:latest
+                  no-cache-filters: runtime
                   cache-from: type=gha,scope=api
                   cache-to: type=gha,mode=max,scope=api
 

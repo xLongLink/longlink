@@ -47,6 +47,7 @@ jobs:
                   push: false
                   tags: longlink-api:trivy
                   build-args: COMPUTE_ARCHIVE=longlink-0.0.0.tgz
+                  no-cache-filters: runtime
                   cache-from: type=gha,scope=api
                   cache-to: type=gha,mode=max,scope=api
 

@@ -12,7 +12,7 @@ ARG VITE_SITE_URL=https://www.longlink.dev
 ENV VITE_SITE_URL=${VITE_SITE_URL}
 RUN vp run build:api
 
-FROM python:3.14.10-slim@sha256:9aaa474097d094040649f2162a627c0049b408f52138d980916788d80f04802f
+FROM python:3.14.10-slim@sha256:9aaa474097d094040649f2162a627c0049b408f52138d980916788d80f04802f AS runtime
 
 ARG VERSION=v0.0.0
 
@@ -28,7 +28,7 @@ ENV PYTHONDONTWRITEBYTECODE="1"
 # Refresh certificate trust and remove unused pip, system utilities, and their unused libraries.
 RUN /usr/local/bin/python -m pip uninstall --yes pip \
     && apt-get update \
-    && apt-get install --yes --no-install-recommends ca-certificates zlib1g \
+    && apt-get install --yes --no-install-recommends ca-certificates libzstd1 zlib1g \
     && apt-get remove --yes --no-auto-remove --allow-remove-essential \
         libblkid1 liblastlog2-2 libmount1 libsmartcols1 mount ncurses-bin util-linux \
     && rm -rf /var/lib/apt/lists/*
