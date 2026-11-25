@@ -28,12 +28,11 @@ export function ProfileMenu() {
     const [error, setError] = useState('');
     const { showBoundary } = useErrorBoundary();
     const inFlight = useRef(false);
-    const closeMenu = () => setIsOpen(false);
 
     async function signOut() {
         if (inFlight.current) return;
         inFlight.current = true;
-        closeMenu();
+        setIsOpen(false);
         setPending(true);
         setError('');
 
@@ -99,18 +98,15 @@ export function ProfileMenu() {
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup aria-label="Account">
                     <DropdownMenuLabel>Account</DropdownMenuLabel>
-                    <DropdownMenuItem render={<RouterLink to="/user/organizations" />} onClickCapture={closeMenu}>
+                    <DropdownMenuItem render={<RouterLink to="/user/organizations" />}>
                         <Building2 aria-hidden="true" className="text-muted-foreground" size={16} />
                         Organizations
                     </DropdownMenuItem>
-                    <DropdownMenuItem render={<RouterLink to="/user/settings" />} onClickCapture={closeMenu}>
+                    <DropdownMenuItem render={<RouterLink to="/user/settings" />}>
                         <Settings2 aria-hidden="true" className="text-muted-foreground" size={16} />
                         Settings
                     </DropdownMenuItem>
-                    <DropdownMenuItem
-                        render={<a href="/docs/" target="_blank" rel="noopener noreferrer" />}
-                        onClickCapture={closeMenu}
-                    >
+                    <DropdownMenuItem render={<a href="/docs/" target="_blank" rel="noopener noreferrer" />}>
                         <BookOpen aria-hidden="true" className="text-muted-foreground" size={16} />
                         Documentation
                         <ExternalLink aria-hidden="true" className="ms-auto text-muted-foreground" size={12} />
@@ -122,11 +118,7 @@ export function ProfileMenu() {
                         <DropdownMenuGroup aria-label="Administration">
                             <DropdownMenuLabel>Administration</DropdownMenuLabel>
                             {adminNavigation.map(({ href, icon: Icon, label }) => (
-                                <DropdownMenuItem
-                                    key={href}
-                                    render={<RouterLink to={href} />}
-                                    onClickCapture={closeMenu}
-                                >
+                                <DropdownMenuItem key={href} render={<RouterLink to={href} />}>
                                     <Icon aria-hidden="true" className="text-muted-foreground" size={16} />
                                     {label}
                                 </DropdownMenuItem>

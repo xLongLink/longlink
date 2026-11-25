@@ -13,10 +13,26 @@ import { zPagePublicSolution } from '@/lib/generated/platform-api-v1/zod.gen';
 
 const pageSize = 25;
 
+function SolutionBanner({ src }: { src: string }) {
+    const [failed, setFailed] = useState(false);
+
+    if (failed) return null;
+
+    return (
+        <img
+            src={src}
+            alt=""
+            loading="lazy"
+            referrerPolicy="no-referrer"
+            className="max-h-64 w-full object-contain"
+            onError={() => setFailed(true)}
+        />
+    );
+}
+
 /** Lists public Solutions with their live display metadata. */
 export default function ExploreSolutions() {
     const [page, setPage] = useState(1);
-    const [failedBanners, setFailedBanners] = useState<string[]>([]);
     const path = `/api/v1/public/solutions?page=${page}&page_size=${pageSize}`;
     const { data, isPending, isError, refetch } = useQuery(apiQueryOptions(path, zPagePublicSolution));
     const solutions = isError ? [] : (data?.items ?? []);
@@ -98,18 +114,7 @@ export default function ExploreSolutions() {
                                         to={`/orgs/${solution.organization.id}/solutions/${solution.id}`}
                                         className="group flex min-w-0 flex-col overflow-hidden border border-border bg-card text-foreground hover:border-foreground/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                                     >
-                                        {banner && !failedBanners.includes(banner) && (
-                                            <img
-                                                src={banner}
-                                                alt=""
-                                                loading="lazy"
-                                                referrerPolicy="no-referrer"
-                                                className="max-h-64 w-full object-contain"
-                                                onError={() => {
-                                                    setFailedBanners((banners) => [...banners, banner]);
-                                                }}
-                                            />
-                                        )}
+                                        {banner && <SolutionBanner key={banner} src={banner} />}
                                         <div className="flex min-w-0 flex-col gap-4 p-4 sm:p-6">
                                             <Stack
                                                 direction="horizontal"

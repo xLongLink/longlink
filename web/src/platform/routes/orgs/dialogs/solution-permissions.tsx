@@ -152,7 +152,17 @@ function MemberPermissions({
                                         ...settings.roles.map((value) => ({ value, label: value }))
                                     ]}
                                     onValueChange={(role) =>
-                                        setRoles((current) => ({ ...current, [user.id]: role ?? '' }))
+                                        setRoles((current) => {
+                                            const updated = { ...current };
+                                            const value = role ?? '';
+                                            if (value === (assignments[index].data.role ?? '')) {
+                                                delete updated[user.id];
+                                            } else {
+                                                updated[user.id] = value;
+                                            }
+
+                                            return updated;
+                                        })
                                     }
                                 >
                                     <SelectTrigger aria-label={`Role for ${user.name}`} className="w-full">

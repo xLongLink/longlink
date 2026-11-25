@@ -1,12 +1,13 @@
 import type { z } from 'zod';
+import { useRef } from 'react';
 import { api } from '@/lib/api';
 import { Info, X } from 'lucide-react';
+import { useFilters } from './use-filters';
 import { useApi } from '@/lib/hooks/use-api';
 import { Input } from '@/components/longlink/form/input';
 import { useSelection } from '@/lib/hooks/use-selection';
 import { Text } from '@/components/longlink/display/text';
 import { Stack } from '@/components/longlink/layout/stack';
-import { useDeferredValue, useRef, useState } from 'react';
 import { Button } from '@/components/longlink/action/button';
 import { Dialog } from '@/components/longlink/layout/dialog';
 import { Heading } from '@/components/longlink/display/heading';
@@ -29,29 +30,25 @@ type ComputeRegistryResponse = z.infer<typeof schemas.zComputeRegistryResponse>;
 
 /** Lists registered Compute infrastructure and manages registration and removal. */
 export default function Compute() {
-    const [filters, setFilters] = useState({ search: '', pagination: { pageIndex: 0, pageSize: 25 } });
-    const { search, pagination } = useDeferredValue(filters);
+    const { search, pagination, suffix, setSearch, setPagination } = useFilters();
     const input = useRef<HTMLInputElement>(null);
-    const suffix = `?page=${pagination.pageIndex + 1}&page_size=25&search=${encodeURIComponent(search.trim())}`;
     const searchField = (
         <Stack direction="horizontal" gap={1} align="center">
             <Input
                 ref={input}
                 aria-label="Search compute"
                 placeholder="Search by name or endpoint"
-                value={filters.search}
-                onChange={(event) =>
-                    setFilters({ search: event.target.value, pagination: { pageIndex: 0, pageSize: 25 } })
-                }
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
             />
-            {filters.search !== '' && (
+            {search !== '' && (
                 <Button
                     size="icon"
                     variant="ghost"
                     aria-label="Clear Search compute"
                     onMouseDown={(event) => event.preventDefault()}
                     onClick={() => {
-                        setFilters({ search: '', pagination: { pageIndex: 0, pageSize: 25 } });
+                        setSearch('');
                         input.current?.focus({ preventScroll: true });
                     }}
                 >
@@ -112,12 +109,8 @@ export default function Compute() {
         getRowId: (compute) => compute.id,
         manualPagination: true,
         rowCount: computes.total,
-        state: { pagination: filters.pagination },
-        onPaginationChange: (updater) =>
-            setFilters((current) => ({
-                ...current,
-                pagination: typeof updater === 'function' ? updater(current.pagination) : updater
-            })),
+        state: { pagination },
+        onPaginationChange: setPagination,
         enableSorting: false
     });
 

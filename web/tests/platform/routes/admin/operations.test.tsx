@@ -224,9 +224,10 @@ it('resets pagination when searching and restores unfiltered results and input f
                 if (!next || !input) throw new Error('Expected labeled search and pagination');
                 await act(async () => user.click(next));
                 await vi.waitFor(() => expect(output.textContent).toContain('Unfiltered page 2'));
-                await act(async () => user.type(input, 'deploy'));
+                await act(async () => user.type(input, '  deploy & audit  '));
                 await vi.waitFor(() => expect(output.textContent).toContain('Matching deployment'));
-                expect(requests.at(-1)).toEqual({ page: 1, search: 'deploy' });
+                expect(input.value).toBe('  deploy & audit  ');
+                expect(requests.at(-1)).toEqual({ page: 1, search: 'deploy & audit' });
                 expect(requests.some((request) => request.page !== 1 && request.search !== '')).toBe(false);
                 const clear = output.querySelector<HTMLButtonElement>('[aria-label="Clear Search operations"]');
 

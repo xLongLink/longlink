@@ -21,6 +21,56 @@ const solution = {
 
 const mcpResource = `https://solutions.example/api/v1/solutions/${solution.id}/proxy/mcp`;
 
+it.each([
+    { status: 'creating', deployment_pending: false },
+    { status: 'running', deployment_pending: true }
+])('refreshes $status/$deployment_pending deployments and stops once running', async (pending) => {
+    // Arrange
+    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] });
+    let requests = 0;
+    const transport = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, options) => {
+        const request = input instanceof Request ? input : new Request(input, options);
+        if (
+            request.method !== 'GET' ||
+            new URL(request.url).pathname !== `/api/v1/organizations/${membership.organization.id}/solutions`
+        ) {
+            throw new Error(`Unexpected request: ${request.method} ${request.url}`);
+        }
+        requests++;
+        return Response.json([requests === 1 ? { ...solution, ...pending, deployed_version: null } : solution]);
+    });
+
+    try {
+        await withMounted(
+            <ApiProvider platformSession>
+                <Suspense fallback={<p>Loading solutions</p>}>
+                    <Management
+                        membership={{ ...membership, role: 'read', tags: [], activeTag: undefined }}
+                        presentation="settings"
+                    />
+                </Suspense>
+            </ApiProvider>,
+            async (output) => {
+                await vi.waitFor(() => expect(output.querySelector('tbody tr')?.textContent).toContain(solution.name));
+                expect(output.querySelector('tbody tr')?.textContent).not.toContain('1.2.0');
+
+                // Act
+                await act(async () => vi.advanceTimersByTimeAsync(5000));
+
+                // Assert
+                await vi.waitFor(() => expect(output.querySelector('tbody tr')?.textContent).toContain('1.2.0'));
+                expect(requests).toBe(2);
+                await act(async () => vi.advanceTimersByTimeAsync(15000));
+                expect(requests).toBe(2);
+                expect(output.querySelector('tbody tr')?.textContent).toContain('1.2.0');
+            }
+        );
+    } finally {
+        transport.mockRestore();
+        vi.useRealTimers();
+    }
+});
+
 it('joins repeated log refreshes, retains logs after failure, and recovers before reopening', async () => {
     const events = userEvent.setup();
     let requests = 0;
