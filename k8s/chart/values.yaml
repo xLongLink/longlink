@@ -1,6 +1,8 @@
 cloudnative-pg:
     image:
         tag: 1.30.1@sha256:923c267ec29636db3bee20f993d0ec4973fa22998e1adad37da79e4d32b5bc07
+    fullnameOverride: cnpg-controller-manager
+    namespaceOverride: cnpg-system
 
 gateway:
     service:
