@@ -38,16 +38,16 @@ def main() -> None:
     ):
         raise ValueError("Expected stable chart and operator versions")
 
-    # Keep the parent version and local dependency repository intact.
+    # Keep the parent version and official dependency repository intact.
     chart = pathlib.Path("k8s/chart")
     metadata = (chart / "Chart.yaml").read_text()
     dependency = re.compile(
         r"(- name: cloudnative-pg\n[ \t]+version: )([0-9.]+)"
-        r"(\n[ \t]+repository: file://charts/cloudnative-pg)"
+        r"(\n[ \t]+repository: https://cloudnative-pg\.github\.io/charts)"
     )
     current = dependency.search(metadata)
     if current is None:
-        raise ValueError("Expected a local CloudNativePG dependency")
+        raise ValueError("Expected the official CloudNativePG dependency repository")
     values = (chart / "values.yaml").read_text()
     image = re.compile(
         r"\A(cloudnative-pg:\n[ \t]+image:\n[ \t]+tag: )"
@@ -81,7 +81,7 @@ def main() -> None:
     tag = f"{app_version}@{digest}"
     values = image.sub(lambda match: match[1] + tag, values)
 
-    # Stage the complete upstream chart and validate the self-contained package.
+    # Stage the unchanged upstream archive and validate the self-contained package.
     with tempfile.TemporaryDirectory() as directory:
         staging = pathlib.Path(directory)
         candidate = staging / "chart"
@@ -93,14 +93,19 @@ def main() -> None:
                 "cnpg/cloudnative-pg",
                 "--version",
                 version,
-                "--untar",
-                "--untardir",
-                str(staging / "upstream"),
+                "--destination",
+                str(staging),
             ],
             check=True,
         )
-        upstream = staging / "upstream/cloudnative-pg"
-        upstream_metadata = (upstream / "Chart.yaml").read_text()
+        upstream = staging / f"cloudnative-pg-{version}.tgz"
+        result = subprocess.run(
+            ["helm", "show", "chart", str(upstream)],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        upstream_metadata = result.stdout
         for field, expected in (("version", version), ("appVersion", app_version)):
             if not re.search(
                 rf"^{field}: ['\"]?{re.escape(expected)}['\"]?$",
@@ -108,8 +113,9 @@ def main() -> None:
                 re.MULTILINE,
             ):
                 raise ValueError(f"Downloaded chart has unexpected {field}")
-        shutil.rmtree(candidate / "charts/cloudnative-pg")
-        shutil.copytree(upstream, candidate / "charts/cloudnative-pg")
+        for archive in (candidate / "charts").glob("cloudnative-pg-*.tgz"):
+            archive.unlink()
+        shutil.copyfile(upstream, candidate / "charts" / upstream.name)
         (candidate / "Chart.yaml").write_text(
             dependency.sub(lambda match: match[1] + version + match[3], metadata)
         )
@@ -143,9 +149,10 @@ def main() -> None:
             check=True,
         )
 
-        # Apply only the validated vendor, dependency version, and image override.
-        shutil.rmtree(chart / "charts/cloudnative-pg")
-        shutil.copytree(upstream, chart / "charts/cloudnative-pg")
+        # Apply only the validated archive, dependency version, and image override.
+        for archive in (chart / "charts").glob("cloudnative-pg-*.tgz"):
+            archive.unlink()
+        shutil.copyfile(upstream, chart / "charts" / upstream.name)
         for filename in ("Chart.yaml", "values.yaml"):
             shutil.copyfile(candidate / filename, chart / filename)
         print(f"Updated CloudNativePG chart to {version}, operator to {tag}")
