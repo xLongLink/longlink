@@ -58,7 +58,7 @@
         "@hey-api/openapi-ts": "0.99.0",
         "@react-router/dev": "8.5.1",
         "@tailwindcss/vite": "^4.3.5",
-        "@testing-library/user-event": "14.6.10",
+        "@testing-library/user-event": "14.6.13",
         "@types/geojson": "^7946.0.16",
         "@types/node": "^26.6.6",
         "@types/react": "^19.3.0",
