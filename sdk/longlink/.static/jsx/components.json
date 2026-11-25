@@ -1990,6 +1990,12 @@
                     "type": "'table' | 'detail'",
                     "default": "table",
                     "description": "Optional fixed size: table is 40×40 for tables; detail is 72×72 for item headers."
+                },
+                {
+                    "name": "padding",
+                    "type": "'none' | 'default'",
+                    "default": "none",
+                    "description": "Preserves intrinsic artwork whitespace without added padding by default. Use default for cramped logos to add padding scaled to the variant. Images remain contained without cropping."
                 }
             ],
             "source": "custom",

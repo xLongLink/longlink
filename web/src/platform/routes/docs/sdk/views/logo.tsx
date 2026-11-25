@@ -13,14 +13,20 @@ const suppliers = [
 ];
 
 /** Shows the LongLink artwork in the active color scheme. */
-export function LongLinkLogoExample({ variant }: { variant?: 'table' | 'detail' }) {
+export function LongLinkLogoExample({
+    variant,
+    padding
+}: {
+    variant?: 'table' | 'detail';
+    padding?: 'none' | 'default';
+}) {
     return (
         <>
             <span className="inline-flex dark:hidden">
-                <Logo src={longlinkLogo} alt="" variant={variant} />
+                <Logo src={longlinkLogo} alt="" variant={variant} padding={padding} />
             </span>
             <span className="hidden dark:inline-flex">
-                <Logo src={longlinkDarkLogo} alt="" variant={variant} />
+                <Logo src={longlinkDarkLogo} alt="" variant={variant} padding={padding} />
             </span>
         </>
     );
@@ -37,7 +43,7 @@ export default function LogoPage() {
                     <Box width="80%">
                         <Stack gap={6}>
                             <Stack direction="horizontal" align="center" gap={4}>
-                                <LongLinkLogoExample variant="detail" />
+                                <LongLinkLogoExample variant="detail" padding="default" />
                                 <Stack gap={1}>
                                     <Text size="lg" weight="medium">
                                         LongLink
@@ -81,7 +87,7 @@ export default function LogoPage() {
   return (
     <Stack gap={6}>
       <Stack direction="horizontal" align="center" gap={4}>
-        <Logo src={suppliers[0].logo} alt="" variant="detail" />
+        <Logo src={suppliers[0].logo} alt="" variant="detail" padding="default" />
         <Stack gap={1}>
           <Text size="lg" weight="medium">{suppliers[0].name}</Text>
           <Text tone="muted">{suppliers[0].description}</Text>

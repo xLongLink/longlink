@@ -18,19 +18,23 @@ it('keeps inline images hidden in server-rendered markup before hydration', () =
 });
 
 it.each(['table', 'detail'] as const)(
-    'reveals only successfully loaded %s images and hides a new source until it loads',
+    'preserves loaded %s images when padding changes and hides a new source until it loads',
     async (variant) => {
         // Arrange
         const complete = vi.spyOn(HTMLImageElement.prototype, 'complete', 'get').mockReturnValue(false);
 
         function Supplier() {
             const [src, setSrc] = useState('blob:first');
+            const [padding, setPadding] = useState<'none' | 'default'>();
             return (
                 <>
                     <button type="button" onClick={() => setSrc('blob:broken')}>
                         Replace
                     </button>
-                    <Logo src={src} alt="Supplier" variant={variant} />
+                    <button type="button" onClick={() => setPadding('default')}>
+                        Pad
+                    </button>
+                    <Logo src={src} alt="Supplier" variant={variant} padding={padding} />
                 </>
             );
         }
@@ -40,6 +44,7 @@ it.each(['table', 'detail'] as const)(
                 const image = output.querySelector('img');
                 if (!image) throw new Error('Missing supplier logo');
                 expect(image.classList.contains('invisible')).toBe(true);
+                expect(image.classList.contains(variant === 'detail' ? 'p-3' : 'p-1.5')).toBe(false);
                 expect(image.getAttribute('width')).toBe(variant === 'detail' ? '72' : '40');
                 expect(image.getAttribute('height')).toBe(variant === 'detail' ? '72' : '40');
                 expect(image.parentElement?.classList.contains(variant === 'detail' ? 'size-18' : 'size-10')).toBe(
@@ -52,6 +57,16 @@ it.each(['table', 'detail'] as const)(
 
                 // Assert
                 expect(image.classList.contains('invisible')).toBe(false);
+                expect(output.querySelector('[role="status"]')).toBeNull();
+
+                // Act
+                await act(async () => output.querySelectorAll('button')[1]?.click());
+
+                // Assert
+                expect(output.querySelector('img')).toBe(image);
+                expect(image.classList.contains(variant === 'detail' ? 'p-3' : 'p-1.5')).toBe(true);
+                expect(image.classList.contains('invisible')).toBe(false);
+                expect(image.classList.contains('object-contain')).toBe(true);
                 expect(output.querySelector('[role="status"]')).toBeNull();
 
                 // Act
