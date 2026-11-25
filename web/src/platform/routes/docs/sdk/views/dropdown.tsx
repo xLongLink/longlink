@@ -1,6 +1,5 @@
 import ViewLayout from './view-layout';
 import { useRef, useState } from 'react';
-import { InlineCode } from '@/components/shadcn/inline-code';
 import {
     Button,
     Stack,
@@ -78,23 +77,7 @@ export default function DropdownPage() {
   );
 }`
             }}
-        >
-            <p>
-                The menu manages its own visibility by default. Set <InlineCode>defaultOpen</InlineCode> to start it
-                open, or use <InlineCode>open</InlineCode> with <InlineCode>onOpenChange</InlineCode> to control it.
-            </p>
-            <p>
-                <InlineCode>DropdownContent</InlineCode> and <InlineCode>DropdownSubContent</InlineCode> already render
-                in portals. Use <InlineCode>DropdownPortal</InlineCode> for a custom mount container. Its{' '}
-                <InlineCode>keepMounted</InlineCode> prop keeps the outer portal mounted, not the popup.
-            </p>
-            <p>
-                Place <InlineCode>DropdownLabel</InlineCode> inside <InlineCode>DropdownGroup</InlineCode> to label
-                related items. Checkbox and radio items stay open by default; set <InlineCode>closeOnClick</InlineCode>{' '}
-                to close the menu after selection. <InlineCode>DropdownShortcut</InlineCode> displays a key hint but
-                does not bind a shortcut.
-            </p>
-        </ViewLayout>
+        />
     );
 }
 

@@ -33,7 +33,7 @@ it('documents every public Dropdown component under the Dropdown reference', () 
     expect(missing).toEqual([]);
 });
 
-it('switches to the shared reference without losing published props, descriptions, or guidance', async () => {
+it('switches to the shared reference without losing published props or companion tables', async () => {
     const user = userEvent.setup();
 
     await withMounted(
@@ -52,7 +52,6 @@ it('switches to the shared reference without losing published props, description
             expect(output.textContent).not.toContain('Order details');
             expect(output.querySelector('table')?.getAttribute('aria-label')).toBe('Button properties');
             expect(output.textContent).toContain('nativeButton');
-            expect(output.textContent).toContain('Manage asynchronous pending state and error feedback in the View.');
             const labelReference = output.querySelector('table[aria-label="ButtonGroupText properties"]');
             expect(labelReference?.textContent).toContain('render');
             const separatorReference = output.querySelector('table[aria-label="ButtonGroupSeparator properties"]');
@@ -96,7 +95,7 @@ it('shows authored hook properties without copying them to an absent companion r
             expect(tables[0]?.getAttribute('aria-label')).toBe('useApi properties');
             const rows = tables[0]?.querySelectorAll('tbody tr');
             expect(rows?.[0]?.querySelector('td')?.textContent).toContain('path');
-            expect(rows?.[0]?.textContent).toContain('The Solution endpoint to query.');
+            expect(rows?.[0]?.querySelector('td:nth-child(2)')?.textContent).toBe('string');
             expect(rows?.[1]?.querySelector('td:last-child')?.textContent).toBe('[]');
         }
     );

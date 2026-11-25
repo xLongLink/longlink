@@ -115,7 +115,6 @@ export default function ViewLayout({
               name: referenceName,
               component: viewCatalog.components.find((entry) => entry.name === referenceName)
           }));
-    const catalogComponent = references[0]?.component;
 
     // Prepare property tables for the reference tab.
     const groups = new Map<string, ViewProperty[]>();
@@ -176,15 +175,6 @@ export default function ViewLayout({
                             {children}
                         </TabsContent>
                         <TabsContent value="properties" className="flex flex-col gap-5">
-                            {references.map(
-                                ({ name, component }) =>
-                                    component && 'guidance' in component && <p key={name}>{component.guidance}</p>
-                            )}
-                            {catalogComponent && 'reference' in catalogComponent && (
-                                <a href={catalogComponent.reference} className="underline underline-offset-4">
-                                    {component.label} upstream reference
-                                </a>
-                            )}
                             {[...groups].map(([group, properties]) => (
                                 <div key={group} className="flex flex-col gap-3">
                                     {groups.size > 1 && <h3 className="text-sm font-medium">{group}</h3>}
@@ -203,12 +193,9 @@ export default function ViewLayout({
                                                 return (
                                                     <TableRow key={row.name}>
                                                         <TableCell>
-                                                            <InlineCode>{row.name}</InlineCode>
-                                                            {row.description && (
-                                                                <p className="mt-2 text-sm text-muted-foreground">
-                                                                    {row.description}
-                                                                </p>
-                                                            )}
+                                                            <InlineCode className="whitespace-nowrap">
+                                                                {row.name}
+                                                            </InlineCode>
                                                         </TableCell>
                                                         <TableCell>
                                                             <InlineCode>{row.type}</InlineCode>
@@ -217,7 +204,9 @@ export default function ViewLayout({
                                                             {defaultValue === undefined ? (
                                                                 '-'
                                                             ) : (
-                                                                <InlineCode>{JSON.stringify(defaultValue)}</InlineCode>
+                                                                <InlineCode className="whitespace-nowrap">
+                                                                    {JSON.stringify(defaultValue)}
+                                                                </InlineCode>
                                                             )}
                                                         </TableCell>
                                                     </TableRow>

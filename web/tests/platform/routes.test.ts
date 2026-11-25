@@ -1,7 +1,22 @@
 import { it, expect } from 'vitest';
 import routes from '@/platform/routes';
 import { matchRoutes } from 'react-router';
-import { brandingPaths } from '@/platform/publications';
+import { brandingPaths, documentationNavigation, type PublicationPage } from '@/platform/publications';
+
+it.each(documentationNavigation)('uses unique icons throughout the $label sidebar', ({ sections }) => {
+    // Arrange
+    const pages: PublicationPage[] = sections.flatMap((section) => section.pages);
+    const icons = new Map<PublicationPage['icon'], string>();
+
+    // Act
+    for (const page of pages) {
+        if (page.children) pages.push(...page.children);
+
+        // Assert
+        expect(icons.get(page.icon), `Duplicate icon for ${page.label}`).toBeUndefined();
+        icons.set(page.icon, page.label);
+    }
+});
 
 it('keeps the legacy Communication URL routable and published', () => {
     // Arrange
