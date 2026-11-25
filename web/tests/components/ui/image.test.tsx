@@ -40,62 +40,72 @@ it('renders an inline data image without requesting host capability', async () =
     );
 });
 
-it('releases owned previews on source changes and ignores late responses', async () => {
-    // Hold host responses independently so stale requests cannot overwrite the current photo.
-    const pending = new Map<string, (blob: Blob) => void>();
+it.each(['image/png', 'image/svg+xml'])(
+    'releases owned %s previews on source changes and ignores late responses',
+    async (type) => {
+        // Arrange
+        // Hold host responses independently so stale requests cannot overwrite the current photo.
+        const pending = new Map<string, (blob: Blob) => void>();
 
-    const request = (path: string) => new Promise<Blob>((resolve) => pending.set(path, resolve));
+        const request = (path: string) => new Promise<Blob>((resolve) => pending.set(path, resolve));
 
-    const create = vi.spyOn(URL, 'createObjectURL').mockReturnValueOnce('blob:first').mockReturnValueOnce('blob:last');
-    const revoke = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => undefined);
+        const create = vi
+            .spyOn(URL, 'createObjectURL')
+            .mockReturnValueOnce('blob:first')
+            .mockReturnValueOnce('blob:last');
+        const revoke = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => undefined);
 
-    function Photo() {
-        const [src, setSrc] = useState('/first');
+        function Photo() {
+            const [src, setSrc] = useState('/first');
 
-        return (
-            <RequestContext value={request}>
-                <button type="button" onClick={() => setSrc('/pending')}>
-                    Pending
-                </button>
-                <button type="button" onClick={() => setSrc('/last')}>
-                    Last
-                </button>
-                <Image src={src} alt="Shipment photo" />
-            </RequestContext>
-        );
-    }
+            return (
+                <RequestContext value={request}>
+                    <button type="button" onClick={() => setSrc('/pending')}>
+                        Pending
+                    </button>
+                    <button type="button" onClick={() => setSrc('/last')}>
+                        Last
+                    </button>
+                    <Image src={src} alt="Shipment photo" />
+                </RequestContext>
+            );
+        }
 
-    try {
-        await withMounted(<Photo />, async (output) => {
-            expect(output.querySelector('img')).toBeNull();
-            await act(async () => pending.get('/first')?.(new Blob(['first'], { type: 'image/png' })));
-            await vi.waitFor(async () => {
-                await act(async () => {});
-                expect(output.querySelector('img')?.getAttribute('src')).toBe('blob:first');
-            });
+        try {
+            await withMounted(<Photo />, async (output) => {
+                // Act
+                expect(output.querySelector('img')).toBeNull();
+                await act(async () => pending.get('/first')?.(new Blob(['first'], { type })));
+                await vi.waitFor(async () => {
+                    await act(async () => {});
+                    expect(output.querySelector('img')?.getAttribute('src')).toBe('blob:first');
+                });
 
-            await act(async () => output.querySelectorAll('button')[0]?.click());
-            expect(output.querySelector('img')).toBeNull();
-            expect(revoke).toHaveBeenCalledWith('blob:first');
+                await act(async () => output.querySelectorAll('button')[0]?.click());
+                expect(output.querySelector('img')).toBeNull();
+                expect(revoke).toHaveBeenCalledWith('blob:first');
 
-            await act(async () => output.querySelectorAll('button')[1]?.click());
-            await act(async () => pending.get('/last')?.(new Blob(['last'], { type: 'image/png' })));
-            await vi.waitFor(async () => {
-                await act(async () => {});
+                await act(async () => output.querySelectorAll('button')[1]?.click());
+                await act(async () => pending.get('/last')?.(new Blob(['last'], { type })));
+                await vi.waitFor(async () => {
+                    await act(async () => {});
+                    expect(output.querySelector('img')?.getAttribute('src')).toBe('blob:last');
+                });
+                await act(async () => pending.get('/pending')?.(new Blob(['stale'], { type })));
+
+                // Assert
+                expect(create).toHaveBeenCalledTimes(2);
                 expect(output.querySelector('img')?.getAttribute('src')).toBe('blob:last');
+                expect(output.querySelector('svg, iframe, object, embed')).toBeNull();
             });
-            await act(async () => pending.get('/pending')?.(new Blob(['stale'], { type: 'image/png' })));
 
-            expect(create).toHaveBeenCalledTimes(2);
-            expect(output.querySelector('img')?.getAttribute('src')).toBe('blob:last');
-        });
-
-        expect(revoke.mock.calls).toEqual([['blob:first'], ['blob:last']]);
-    } finally {
-        create.mockRestore();
-        revoke.mockRestore();
+            expect(revoke.mock.calls).toEqual([['blob:first'], ['blob:last']]);
+        } finally {
+            create.mockRestore();
+            revoke.mockRestore();
+        }
     }
-});
+);
 
 it.each(['rejected', 'non-image', 'missing'] as const)(
     'keeps a %s scoped preview unavailable without exposing its source',
@@ -170,21 +180,35 @@ it('recovers from an inline decode failure on source change without revoking cal
     }
 });
 
-it('releases a scoped preview after a decode failure and reports the original image error', async () => {
-    // A failed decode must still notify callers and release the host-owned URL on unmount.
-    const request = async () => new Blob(['broken'], { type: 'image/png' });
+it.each(['image/png', 'image/svg+xml'])(
+    'recovers a scoped %s preview after a decode failure and releases owned URLs',
+    async (type) => {
+        // Arrange
+        const request = vi.fn(async () => new Blob(['image'], { type }));
 
-    const create = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:broken-scoped');
-    const revoke = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => undefined);
-    const onError = vi.fn();
-    const imageRef = createRef<HTMLImageElement>();
+        const create = vi
+            .spyOn(URL, 'createObjectURL')
+            .mockReturnValueOnce('blob:broken-scoped')
+            .mockReturnValueOnce('blob:replacement');
+        const revoke = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => undefined);
+        const onError = vi.fn();
+        const imageRef = createRef<HTMLImageElement>();
 
-    try {
-        await withMounted(
-            <RequestContext value={request}>
-                <Image src="/photo" alt="Shipment photo" ratio={1} onError={onError} ref={imageRef} />
-            </RequestContext>,
-            async (output) => {
+        function Photo() {
+            const [src, setSrc] = useState('/photo');
+
+            return (
+                <RequestContext value={request}>
+                    <button type="button" onClick={() => setSrc('/replacement')}>
+                        Replace
+                    </button>
+                    <Image src={src} alt="Shipment photo" ratio={1} onError={onError} ref={imageRef} />
+                </RequestContext>
+            );
+        }
+
+        try {
+            await withMounted(<Photo />, async (output) => {
                 await vi.waitFor(async () => {
                     await act(async () => {});
                     expect(output.querySelector('img')).not.toBeNull();
@@ -194,18 +218,31 @@ it('releases a scoped preview after a decode failure and reports the original im
                 if (!image) throw new Error('Missing scoped image');
                 expect(imageRef.current).toBe(image);
 
+                // Act
                 await act(async () => image.dispatchEvent(new Event('error')));
+                // Assert
                 expect(onError.mock.calls[0]?.[0].target).toBe(image);
                 expect(output.querySelector('img')).toBeNull();
                 expect(imageRef.current).toBeNull();
                 expect(output.querySelector('[role="status"]')?.getAttribute('aria-label')).toBe(
                     'Shipment photo: Photo unavailable'
                 );
-            }
-        );
-        expect(revoke).toHaveBeenCalledExactlyOnceWith('blob:broken-scoped');
-    } finally {
-        create.mockRestore();
-        revoke.mockRestore();
+                // Act
+                await act(async () => output.querySelector('button')?.click());
+                await vi.waitFor(async () => {
+                    await act(async () => {});
+                    expect(output.querySelector('img')?.getAttribute('src')).toBe('blob:replacement');
+                });
+                // Assert
+                expect(imageRef.current).toBe(output.querySelector('img'));
+                expect(request).toHaveBeenLastCalledWith('/replacement', { binary: true });
+                expect(revoke).toHaveBeenCalledExactlyOnceWith('blob:broken-scoped');
+                expect(output.querySelector('svg, iframe, object, embed')).toBeNull();
+            });
+            expect(revoke.mock.calls).toEqual([['blob:broken-scoped'], ['blob:replacement']]);
+        } finally {
+            create.mockRestore();
+            revoke.mockRestore();
+        }
     }
-});
+);

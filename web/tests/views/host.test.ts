@@ -1,9 +1,10 @@
+import { Window } from 'happy-dom';
 import { ApiError } from '@/lib/api';
 import { createServer } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { REQUEST_TIMEOUT } from '@/views/protocol';
-import { load, request, requestError } from '@/views/host';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { download, load, request, requestError } from '@/views/host';
 
 afterEach(() => {
     // Restore the HTTP transport after each response-loading test.
@@ -17,23 +18,68 @@ describe('Solution response loading', () => {
         { media: 'audio/ogg', expected: 'audio/ogg' },
         { media: 'video/mp4', expected: 'video/mp4' },
         { media: 'application/xml', expected: 'application/xml' },
-        { media: 'image/svg+xml', expected: 'application/octet-stream' }
+        { media: 'image/svg+xml', expected: 'image/svg+xml' },
+        { media: 'IMAGE/SVG+XML; charset=utf-8', expected: 'image/svg+xml' },
+        { media: 'image/svg', expected: 'application/octet-stream' }
     ])('admits $media as $expected without changing attachment bytes', async ({ media, expected }) => {
+        // Arrange
         const bytes = new Uint8Array([0x00, 0xff, 0x3c, 0x3e]);
         vi.spyOn(globalThis, 'fetch').mockImplementation(
             async () => new Response(bytes, { headers: { 'Content-Type': media } })
         );
         const controller = new AbortController();
 
+        // Act
         const body = await request(
             'https://solution.example/',
             { type: 'request', id: 0, path: 'attachment.png', method: 'GET', binary: true },
             controller.signal
         );
 
+        // Assert
         if (!(body instanceof Blob)) throw new Error('Expected binary response');
         expect(body.type).toBe(expected);
         expect(new Uint8Array(await body.arrayBuffer())).toEqual(bytes);
+    });
+
+    it('downloads SVG as inert attachment bytes and releases its link and URL', async () => {
+        // Arrange
+        const window = new Window();
+        vi.stubGlobal('document', window.document);
+        const svg = '<svg xmlns="http://www.w3.org/2000/svg"><script>active()</script></svg>';
+        vi.spyOn(globalThis, 'fetch').mockImplementation(
+            async () => new Response(svg, { headers: { 'Content-Type': 'image/svg+xml' } })
+        );
+        const create = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:download');
+        const revoke = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => undefined);
+        const click = vi.spyOn(window.HTMLAnchorElement.prototype, 'click').mockImplementation(function (
+            this: HTMLAnchorElement
+        ) {
+            expect(this.isConnected).toBe(true);
+            expect(this.href).toBe('blob:download');
+            expect(this.download).toBe('attachment.svg');
+        });
+
+        try {
+            // Act
+            await download(
+                'https://solution.example/',
+                { type: 'download', id: 0, path: 'attachment.svg', filename: 'attachment.svg' },
+                new AbortController().signal
+            );
+
+            // Assert
+            expect(click).toHaveBeenCalledTimes(1);
+            expect(create).toHaveBeenCalledTimes(1);
+            const body = create.mock.calls[0]?.[0];
+            if (!(body instanceof Blob)) throw new Error('Expected download blob');
+            expect(body.type).toBe('application/octet-stream');
+            expect(await body.text()).toBe(svg);
+            expect(window.document.querySelector('a, svg, script, iframe, object, embed')).toBeNull();
+            await vi.waitFor(() => expect(revoke).toHaveBeenCalledExactlyOnceWith('blob:download'));
+        } finally {
+            await window.happyDOM.close();
+        }
     });
 
     it('rejects redirects without requesting their destination', async () => {
