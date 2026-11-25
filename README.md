@@ -120,6 +120,8 @@ make web    # In the second terminal, after seeding finishes
 
 The default development email address is `admin@admin.com`, and the password is `admin`.
 
+View local verification, password-reset, and invitation emails in [Mailpit](http://localhost:8025/) after running `make up`.
+
 ### Develop the SDK runtime
 
 ```bash
