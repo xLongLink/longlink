@@ -1,28 +1,67 @@
+import type { z } from 'zod';
 import { api } from '@/lib/api';
-import { Info } from 'lucide-react';
+import { Info, X } from 'lucide-react';
 import { useMetadata } from './use-metadata';
 import { useApi } from '@/lib/hooks/use-api';
-import { useListControls } from './use-list-controls';
 import { Link } from '@/components/longlink/action/link';
+import { Input } from '@/components/longlink/form/input';
 import { Text } from '@/components/longlink/display/text';
 import { Stack } from '@/components/longlink/layout/stack';
+import { useDeferredValue, useRef, useState } from 'react';
 import { Badge } from '@/components/longlink/display/badge';
-import { Empty } from '@/components/longlink/display/empty';
 import { Button } from '@/components/longlink/action/button';
 import { Dialog } from '@/components/longlink/layout/dialog';
 import { Avatar } from '@/components/longlink/display/avatar';
 import { Heading } from '@/components/longlink/display/heading';
 import { Timestamp } from '@/components/longlink/display/timestamp';
-import { Pagination } from '@/components/longlink/action/pagination';
 import { useConfirm } from '@/components/longlink/hooks/use-confirm';
-import { zPageSolutionResponse } from '@/lib/generated/platform-api-v1/zod.gen';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
+import { zSolutionResponse, zPageSolutionResponse } from '@/lib/generated/platform-api-v1/zod.gen';
+import {
+    Frame,
+    useTable,
+    dataGridFeatures,
+    type DataGridFeatures,
+    type ColumnDef,
+    DataGrid,
+    DataGridPagination,
+    DataGridScrollArea,
+    DataGridTable
+} from '@/components/longlink';
+
+type SolutionResponse = z.infer<typeof zSolutionResponse>;
 
 /** Lists Solutions and manages administrator metadata and deletion dialogs. */
 export default function Solutions() {
-    const { suffix, searchField, pagination } = useListControls(
-        'solutions',
-        'Search by name, description, or organization'
+    const [filters, setFilters] = useState({ search: '', pagination: { pageIndex: 0, pageSize: 25 } });
+    const { search, pagination } = useDeferredValue(filters);
+    const input = useRef<HTMLInputElement>(null);
+    const suffix = `?page=${pagination.pageIndex + 1}&page_size=25&search=${encodeURIComponent(search.trim())}`;
+    const searchField = (
+        <Stack direction="horizontal" gap={1} align="center">
+            <Input
+                ref={input}
+                aria-label="Search solutions"
+                placeholder="Search by name, description, or organization"
+                value={filters.search}
+                onChange={(event) =>
+                    setFilters({ search: event.target.value, pagination: { pageIndex: 0, pageSize: 25 } })
+                }
+            />
+            {filters.search !== '' && (
+                <Button
+                    size="icon"
+                    variant="ghost"
+                    aria-label="Clear Search solutions"
+                    onMouseDown={(event) => event.preventDefault()}
+                    onClick={() => {
+                        setFilters({ search: '', pagination: { pageIndex: 0, pageSize: 25 } });
+                        input.current?.focus({ preventScroll: true });
+                    }}
+                >
+                    <X aria-hidden="true" />
+                </Button>
+            )}
+        </Stack>
     );
     const confirmation = useConfirm();
 
@@ -30,90 +69,106 @@ export default function Solutions() {
 
     const [metadata, selectMetadata] = useMetadata(solutions.items);
 
+    const columns: ColumnDef<DataGridFeatures, SolutionResponse>[] = [
+        {
+            accessorKey: 'name',
+            header: 'Solution',
+            cell: ({ row: { original: solution } }) => (
+                <Stack gap={0} align="start">
+                    <Stack direction="horizontal" gap={1} align="center">
+                        <Link href={`/orgs/${solution.organization.id}/solutions/${solution.id}`}>{solution.name}</Link>
+                        {solution.status !== 'running' && (
+                            <Badge variant={solution.status === 'creating' ? 'secondary' : 'destructive'}>
+                                {solution.status === 'creating' ? 'Creating' : 'Failed'}
+                            </Badge>
+                        )}
+                    </Stack>
+                    {solution.description && (
+                        <Text size="xs" tone="muted">
+                            {solution.description}
+                        </Text>
+                    )}
+                </Stack>
+            )
+        },
+        {
+            accessorKey: 'organization',
+            header: 'Organization',
+            cell: ({ row: { original: solution } }) => (
+                <Stack direction="horizontal" gap={3} align="center">
+                    <Avatar shape="rounded" name={solution.organization.name} />
+                    <Link href={`/orgs/${solution.organization.id}`}>{solution.organization.name}</Link>
+                </Stack>
+            )
+        },
+        {
+            accessorKey: 'image_desired',
+            header: 'Image',
+            cell: ({ row: { original: solution } }) => (
+                <Stack gap={0} align="start">
+                    <Text>{solution.image_desired.replace(/@sha256:[a-f0-9]{5,}([a-f0-9]{4})$/, '@sha25...$1')}</Text>
+                    <Text size="xs" tone="muted">
+                        Revision: {solution.desired_revision_id ?? 'Not selected'}
+                    </Text>
+                </Stack>
+            )
+        },
+        {
+            id: 'actions',
+            header: () => <Text align="end">Actions</Text>,
+            cell: ({ row }) => (
+                <Stack align="end">
+                    <Button
+                        size="icon"
+                        variant="ghost"
+                        aria-label="Metadata"
+                        onClick={() => selectMetadata(row.original.id)}
+                    >
+                        <Info aria-hidden="true" />
+                    </Button>
+                </Stack>
+            )
+        }
+    ];
+
+    const table = useTable({
+        features: dataGridFeatures,
+        data: solutions.items,
+        columns,
+        getRowId: (solution) => solution.id,
+        manualPagination: true,
+        rowCount: solutions.total,
+        state: { pagination: filters.pagination },
+        onPaginationChange: (updater) =>
+            setFilters((current) => ({
+                ...current,
+                pagination: typeof updater === 'function' ? updater(current.pagination) : updater
+            })),
+        enableSorting: false
+    });
+
     return (
         <Stack gap={2}>
             <title>Solutions | LongLink</title>
             <Heading level={1}>Solutions</Heading>
-            {searchField}
-            <Stack gap={1}>
-                <Table wrap>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Solution</TableHead>
-                            <TableHead>Organization</TableHead>
-                            <TableHead>Image</TableHead>
-                            <TableHead align="end">Actions</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {solutions.items.map((row) => (
-                            <TableRow key={row.id}>
-                                <TableCell>
-                                    <Stack gap={0} align="start">
-                                        <Stack direction="horizontal" gap={1} align="center">
-                                            <Link href={`/orgs/${row.organization.id}/solutions/${row.id}`}>
-                                                {row.name}
-                                            </Link>
-                                            {row.status !== 'running' && (
-                                                <Badge
-                                                    variant={row.status === 'creating' ? 'secondary' : 'destructive'}
-                                                >
-                                                    {row.status === 'creating' ? 'Creating' : 'Failed'}
-                                                </Badge>
-                                            )}
-                                        </Stack>
-                                        {row.description && (
-                                            <Text size="xs" tone="muted">
-                                                {row.description}
-                                            </Text>
-                                        )}
-                                    </Stack>
-                                </TableCell>
-                                <TableCell>
-                                    <Stack direction="horizontal" gap={3} align="center">
-                                        <Avatar shape="rounded" name={row.organization.name} />
-                                        <Stack gap={0} align="start">
-                                            <Link href={`/orgs/${row.organization.id}`}>{row.organization.name}</Link>
-                                            <Text size="xs" tone="muted">
-                                                Organization
-                                            </Text>
-                                        </Stack>
-                                    </Stack>
-                                </TableCell>
-                                <TableCell>
-                                    <Stack gap={0} align="start">
-                                        <Text>
-                                            {row.image_desired.replace(
-                                                /@sha256:[a-f0-9]{5,}([a-f0-9]{4})$/,
-                                                '@sha25...$1'
-                                            )}
-                                        </Text>
-                                        <Text size="xs" tone="muted">
-                                            Revision: {row.desired_revision_id ?? 'Not selected'}
-                                        </Text>
-                                    </Stack>
-                                </TableCell>
-                                <TableCell align="end">
-                                    <Button size="sm" variant="ghost" onClick={() => selectMetadata(row.id)}>
-                                        <Info aria-hidden="true" />
-                                        Metadata
-                                    </Button>
-                                </TableCell>
-                            </TableRow>
-                        ))}
-                        {solutions.items.length === 0 && (
-                            <TableRow>
-                                <TableCell colSpan={4} align="center">
-                                    <Empty title="No data" />
-                                </TableCell>
-                            </TableRow>
-                        )}
-                    </TableBody>
-                </Table>
-                <Stack as="footer" gap={0} align="center" paddingBlock={2}>
-                    <Pagination {...pagination} totalItems={solutions.total} />
-                </Stack>
-            </Stack>
+            <DataGrid
+                table={table}
+                tableLayout={{ dense: true, headerBackground: false, rowBorder: true }}
+                emptyMessage="No data"
+            >
+                <Frame
+                    variant="ghost"
+                    dense
+                    spacing="sm"
+                    padding="none"
+                    action={searchField}
+                    footer={<DataGridPagination sizes={[25]} />}
+                >
+                    <DataGridScrollArea orientation="horizontal">
+                        <DataGridTable />
+                    </DataGridScrollArea>
+                </Frame>
+            </DataGrid>
             {metadata && (
                 <Dialog
                     open

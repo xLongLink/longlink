@@ -21,13 +21,7 @@ const registrationSchema = schemas.zComputeRegistryCreate.extend({
     kubeconfig: z.string().refine((value) => value.trim().length > 0)
 });
 
-export function ComputeRegistration({
-    onSuccess,
-    onOpenChange
-}: {
-    onOpenChange: (open: boolean) => void;
-    onSuccess: () => Promise<void>;
-}) {
+export function ComputeRegistration({ onSuccess, onClose }: { onClose: () => void; onSuccess: () => Promise<void> }) {
     const form = useForm({
         resolver: zodResolver(registrationSchema),
         defaultValues: { name: '', gateway_url: '', storage_endpoint: '', kubeconfig: '' }
@@ -84,7 +78,15 @@ export function ComputeRegistration({
     });
 
     return (
-        <Dialog open onOpenChange={onOpenChange} title="Register Compute" showHeader={false} bodyPadding={false}>
+        <Dialog
+            open
+            onOpenChange={(open) => {
+                if (!open) onClose();
+            }}
+            title="Register Compute"
+            showHeader={false}
+            bodyPadding={false}
+        >
             <IllustratedForm
                 image={{ src: '/images/capacity-dialog.png', width: 768, height: 768 }}
                 onSubmit={form.handleSubmit(submit)}
@@ -163,12 +165,7 @@ export function ComputeRegistration({
                     </Field>
                     <FieldError errors={[form.formState.errors.root]} />
                     <Stack direction="horizontal" gap={2} align="center" justify="between">
-                        <Button
-                            type="button"
-                            variant="link"
-                            disabled={form.formState.isSubmitting}
-                            onClick={() => onOpenChange(false)}
-                        >
+                        <Button type="button" variant="link" disabled={form.formState.isSubmitting} onClick={onClose}>
                             Cancel
                         </Button>
                         <Button

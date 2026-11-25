@@ -1,78 +1,140 @@
+import type { z } from 'zod';
+import { X } from 'lucide-react';
 import { useApi } from '@/lib/hooks/use-api';
-import { useListControls } from './use-list-controls';
+import { Input } from '@/components/longlink/form/input';
 import { Text } from '@/components/longlink/display/text';
 import { Stack } from '@/components/longlink/layout/stack';
-import { Empty } from '@/components/longlink/display/empty';
+import { useDeferredValue, useRef, useState } from 'react';
+import { Button } from '@/components/longlink/action/button';
 import { Avatar } from '@/components/longlink/display/avatar';
 import { Heading } from '@/components/longlink/display/heading';
 import { Timestamp } from '@/components/longlink/display/timestamp';
-import { Pagination } from '@/components/longlink/action/pagination';
-import { zPageAdminUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
+import { zAdminUserSummary, zPageAdminUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
+import {
+    Frame,
+    useTable,
+    dataGridFeatures,
+    type DataGridFeatures,
+    type ColumnDef,
+    DataGrid,
+    DataGridPagination,
+    DataGridScrollArea,
+    DataGridTable
+} from '@/components/longlink';
+
+type AdminUserSummary = z.infer<typeof zAdminUserSummary>;
 
 /** Lists Platform users with server-side pagination. */
 export default function Users() {
-    const { suffix, searchField, pagination } = useListControls('users', 'Search by name or email');
+    const [filters, setFilters] = useState({ search: '', pagination: { pageIndex: 0, pageSize: 25 } });
+    const { search, pagination } = useDeferredValue(filters);
+    const input = useRef<HTMLInputElement>(null);
+    const suffix = `?page=${pagination.pageIndex + 1}&page_size=25&search=${encodeURIComponent(search.trim())}`;
+    const searchField = (
+        <Stack direction="horizontal" gap={1} align="center">
+            <Input
+                ref={input}
+                aria-label="Search users"
+                placeholder="Search by name or email"
+                value={filters.search}
+                onChange={(event) =>
+                    setFilters({ search: event.target.value, pagination: { pageIndex: 0, pageSize: 25 } })
+                }
+            />
+            {filters.search !== '' && (
+                <Button
+                    size="icon"
+                    variant="ghost"
+                    aria-label="Clear Search users"
+                    onMouseDown={(event) => event.preventDefault()}
+                    onClick={() => {
+                        setFilters({ search: '', pagination: { pageIndex: 0, pageSize: 25 } });
+                        input.current?.focus({ preventScroll: true });
+                    }}
+                >
+                    <X aria-hidden="true" />
+                </Button>
+            )}
+        </Stack>
+    );
 
     const [users] = useApi(`/api/v1/users${suffix}`, zPageAdminUserSummary);
+
+    const columns: ColumnDef<DataGridFeatures, AdminUserSummary>[] = [
+        {
+            accessorKey: 'name',
+            header: 'User',
+            cell: ({ row: { original: user } }) => (
+                <Stack direction="horizontal" gap={3} align="center">
+                    <Avatar name={user.name} src={user.avatar} />
+                    <Stack gap={0} align="start">
+                        <Stack direction="horizontal" gap={1} align="center">
+                            <Text>{user.name}</Text>
+                            <Text size="xs" tone="muted">
+                                {user.administrator ? 'Administrator' : 'User'}
+                            </Text>
+                        </Stack>
+                        <Text size="xs" tone="muted">
+                            {user.email}
+                        </Text>
+                    </Stack>
+                </Stack>
+            )
+        },
+        {
+            id: 'metadata',
+            header: 'Metadata',
+            cell: ({ row: { original: user } }) => (
+                <Stack gap={0} align="start">
+                    <Text>
+                        Created: <Timestamp value={user.created_at} format="date_time" />
+                    </Text>
+                    <Text size="xs" tone="muted">
+                        ID: {user.id}
+                    </Text>
+                </Stack>
+            )
+        }
+    ];
+
+    const table = useTable({
+        features: dataGridFeatures,
+        data: users.items,
+        columns,
+        getRowId: (user) => user.id,
+        manualPagination: true,
+        rowCount: users.total,
+        state: { pagination: filters.pagination },
+        onPaginationChange: (updater) =>
+            setFilters((current) => ({
+                ...current,
+                pagination: typeof updater === 'function' ? updater(current.pagination) : updater
+            })),
+        enableSorting: false
+    });
 
     return (
         <Stack gap={2}>
             <title>Users | LongLink</title>
             <Heading level={1}>Users</Heading>
-            {searchField}
-            <Stack gap={1}>
-                <Table wrap>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>User</TableHead>
-                            <TableHead>Metadata</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {users.items.map((row) => (
-                            <TableRow key={row.id}>
-                                <TableCell>
-                                    <Stack direction="horizontal" gap={3} align="center">
-                                        <Avatar name={row.name} src={row.avatar} />
-                                        <Stack gap={0} align="start">
-                                            <Stack direction="horizontal" gap={1} align="center">
-                                                <Text>{row.name}</Text>
-                                                <Text size="xs" tone="muted">
-                                                    {row.administrator ? 'Administrator' : 'User'}
-                                                </Text>
-                                            </Stack>
-                                            <Text size="xs" tone="muted">
-                                                {row.email}
-                                            </Text>
-                                        </Stack>
-                                    </Stack>
-                                </TableCell>
-                                <TableCell>
-                                    <Stack gap={0} align="start">
-                                        <Text>
-                                            Created: <Timestamp value={row.created_at} format="date_time" />
-                                        </Text>
-                                        <Text size="xs" tone="muted">
-                                            ID: {row.id}
-                                        </Text>
-                                    </Stack>
-                                </TableCell>
-                            </TableRow>
-                        ))}
-                        {users.items.length === 0 && (
-                            <TableRow>
-                                <TableCell colSpan={2} align="center">
-                                    <Empty title="No data" />
-                                </TableCell>
-                            </TableRow>
-                        )}
-                    </TableBody>
-                </Table>
-                <Stack as="footer" gap={0} align="center" paddingBlock={2}>
-                    <Pagination {...pagination} totalItems={users.total} />
-                </Stack>
-            </Stack>
+            <DataGrid
+                table={table}
+                tableLayout={{ dense: true, headerBackground: false, rowBorder: true }}
+                emptyMessage="No data"
+            >
+                <Frame
+                    variant="ghost"
+                    dense
+                    spacing="sm"
+                    padding="none"
+                    action={searchField}
+                    footer={<DataGridPagination sizes={[25]} />}
+                >
+                    <DataGridScrollArea orientation="horizontal">
+                        <DataGridTable />
+                    </DataGridScrollArea>
+                </Frame>
+            </DataGrid>
         </Stack>
     );
 }
