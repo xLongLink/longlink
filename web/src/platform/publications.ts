@@ -8,6 +8,7 @@ import {
     ChartLine,
     ChartPie,
     ChartRadar,
+    ChartSpline,
     CircleGauge,
     ChartNoAxesCombined,
     BookOpen,
@@ -19,6 +20,7 @@ import {
     CircleHelp,
     ClipboardList,
     Columns3,
+    CodeXml,
     CreditCard,
     Database,
     FileCode2,
@@ -31,16 +33,20 @@ import {
     Grip,
     Grid2X2,
     HardDrive,
+    Hand,
     Heading,
     Image,
     Layers,
+    LayoutTemplate,
     Link2,
     ListCollapse,
     ListFilter,
+    ListTodo,
     Loader,
     Map,
     MapPin,
     MapPinned,
+    MapPlus,
     Menu,
     Minus,
     MousePointer2,
@@ -53,6 +59,8 @@ import {
     Rocket,
     Route,
     Settings2,
+    ScanEye,
+    Server,
     ShieldCheck,
     Table2,
     TableProperties,
@@ -77,13 +85,13 @@ type DocumentationSection = { title: string; pages: PublicationPage[] };
 // Keep category navigation and overview headings in the same reading order.
 const categories = [
     { label: 'Introduction', category: 'Runtime', anchor: '', icon: BookOpen },
-    { label: 'Hooks', category: 'Hooks', anchor: '#hooks', icon: FileCode2 },
-    { label: 'Layout', category: 'Layouts', anchor: '#layouts', icon: FileCode2 },
-    { label: 'Action', category: 'Action', anchor: '#action', icon: Waypoints },
-    { label: 'Display', category: 'Display', anchor: '#display', icon: Image },
-    { label: 'Form', category: 'Form', anchor: '#form', icon: FileText },
-    { label: 'Charts', category: 'Charts', anchor: '#charts', icon: ChartArea },
-    { label: 'Maps', category: 'Maps', anchor: '#maps', icon: Map }
+    { label: 'Hooks', category: 'Hooks', anchor: '#hooks', icon: CodeXml },
+    { label: 'Layout', category: 'Layouts', anchor: '#layouts', icon: LayoutTemplate },
+    { label: 'Action', category: 'Action', anchor: '#action', icon: Hand },
+    { label: 'Display', category: 'Display', anchor: '#display', icon: ScanEye },
+    { label: 'Form', category: 'Form', anchor: '#form', icon: ListTodo },
+    { label: 'Charts', category: 'Charts', anchor: '#charts', icon: ChartSpline },
+    { label: 'Maps', category: 'Maps', anchor: '#maps', icon: MapPlus }
 ] as const;
 
 // Keep branding navigation and publication paths in their established reading order.
@@ -220,7 +228,7 @@ const selfHostedPages: DocumentationPage[] = [
         path: '/docs/api/self-hosted/platform',
         file: './routes/docs/api/self-hosted/platform.tsx',
         label: 'Platform',
-        icon: ShieldCheck
+        icon: Server
     },
     {
         path: '/docs/api/self-hosted/compute',
