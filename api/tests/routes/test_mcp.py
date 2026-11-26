@@ -24,9 +24,7 @@ from src.database.models.solutions import Solution
 from src.database.models.association import UserOrganization
 from src.database.models.organizations import Organization
 
-IDENTITY_CATALOG = Catalog(
-    endpoints=[Endpoint(key="GET /api/identity", path="/api/identity", method="GET", roles=["read", "write"], summary="current_identity")]
-)
+IDENTITY_CATALOG = Catalog(endpoints=[Endpoint(path="/api/identity", method="GET", roles=["read", "write"])])
 
 
 @pytest_asyncio.fixture

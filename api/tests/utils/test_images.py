@@ -1,3 +1,4 @@
+import json
 import httpx2
 import pytest
 from fastapi import HTTPException
@@ -84,6 +85,32 @@ async def test_metadata_fetches_digest_image_references(
     assert manifest_request.headers["Accept"] == images.MANIFEST_ACCEPT
     assert manifest_request.headers["Authorization"] == "Bearer pull-token"
     assert blob_request.headers["Authorization"] == "Bearer pull-token"
+
+
+@pytest.mark.parametrize(("field", "value"), [("key", "GET /api/tasks"), ("summary", "tasks")])
+async def test_metadata_rejects_legacy_permission_catalog(monkeypatch: pytest.MonkeyPatch, field: str, value: str) -> None:
+    """Reject old permission labels at the registry boundary before deployment."""
+
+    # Arrange
+    def respond(request: httpx2.Request) -> httpx2.Response:
+        """Return a complete image with legacy endpoint metadata."""
+
+        if request.url.path == "/token":
+            return httpx2.Response(200, json={"token": "pull-token"})
+        if "/manifests/" in request.url.path:
+            return httpx2.Response(200, json={"config": {"digest": "sha256:config"}})
+        catalog = {"endpoints": [{"path": "/api/tasks", "method": "GET", "roles": ["read"], field: value}]}
+        return httpx2.Response(200, json={"config": {"Labels": {"dev.longlink.permissions": json.dumps(catalog)}}})
+
+    mock_async_client(monkeypatch, respond)
+
+    # Act
+    with pytest.raises(HTTPException) as error:
+        await images.required_metadata(Image("ghcr.io/longlink/dashboard@sha256:deadbeef"))
+
+    # Assert
+    assert error.value.status_code == 404
+    assert error.value.detail == "Image metadata not found"
 
 
 async def test_metadata_rejects_mismatched_registry_digest(monkeypatch: pytest.MonkeyPatch) -> None:

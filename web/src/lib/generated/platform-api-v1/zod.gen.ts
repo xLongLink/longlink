@@ -169,7 +169,6 @@ export const zEmailPayload = z.object({
  * Describe one registered business operation.
  */
 export const zEndpoint = z.object({
-    key: z.string().max(520),
     path: z.string().max(512).regex(/^\//),
     roles: z.array(z.string()).max(64),
     method: z.enum([
@@ -180,8 +179,7 @@ export const zEndpoint = z.object({
         'DELETE',
         'HEAD',
         'OPTIONS'
-    ]),
-    summary: z.string().max(256).optional().default('')
+    ])
 });
 
 /**

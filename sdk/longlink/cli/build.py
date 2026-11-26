@@ -465,15 +465,12 @@ def build_solution(root: Path, build_context: Path, *, pyproject_data: Mapping[s
     lockfile = source_root / "uv.lock"
     validate_lockfile(lockfile, source_root)
 
-    # Reject path line breaks before embedding any filesystem names in Docker instructions.
-    for path in (root, *project_manifests):
-        relative_path = path.relative_to(source_root).as_posix()
-        if "\r" in relative_path or "\n" in relative_path:
-            raise errors.Error(f"Docker build paths must not contain line breaks: {relative_path!r}")
-
-        # Docker COPY interprets glob characters instead of treating them literally.
-        if any(character in relative_path for character in "*?["):
-            raise errors.Error(f"Docker build paths must not contain glob characters: {relative_path!r}")
+    # Reject unsafe Solution paths before embedding the working directory in Docker instructions.
+    relative_path = root.relative_to(source_root).as_posix()
+    if "\r" in relative_path or "\n" in relative_path:
+        raise errors.Error(f"Docker build paths must not contain line breaks: {relative_path!r}")
+    if any(character in relative_path for character in "*?["):
+        raise errors.Error(f"Docker build paths must not contain glob characters: {relative_path!r}")
 
     # Use the installed package version when available, falling back for editable source trees.
     try:

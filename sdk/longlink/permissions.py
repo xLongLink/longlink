@@ -1,7 +1,7 @@
 import re
 import hashlib
 from typing import Literal, get_args
-from pydantic import Field, BaseModel, ConfigDict, model_validator
+from pydantic import Field, BaseModel, ConfigDict, field_validator, model_validator
 from contextlib import ExitStack, contextmanager
 from collections.abc import Mapping, Sequence, Generator
 from fastapi.routing import RouteContext
@@ -14,25 +14,44 @@ METHODS = frozenset(get_args(Method))
 ROLE_PATTERN = re.compile(r"[a-z][a-z0-9_-]{0,63}")
 
 
+def validate_roles(roles: object) -> list[str]:
+    """Normalize role sequences and reject ambiguous or malformed declarations."""
+
+    # Keep decorator and catalog inputs subject to the same role contract.
+    if isinstance(roles, str) or not isinstance(roles, Sequence):
+        raise ValueError("Roles must be a sequence of names")
+    names = list(roles)
+    if (
+        len(names) > 64
+        or any(not isinstance(name, str) or ROLE_PATTERN.fullmatch(name) is None for name in names)
+        or len(set(names)) != len(names)
+    ):
+        raise ValueError("Roles must be unique lowercase identifiers of at most 64 characters, with at most 64 roles")
+    return names
+
+
 class Endpoint(BaseModel):
     """Describe one registered business operation."""
 
     model_config = ConfigDict(extra="forbid")
 
     # Operation identity and default access.
-    key: str = Field(max_length=520)
     path: str = Field(max_length=512, pattern=r"^/")
     roles: list[str] = Field(max_length=64)
     method: Method
-    summary: str = Field(default="", max_length=256)
 
-    @model_validator(mode="after")
-    def validate_identity(self) -> "Endpoint":
-        """Reject ambiguous operation keys and malformed role names."""
+    @field_validator("roles", mode="before")
+    @classmethod
+    def validate_roles(cls, roles: object) -> list[str]:
+        """Apply the shared role declaration contract to catalog inputs."""
 
-        if self.key != f"{self.method} {self.path}" or any(ROLE_PATTERN.fullmatch(role) is None for role in self.roles):
-            raise ValueError("Invalid endpoint identity or role")
-        return self
+        return validate_roles(roles)
+
+    @property
+    def key(self) -> str:
+        """Derive the unique operation identity from its registered route."""
+
+        return f"{self.method} {self.path}"
 
 
 class Catalog(BaseModel):
@@ -93,13 +112,7 @@ def discover(routes: Sequence[RouteContext]) -> Catalog:
                 raise ValueError(f"Unsupported permission method: {method}")
             defaults = ["read", "write"] if method in {"GET", "HEAD", "OPTIONS"} else ["write"]
             endpoint = Endpoint.model_validate(
-                {
-                    "key": f"{method} {route.path}",
-                    "path": route.path,
-                    "method": method,
-                    "roles": declared if declared is not None else defaults,
-                    "summary": (route.summary or route.name or "")[:256],
-                }
+                {"path": route.path, "method": method, "roles": declared if declared is not None else defaults}
             )
             endpoints.append(endpoint)
     endpoints.sort(key=lambda endpoint: endpoint.key)
