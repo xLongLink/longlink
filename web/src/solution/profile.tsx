@@ -1,9 +1,10 @@
-import { useLayoutEffect, useState } from 'react';
+import { useLayoutEffect } from 'react';
+import type { DevelopmentUser } from '@/views/manifest';
 import { Text } from '@/components/longlink/display/text';
 import { Avatar } from '@/components/longlink/display/avatar';
 import { SidebarMenuButton } from '@/components/shadcn/sidebar';
 import { BookOpen, ChevronsUpDown, ExternalLink } from 'lucide-react';
-import { developmentUsers, getDevelopmentUser, setDevelopmentUser } from '@/solution/development';
+import { getDevelopmentUser, setDevelopmentUser } from '@/solution/development';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -15,14 +16,17 @@ import {
 } from '@/components/shadcn/dropdown-menu';
 
 /** Switches local request identity without exposing production account controls. */
-export function DevelopmentProfile() {
-    const [profile] = useState(getDevelopmentUser);
-    const { user } = profile;
+export function DevelopmentProfile({ users }: { users: readonly DevelopmentUser[] }) {
+    const profile = getDevelopmentUser(users);
 
     // Install the initial persona before the isolated View can make business requests.
     useLayoutEffect(() => {
-        setDevelopmentUser(profile);
+        if (profile) setDevelopmentUser(profile);
     }, [profile]);
+
+    if (!profile) return null;
+
+    const { user } = profile;
 
     return (
         <DropdownMenu>
@@ -45,10 +49,10 @@ export function DevelopmentProfile() {
             <DropdownMenuContent side="top" align="end" aria-label="Development user">
                 <DropdownMenuGroup aria-label="Development users">
                     <DropdownMenuLabel>Development users</DropdownMenuLabel>
-                    {developmentUsers.map((candidate) => (
+                    {users.map((candidate) => (
                         <DropdownMenuItem
                             key={candidate.user.id}
-                            aria-current={candidate.role === profile.role ? 'true' : undefined}
+                            aria-current={candidate.user.id === user.id ? 'true' : undefined}
                             onClick={() => {
                                 setDevelopmentUser(candidate);
 

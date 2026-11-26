@@ -28,6 +28,13 @@ const runtimeSchema = z.object({
 
 export type ViewRuntime = z.infer<typeof runtimeSchema>;
 
+const developmentUserSchema = z.object({
+    role: z.string().min(1),
+    user: z.looseObject({ id: z.string().min(1), name: z.string(), email: z.string() })
+});
+
+export type DevelopmentUser = z.infer<typeof developmentUserSchema>;
+
 const viewSchema = z.object({
     path: z
         .string()
@@ -80,7 +87,8 @@ export const manifestSchema = z
         views: viewsSchema,
         runtime: runtimeSchema,
         tabs: z.array(tabSchema).optional(),
-        development: z.boolean().optional()
+        development: z.boolean().optional(),
+        development_users: z.array(developmentUserSchema).optional()
     })
     .superRefine((manifest, context) => {
         const routes = new Set(manifest.views.map((view) => view.route));

@@ -3,6 +3,7 @@ from typing import Literal
 from pathlib import Path
 from pydantic import Field, BaseModel
 from dataclasses import dataclass
+from longlink.identity import DevelopmentIdentity
 
 STATIC_ROUTE_SEGMENT_PATTERN = re.compile(r"[A-Za-z0-9._~-]+")
 
@@ -42,6 +43,7 @@ class ViewManifest:
     runtime: ViewRuntime
     tabs: list[ViewTab] | None = None
     development: bool | None = None
+    development_users: list[DevelopmentIdentity] | None = None
 
     def resolved_tabs(self) -> list[ViewTab]:
         """Resolve explicit navigation or derive top-level static tabs in catalog order."""

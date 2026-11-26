@@ -4,7 +4,9 @@ import { createHash } from 'node:crypto';
 import { createRoot } from 'react-dom/client';
 import { Dialog } from '@base-ui/react/dialog';
 import { MessagePort } from 'node:worker_threads';
+import { DevelopmentProfile } from '@/solution/profile';
 import { SolutionPage } from '@/views/host/solution-page';
+import { developmentCookie } from '@/solution/development';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ApiErrorContext, createErrorReporter } from '@/lib/errors';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
@@ -105,6 +107,33 @@ describe('SolutionPage', () => {
             output.querySelector('[aria-label="Section navigation"] a[aria-current="page"]')?.getAttribute('href')
         ).toBe('/home');
         await vi.waitFor(() => expect(output.querySelector('iframe')?.srcdoc).toContain('Content-Security-Policy'));
+    });
+
+    it.each([true, false])('exposes manifest users only in development mode (%s)', async (development) => {
+        // Arrange
+        const user = { role: 'reviewer', user: { id: 'reviewer-1', name: 'Reviewer', email: 'review@example.com' } };
+        stubFetch((url) => {
+            if (!url.endsWith('/views.json')) return sourceResponse('export default function Home() { return null; }');
+
+            return Response.json({
+                views: [{ path: 'home.jsx', route: '/home' }],
+                runtime: { version: createHash('sha256').update('\n').digest('hex') },
+                development,
+                development_users: [user]
+            });
+        });
+
+        try {
+            // Act
+            const output = await renderPage('/home');
+            await vi.waitFor(() => expect(output.querySelector('iframe')?.srcdoc).toContain('Content-Security-Policy'));
+
+            // Assert
+            expect(output.querySelector('[aria-label="Reviewer"]') !== null).toBe(development);
+            expect(document.cookie.includes(developmentCookie)).toBe(development);
+        } finally {
+            document.cookie = `${developmentCookie}=; Path=/; Max-Age=0`;
+        }
     });
 
     it('honors explicit tab order and labels while resolving unlabeled tabs from View filenames', async () => {
@@ -906,6 +935,7 @@ describe('SolutionPage', () => {
                                             <Location />
                                             <SolutionPage
                                                 action={null}
+                                                developmentAction={(users) => <DevelopmentProfile users={users} />}
                                                 breadcrumb={null}
                                                 formatTitle={(title) => `${title ?? 'Untitled'} | Solution`}
                                                 viewsUrl={viewsUrl}

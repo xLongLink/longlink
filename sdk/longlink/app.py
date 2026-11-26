@@ -5,7 +5,7 @@ from typing import Any, Literal
 from fastapi import FastAPI, APIRouter
 from fastmcp import FastMCP
 from pathlib import Path
-from longlink import views, permissions
+from longlink import views, identity, permissions
 from contextlib import ExitStack, AsyncExitStack, asynccontextmanager
 from dataclasses import dataclass
 from collections.abc import Mapping, Callable, Awaitable, AsyncGenerator
@@ -156,6 +156,10 @@ class LongLink(RouteDecorators, FastAPI):
                 business_routes = self.permission_routes()
                 catalog = permissions.discover(business_routes)
                 self.state.permission_catalog = catalog
+
+                # Publish local personas only after all business roles are known.
+                if settings.ENV == "development":
+                    view_manifest.development_users = identity.development_users(catalog)
 
                 # Keep guards installed through runtime lifespan shutdown.
                 guards.enter_context(permissions.guarded(business_routes, catalog))

@@ -16,7 +16,7 @@ export default function Solution() {
                 </Link>
             }
             breadcrumb={<PathBreadcrumb />}
-            developmentAction={<DevelopmentProfile />}
+            developmentAction={(users) => <DevelopmentProfile users={users} />}
             formatTitle={(title) => (title ? `${title} | LongLink` : 'LongLink')}
         />
     );
