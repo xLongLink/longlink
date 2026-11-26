@@ -5,6 +5,7 @@ from conftest import DatabasePostgres, StorageKubernetes, DatabaseKubernetes, re
 from factories import claim_operation, create_solution, fetch_operations, complete_operation, create_organization
 from src.utils import jobs
 from contextlib import asynccontextmanager
+from kr8s.asyncio import Api
 from src.utils.s3 import Credentials
 from sqlalchemy.orm import selectinload
 from src.kubernetes import storage
@@ -112,13 +113,25 @@ async def test_solution_delete_removes_provider_state_and_tombstone(
 
             calls.append(("schema", solution_id))
 
-    class FakeKubernetes(DatabaseKubernetes):
-        """Provide the administration tunnel and observe its cleanup."""
+    class Service:
+        """Provide the RustFS Service boundary and observe tunnel cleanup."""
+
+        def __init__(self, name: str, *, namespace: str, api: Api) -> None:
+            """Accept the private administration service."""
+
+            assert name == "rustfs-svc"
+            assert namespace == "rustfs"
+            assert api is not None
+
+        async def refresh(self) -> None:
+            """Accept the Service refresh."""
 
         @asynccontextmanager
-        async def forward_storage(self) -> AsyncGenerator[int, None]:
+        async def portforward(self, port: int, *, local_port: str) -> AsyncGenerator[int, None]:
             """Release the administration tunnel before object removal."""
 
+            assert port == 9000
+            assert local_port == "auto"
             try:
                 yield 19000
             finally:
@@ -135,7 +148,8 @@ async def test_solution_delete_removes_provider_state_and_tombstone(
         assert bucket == f"longlink-{organization.id.hex}"
         calls.append(("prefix", prefix))
 
-    monkeypatch.setattr(solution_operations, "Kubernetes", FakeKubernetes)
+    monkeypatch.setattr(solution_operations, "Kubernetes", DatabaseKubernetes)
+    monkeypatch.setattr(storage, "Service", Service)
     monkeypatch.setattr(solution_operations.solution_resources, "delete", delete)
     monkeypatch.setattr(solution_operations, "Storage", storage.Storage)
     monkeypatch.setattr(storage.rustfs.RustFS, "revoke", revoke)

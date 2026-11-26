@@ -4,6 +4,7 @@ import secrets
 from uuid import uuid4
 from types import SimpleNamespace
 from contextlib import asynccontextmanager
+from kr8s.asyncio import Api
 from src.kubernetes import storage
 from collections.abc import AsyncGenerator
 
@@ -23,18 +24,55 @@ def storage_compute() -> SimpleNamespace:
 
 
 @pytest.fixture
-def storage_cluster() -> object:
-    """Supply a Kubernetes tunnel with a fixed local administration port."""
+def storage_cluster(monkeypatch: pytest.MonkeyPatch) -> object:
+    """Replace the Service boundary while retaining storage tunnel ownership."""
 
-    class Cluster:
-        """Expose the forwarded RustFS port without opening a cluster connection."""
+    clients: list[httpx2.AsyncClient] = []
+    api = object()
+
+    class Client(httpx2.AsyncClient):
+        async def __aenter__(self) -> "Client":
+            """Observe HTTP lifetime inside the real tunnel scope."""
+
+            clients.append(self)
+            return await super().__aenter__()
+
+    class Service:
+        def __init__(self, name: str, *, namespace: str, api: Api) -> None:
+            """Require the private RustFS service rather than its public proxy."""
+
+            assert name == "rustfs-svc"
+            assert namespace == "rustfs"
+            self.api = api
+            self.refreshed = False
+
+        async def refresh(self) -> None:
+            """Refresh the service before selecting a forwarding target."""
+
+            assert self.api is api
+            self.refreshed = True
 
         @asynccontextmanager
-        async def forward_storage(self) -> AsyncGenerator[int, None]:
-            """Scope the private administration port to one workflow."""
+        async def portforward(self, port: int, *, local_port: str) -> AsyncGenerator[int, None]:
+            """Require automatic local allocation and HTTP cleanup before release."""
 
-            yield 19000
+            assert self.refreshed
+            assert port == 9000
+            assert local_port == "auto"
+            try:
+                yield 19000
+            finally:
+                assert clients
+                assert all(client.is_closed for client in clients)
 
+    class Cluster:
+        async def api(self) -> object:
+            """Return the borrowed cluster connection."""
+
+            return api
+
+    monkeypatch.setattr(storage, "Service", Service)
+    monkeypatch.setattr(storage.httpx2, "AsyncClient", Client)
     return Cluster()
 
 
@@ -50,6 +88,7 @@ async def test_storage_administration_uses_cluster_tunnel(
         """Observe the destination and signed admin request at the HTTP boundary."""
 
         requests.append(request)
+        assert request.extensions["timeout"]["read"] == 30
         return httpx2.Response(200, json={})
 
     transport = httpx2.MockTransport(respond)

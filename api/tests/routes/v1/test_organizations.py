@@ -8,7 +8,7 @@ from sqlmodel import col, select
 from factories import create_compute, create_solution, fetch_operations, create_organization, assert_no_new_operations
 from src.utils import s3, mail, postgres
 from contextlib import asynccontextmanager
-from sqlalchemy import func
+from sqlalchemy import func, update, literal_column
 from urllib.parse import urlencode
 from unittest.mock import AsyncMock
 from sqlalchemy.exc import SQLAlchemyError
@@ -124,6 +124,41 @@ async def test_usage_edit_revalidates_ownership_and_payment_authorization(
     assert split.status_code == 402
 
 
+async def test_usage_counts_only_active_members_and_solutions_in_the_organization(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User]
+) -> None:
+    """Exclude other tenants, pending invitations, and deleted users and Solutions."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+    foreign = await create_organization(users[1], name="foreign")
+    await create_solution(organization, name="active")
+    deleted_solution = await create_solution(organization, name="deleted")
+    await create_solution(foreign, name="foreign")
+    async with session_scope() as session:
+        deleted_user = await session.get(User, users[2].id)
+        persisted_solution = await session.get(Solution, deleted_solution.id)
+        assert deleted_user is not None
+        assert persisted_solution is not None
+        deleted_user.deleted_at = datetime.now(UTC)
+        persisted_solution.deleted_at = datetime.now(UTC)
+        session.add_all(
+            [
+                UserOrganization(user_id=users[2].id, organization_id=organization.id, role=OrganizationRoles.read),
+                OrganizationInvitation(organization_id=organization.id, email="pending@example.com", role=OrganizationRoles.read),
+            ]
+        )
+        await session.commit()
+
+    # Act
+    response = await clients[0].get(f"/api/v1/organizations/{organization.id}/usage")
+
+    # Assert
+    assert response.status_code == 200
+    assert response.json()["users"] == 1
+    assert response.json()["solutions"] == 1
+
+
 @pytest.mark.parametrize(
     ("pool", "increase"),
     [
@@ -172,7 +207,7 @@ async def test_usage_edit_requires_payment_for_each_pool_increase(
 async def test_usage_edit_accepts_database_pools_larger_than_compute_and_files(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Configure database capacity without reserving it inside another pool."""
+    """Configure capacity without reserving another pool or decrypting an unused database password."""
 
     # Arrange
     organization = await create_organization(users[0])
@@ -182,6 +217,13 @@ async def test_usage_edit_accepts_database_pools_larger_than_compute_and_files(
         persisted.status = Status.running
         persisted.database_cpu_millicores = 1000
         persisted.database_ram_bytes = 1024**3
+        await session.flush()
+        await session.execute(
+            update(Organization)
+            .where(col(Organization.id) == organization.id)
+            .values(database_password=literal_column("'unreadable'"))
+            .execution_options(synchronize_session=False)
+        )
         await session.commit()
     capacity = {
         "storage_bytes": 17,

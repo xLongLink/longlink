@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from src.utils import s3, rustfs
 from contextlib import asynccontextmanager
 from collections.abc import Sequence, AsyncGenerator
-from kr8s.asyncio.objects import Secret
+from kr8s.asyncio.objects import Secret, Service
 
 if TYPE_CHECKING:
     from src.kubernetes.client import Kubernetes
@@ -25,11 +25,21 @@ class Storage:
         self._cluster = cluster
 
     @asynccontextmanager
+    async def _tunnel(self) -> AsyncGenerator[int, None]:
+        """Own the private RustFS administration tunnel for one storage workflow."""
+
+        # Forward the cluster service directly so administrator requests never traverse the public storage proxy.
+        service = Service("rustfs-svc", namespace="rustfs", api=await self._cluster.api())
+        await service.refresh()
+        async with service.portforward(9000, local_port="auto") as port:
+            yield port
+
+    @asynccontextmanager
     async def _admin(self) -> AsyncGenerator[rustfs.RustFS, None]:
         """Own one administrative HTTP client inside the authenticated cluster tunnel's lifetime."""
 
         # Close the workflow's HTTP transport before the Kubernetes tunnel is released.
-        async with self._cluster.forward_storage() as port:
+        async with self._tunnel() as port:
             client = httpx2.AsyncClient(trust_env=False, timeout=30, follow_redirects=False)
             async with client:
                 admin = rustfs.RustFS(f"http://127.0.0.1:{port}", self._credentials, client)
@@ -66,7 +76,7 @@ class Storage:
             await client.list_buckets()
 
         # Release the readiness HTTP client before closing its tunnel.
-        async with self._cluster.forward_storage() as port:
+        async with self._tunnel() as port:
             client = httpx2.AsyncClient(trust_env=False, timeout=5.0, follow_redirects=False)
             async with client:
                 response = await client.get(f"http://127.0.0.1:{port}/health/ready")

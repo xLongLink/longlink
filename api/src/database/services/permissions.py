@@ -52,17 +52,19 @@ async def member(session: AsyncSession, solution: Solution, user_id: UUID) -> di
     """Return the saved role and the deployed revision used to review it."""
 
     await organizations.require_membership(session, user_id, solution.organization_id)
-    revision_id = (
-        await session.scalar(
-            select(col(PermissionCatalog.revision_id)).where(col(PermissionCatalog.revision_id) == solution.deployed_revision_id)
+
+    # Read the deployed catalog and this member's assignment without identity-map state.
+    result = await session.execute(
+        select(col(PermissionCatalog.revision_id), col(SolutionMemberAccess.role))
+        .outerjoin(
+            SolutionMemberAccess, (col(SolutionMemberAccess.user_id) == user_id) & (col(SolutionMemberAccess.solution_id) == solution.id)
         )
-        if solution.deployed_revision_id is not None
-        else None
+        .where(col(PermissionCatalog.revision_id) == solution.deployed_revision_id)
     )
-    if revision_id is None:
+    access = result.one_or_none()
+    if access is None:
         raise HTTPException(status_code=409, detail="Rebuild and deploy the Solution to load endpoint permissions")
-    access = await session.get(SolutionMemberAccess, (user_id, solution.id), populate_existing=True)
-    return {"role": access.role if access else None, "revision_id": revision_id}
+    return {"role": access.role, "revision_id": access.revision_id}
 
 
 async def update_member(session: AsyncSession, solution: Solution, member_id: UUID, payload: models.AccessUpdate, actor_id: UUID) -> None:

@@ -38,6 +38,12 @@ async def test_reconcile_prepares_providers_namespace_and_publishes_organization
     # Observe cleanup ordering at external infrastructure boundaries.
     calls: list[str] = []
 
+    async def wait_ready(_client: object, organization_id: UUID) -> None:
+        """Record readiness before provisioning and after capacity reconciliation."""
+
+        assert organization_id == organization.id
+        calls.append("ready")
+
     class Database(DatabasePostgres):
         async def prepare_organization_database(self, _organization: UUID) -> None:
             """Record database preparation."""
@@ -73,6 +79,7 @@ async def test_reconcile_prepares_providers_namespace_and_publishes_organization
         calls.append("registries")
 
     monkeypatch.setattr(organization_operations.database_resources.postgres, "Postgres", Database)
+    monkeypatch.setattr(organization_operations.database_resources, "wait_ready", wait_ready)
     monkeypatch.setattr(organization_operations, "Kubernetes", DatabaseKubernetes)
     monkeypatch.setattr(organization_operations, "Storage", Storage)
     monkeypatch.setattr(organization_operations.organizations, "apply", apply)
@@ -85,11 +92,64 @@ async def test_reconcile_prepares_providers_namespace_and_publishes_organization
         assert await session.get(OrganizationActivity, organization.id) is None
 
     # Every boundary completes before status publication.
-    assert calls == ["database", "namespace", "storage", "registries"]
+    assert calls == ["ready", "database", "namespace", "storage", "ready", "registries"]
     assert refreshed is not None
     assert refreshed.status == Status.running
     assert refreshed.provisioned_at is not None
     assert OrganizationUsageUpdate.model_validate(refreshed, from_attributes=True) == allocation
+
+
+@pytest.mark.usefixtures("database_runtime")
+async def test_reconcile_available_database_requires_readiness_before_provider_work(
+    users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Keep published availability and capacity when the existing database is unready."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+    async with session_scope() as session:
+        current = await session.get(Organization, organization.id)
+        assert current is not None
+        current.database_state = DatabaseState.available
+        current.status = Status.running
+        current.provisioned_at = datetime.now(UTC)
+        await session.commit()
+    allocation = OrganizationUsageUpdate.model_validate(organization, from_attributes=True)
+    allocation.compute_cpu_millicores += 1000
+    await queue_operation(target_id=organization.id, allocation=allocation.model_dump())
+    operation = await claim_operation()
+    assert operation is not None
+
+    async def wait_ready(_client: object, organization_id: UUID) -> None:
+        """Fail readiness for the previously published database."""
+
+        assert organization_id == organization.id
+        raise RuntimeError("database is unready")
+
+    monkeypatch.setattr(organization_operations, "Kubernetes", DatabaseKubernetes)
+    monkeypatch.setattr(organization_operations.database_resources, "wait_ready", wait_ready)
+    reject_provider_construction(
+        monkeypatch,
+        (organization_operations.database_resources.postgres, "Postgres"),
+        (organization_operations.organizations, "apply"),
+        (organization_operations, "Storage"),
+        (organization_operations.database_resources, "resize"),
+        (organization_operations.registries, "synchronize"),
+    )
+
+    # Act
+    with pytest.raises(RuntimeError, match="database is unready"):
+        await organization_operations.reconcile(operation)
+
+    # Assert
+    async with session_scope() as session:
+        current = await session.get(Organization, organization.id)
+        assert current is not None
+        assert current.database_state == DatabaseState.available
+        assert current.status == Status.running
+        assert current.compute_cpu_millicores == organization.compute_cpu_millicores
+        assert current.provisioned_at is not None
+        assert await session.get(OrganizationActivity, organization.id) is None
 
 
 @pytest.mark.usefixtures("database_runtime")

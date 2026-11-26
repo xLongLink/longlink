@@ -375,18 +375,6 @@ async def members(session: AsyncSession, organization_id: UUID) -> Sequence[User
     return result.all()
 
 
-async def member_count(session: AsyncSession, organization_id: UUID) -> int:
-    """Count accepted active members, excluding invitations and deleted users."""
-
-    result = await session.execute(
-        select(func.count())
-        .select_from(UserOrganization)
-        .join(User, col(User.id) == col(UserOrganization.user_id))
-        .where(col(UserOrganization.organization_id) == organization_id, col(User.deleted_at).is_(None))
-    )
-    return result.scalar_one()
-
-
 async def lock_row(session: AsyncSession, organization_id: UUID) -> Organization | None:
     """Lock and refresh an Organization, including tombstones, in the caller's transaction."""
 
@@ -466,7 +454,21 @@ async def update_usage(session: AsyncSession, organization_id: UUID, user_id: UU
         raise HTTPException(status_code=402, detail="Payment authorization required")
 
     # Check provider-observed capacity rather than assuming desired database size matches existing PVCs.
-    _, compute = await database_infrastructure(session, organization_id)
+    compute_fields = [attr(ComputeRegistry.kubeconfig)]
+    if payload.storage_bytes < organization.storage_bytes:
+        compute_fields.extend(
+            [
+                attr(ComputeRegistry.storage_endpoint),
+                attr(ComputeRegistry.storage_access_key),
+                attr(ComputeRegistry.storage_secret_key),
+                attr(ComputeRegistry.storage_certificate),
+            ]
+        )
+    compute = await session.scalar(
+        select(ComputeRegistry).options(load_only(*compute_fields)).where(col(ComputeRegistry.id) == organization.compute_id)
+    )
+    if compute is None:
+        raise HTTPException(status_code=404, detail="Organization not found")
     cluster = Kubernetes(compute.kubeconfig)
     try:
         async with asyncio.timeout(15):
@@ -483,7 +485,6 @@ async def update_usage(session: AsyncSession, organization_id: UUID, user_id: UU
     # File downsizing must retain every currently stored object.
     quota_bytes = payload.storage_bytes
     if quota_bytes < organization.storage_bytes:
-        compute = await storage_infrastructure(session, organization_id)
         used_bytes = await storage_usage(compute, organization_id)
         if quota_bytes < used_bytes:
             raise HTTPException(status_code=409, detail="Storage capacity cannot be reduced below current usage")
