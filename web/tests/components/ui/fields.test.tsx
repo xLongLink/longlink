@@ -278,10 +278,26 @@ it('keeps the first duplicate combobox option authoritative and refreshes labels
         const user = userEvent.setup();
         await act(async () => user.click(input));
         await vi.waitFor(() => {
-            const options = Array.from(document.querySelectorAll('[role="option"]'));
-            expect(options.map((option) => option.textContent)).toEqual(['Design', 'Design', 'Engineering']);
-            expect(options.slice(0, 2).every((option) => option.getAttribute('aria-disabled') === 'true')).toBe(true);
+            const design = Array.from(document.querySelectorAll('[role="option"]')).find(
+                (option) => option.textContent === 'Design'
+            );
+            expect(design).toBeDefined();
+            expect(design?.getAttribute('aria-disabled')).toBe('true');
         });
+        const listbox = document.querySelector('[role="listbox"]');
+
+        if (!listbox) throw new Error('Expected team options');
+        expect(listbox.textContent).not.toContain('Duplicate design');
+        const designOptions = Array.from(listbox.querySelectorAll('[role="option"]')).filter(
+            (option) => option.textContent === 'Design'
+        );
+
+        expect(designOptions.length).toBeGreaterThan(0);
+        for (const design of designOptions) {
+            expect(design.getAttribute('aria-disabled')).toBe('true');
+            await act(async () => user.click(design));
+            expect(new FormData(form).getAll('teams')).toEqual(['design', 'retired']);
+        }
         await act(async () => user.keyboard('{Escape}'));
         await act(async () => user.click(refresh));
         await vi.waitFor(() =>

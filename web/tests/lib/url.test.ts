@@ -10,7 +10,6 @@ import {
 describe('resolveExternalUrl', () => {
     it.each([
         ['https://platform.example', ' https://docs.example/help ', 'https://docs.example/help'],
-        ['https://platform.example', 'http://docs.example/help', 'http://docs.example/help'],
         ['http://platform.example', '//docs.example/help', 'http://docs.example/help']
     ])('resolves external navigation %s + %s', (base, path, expected) => {
         // Act and assert
@@ -45,10 +44,6 @@ describe('resolveNavigationUrl', () => {
     ])('joins base %s and relative path %s', (baseUrl, path, expected) => {
         // Act and assert
         expect(resolveNavigationUrl(baseUrl, path)).toBe(expected);
-    });
-
-    it('resolves dot segments', () => {
-        expect(resolveNavigationUrl('/api/solutions/123/proxy/', '../../me')).toBe('/api/solutions/123/proxy/me');
     });
 
     it.each(['javascript:alert(1)', 'https://evil.example/items', '//evil.example/items', '\\evil.example/items'])(

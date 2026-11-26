@@ -33,6 +33,7 @@ const columns: ColumnDef<DataGridFeatures, Shipment>[] = [
 ];
 
 it('keeps controlled selection on domain IDs through native sorting, refresh and reset', async () => {
+    // Arrange
     const user = userEvent.setup();
 
     function Shipments() {
@@ -83,14 +84,19 @@ it('keeps controlled selection on domain IDs through native sorting, refresh and
 
     await withMounted(<Shipments />, async (output) => {
         const select = output.querySelector<HTMLElement>('tbody [aria-label="Select row"]');
+        const selectAll = output.querySelector<HTMLElement>('[role="checkbox"][aria-label="Select all"]');
         const sort = output.querySelector<HTMLButtonElement>('thead button');
         const refresh = output.querySelector<HTMLButtonElement>('button');
         const reset = output.querySelectorAll('button')[1];
 
-        if (!select || !sort || !refresh || !reset) throw new Error('Expected shipment controls');
+        if (!select || !selectAll || !sort || !refresh || !reset) throw new Error('Expected shipment controls');
 
+        // Act
         await act(async () => user.click(select));
+
+        // Assert
         expect(output.querySelector('output')?.textContent).toBe('north');
+        expect(selectAll.getAttribute('aria-checked')).toBe('mixed');
         await act(async () => user.click(sort));
         expect(output.querySelector('tbody tr')?.textContent).toBe('South2');
         expect(output.querySelector('tbody tr [aria-label="Select row"]')?.getAttribute('aria-checked')).toBe('false');
@@ -105,6 +111,30 @@ it('keeps controlled selection on domain IDs through native sorting, refresh and
             output.querySelector('tbody tr:last-child [aria-label="Select row"]')?.getAttribute('aria-checked')
         ).toBe('true');
         expect(output.querySelector('output')?.textContent).toBe('north');
+
+        // Act
+        await act(async () => user.click(selectAll));
+
+        // Assert
+        expect(output.querySelector('output')?.textContent?.split(',').sort()).toEqual(['north', 'south']);
+        expect(selectAll.getAttribute('aria-checked')).toBe('true');
+        expect(
+            [...output.querySelectorAll('tbody [aria-label="Select row"]')].map((row) =>
+                row.getAttribute('aria-checked')
+            )
+        ).toEqual(['true', 'true']);
+
+        // Act
+        await act(async () => user.click(selectAll));
+
+        // Assert
+        expect(output.querySelector('output')?.textContent).toBe('');
+        expect(selectAll.getAttribute('aria-checked')).toBe('false');
+        expect(
+            [...output.querySelectorAll('tbody [aria-label="Select row"]')].map((row) =>
+                row.getAttribute('aria-checked')
+            )
+        ).toEqual(['false', 'false']);
     });
 });
 
@@ -173,6 +203,7 @@ it('updates pagination and select-all availability from the filtered row model',
     const user = userEvent.setup();
 
     function Shipments() {
+        const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
         const table = useTable({
             features: dataGridFeatures,
             data: [
@@ -181,7 +212,9 @@ it('updates pagination and select-all availability from the filtered row model',
             ],
             columns: columns.map((column) => ({ ...column, filterFn: filterFn_includesString })),
             getRowId: (row) => row.id,
-            enableRowSelection: true
+            enableRowSelection: true,
+            state: { rowSelection },
+            onRowSelectionChange: setRowSelection
         });
 
         return (
@@ -192,6 +225,11 @@ it('updates pagination and select-all availability from the filtered row model',
                 <button type="button" onClick={() => table.setColumnFilters([{ id: 'name', value: 'missing' }])}>
                     Filter missing
                 </button>
+                <output aria-label="Selected shipments">
+                    {Object.keys(rowSelection)
+                        .filter((id) => rowSelection[id])
+                        .join(',')}
+                </output>
                 <DataGrid table={table}>
                     <DataGridTable />
                     <DataGridPagination />
@@ -214,6 +252,17 @@ it('updates pagination and select-all availability from the filtered row model',
         expect(
             output.querySelector('[role="checkbox"][aria-label="Select all"]')?.getAttribute('aria-disabled')
         ).not.toBe('true');
+
+        const selectAll = output.querySelector<HTMLElement>('[role="checkbox"][aria-label="Select all"]');
+        if (!selectAll) throw new Error('Expected select-all control');
+
+        // Act
+        await act(async () => user.click(selectAll));
+
+        // Assert
+        expect(output.querySelector('output')?.textContent).toBe('north');
+        expect(output.querySelector('tbody [aria-label="Select row"]')?.getAttribute('aria-checked')).toBe('true');
+        expect(selectAll.getAttribute('aria-checked')).toBe('true');
 
         // Act
         await act(async () => user.click(missing));

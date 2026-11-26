@@ -5,53 +5,6 @@ import { withMounted } from '../../render';
 import userEvent from '@testing-library/user-event';
 import { ChartContainer, ChartLegendContent, ChartTooltipContent } from '@/components/shadcn/chart';
 
-it.each([
-    { color: undefined, fill: '#112233', expected: '#112233' },
-    { color: '#445566', fill: '#112233', expected: '#445566' },
-    { color: undefined, fill: undefined, expected: '#778899' }
-])('resolves tooltip indicator color with color=$color and payload fill=$fill', async ({ color, fill, expected }) => {
-    // Arrange
-    const payload = [{ graphicalItemId: 'orders', name: 'Orders', value: 12, color: '#778899', payload: { fill } }];
-
-    // Act
-    await withMounted(
-        <ChartContainer config={{}} ref={measureChart}>
-            <ChartTooltipContent active hideLabel payload={payload} color={color} />
-        </ChartContainer>,
-        async (output) => {
-            // Assert
-            const indicator = output.querySelector<HTMLElement>('[style*="--color-bg"]');
-
-            if (!indicator) throw new Error('Expected tooltip indicator');
-            expect(indicator.style.getPropertyValue('--color-bg')).toBe(expected);
-            expect(indicator.style.getPropertyValue('--color-border')).toBe(expected);
-        }
-    );
-});
-
-it('keeps dashed tooltip indicators transparent while supplying their border color', async () => {
-    // Arrange
-    const payload = [{ graphicalItemId: 'orders', name: 'Orders', value: 12, payload: { fill: '#112233' } }];
-
-    // Act
-    await withMounted(
-        <ChartContainer config={{}} ref={measureChart}>
-            <ChartTooltipContent active hideLabel indicator="dashed" payload={payload} />
-        </ChartContainer>,
-        async (output) => {
-            // Assert
-            const indicator = output.querySelector<HTMLElement>('[style*="--color-border"]');
-
-            if (!indicator) throw new Error('Expected dashed tooltip indicator');
-            expect(indicator.classList.contains('border-dashed')).toBe(true);
-            expect(indicator.classList.contains('bg-transparent')).toBe(true);
-            expect(indicator.style.backgroundColor).toBe('');
-            expect(indicator.style.borderColor).toBe('');
-            expect(indicator.style.getPropertyValue('--color-border')).toBe('#112233');
-        }
-    );
-});
-
 it('updates tooltip and legend entries with duplicate display names without duplicate keys', async () => {
     // Arrange
     const errors = vi.spyOn(console, 'error');

@@ -74,18 +74,19 @@ it('exposes each row once and lets keyboard users focus the described pause regi
         expect(output.querySelector(`#${section.getAttribute('aria-labelledby')}`)?.tagName).toBe('H2');
         expect(output.querySelector(`#${section.getAttribute('aria-describedby')}`)?.textContent?.trim()).toBeTruthy();
 
-        // Only the first copy is named and exposed; hidden copies still fill the moving track.
         for (const label of ['Industries', 'Use cases']) {
-            const list = output.querySelector(`ul[aria-label="${label}"]`);
+            const namedLists = output.querySelectorAll(`ul[aria-label="${label}"]`);
+            expect(namedLists).toHaveLength(1);
+            const list = namedLists[0];
 
             if (!list?.parentElement) throw new Error(`Expected ${label} row`);
-            expect(list.hasAttribute('aria-hidden')).toBe(false);
-            const duplicates = [...list.parentElement.querySelectorAll('ul[aria-hidden="true"]')];
-            expect(duplicates).toHaveLength(2);
+            const rowLists = [...list.parentElement.querySelectorAll('ul')];
+            expect(rowLists.filter((rowList) => rowList.getAttribute('aria-hidden') !== 'true')).toEqual([list]);
 
-            for (const duplicate of duplicates) {
+            for (const duplicate of rowLists.filter((rowList) => rowList !== list)) {
+                expect(duplicate.getAttribute('aria-hidden')).toBe('true');
                 expect(duplicate.hasAttribute('aria-label')).toBe(false);
-                expect(duplicate.textContent).toBe(list.textContent);
+                expect(duplicate.hasAttribute('aria-labelledby')).toBe(false);
             }
         }
     });

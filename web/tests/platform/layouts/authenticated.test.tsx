@@ -1,31 +1,70 @@
 // @vitest-environment happy-dom
 // @vitest-environment-options {"url":"http://localhost"}
-import { act } from 'react';
 import { user } from '../render';
+import { act, useEffect } from 'react';
 import { it, expect, vi } from 'vitest';
+import { withMounted } from '../../render';
 import { Route, Routes } from 'react-router';
 import { ApiProvider } from '@/components/api';
 import { AccountProvider } from '@/platform/account';
 import Layout from '@/platform/layouts/authenticated';
-import { renderStatic, withMounted } from '../../render';
 
-it('does not mount protected content while the identity request is unresolved', () => {
-    // Act
-    const output = renderStatic(
-        <AccountProvider>
-            <Routes>
-                <Route element={<Layout />}>
-                    <Route path="/user/organizations" element={<output>Private organizations</output>} />
-                </Route>
-            </Routes>
-        </AccountProvider>,
-        '/user/organizations'
-    );
+function ProtectedOrganizations({ onMount }: { onMount: () => void }) {
+    useEffect(onMount, [onMount]);
 
-    // Assert
-    expect(output.querySelector('[role="status"]')).not.toBeNull();
-    expect(output.querySelector('output')).toBeNull();
-    expect(output.querySelector('meta[name="robots"]')?.getAttribute('content')).toBe('noindex, nofollow');
+    return <output>Private organizations</output>;
+}
+
+it('mounts protected content only after the identity request succeeds', async () => {
+    // Arrange
+    const mounted = vi.fn();
+    let respond!: (response: Response) => void;
+    const response = new Promise<Response>((resolve) => {
+        respond = resolve;
+    });
+    const transport = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, options) => {
+        const request = input instanceof Request ? input : new Request(input, options);
+
+        if (new URL(request.url).pathname !== '/api/v1/me') throw new Error(`Unexpected request: ${request.url}`);
+
+        return await response;
+    });
+
+    try {
+        // Act
+        await withMounted(
+            <ApiProvider platformSession>
+                <AccountProvider>
+                    <Routes>
+                        <Route element={<Layout />}>
+                            <Route path="/user/organizations" element={<ProtectedOrganizations onMount={mounted} />} />
+                        </Route>
+                    </Routes>
+                </AccountProvider>
+            </ApiProvider>,
+            async (output) => {
+                // Assert
+                expect(output.querySelector('[role="status"]')).not.toBeNull();
+                expect(mounted).not.toHaveBeenCalled();
+                expect(output.querySelector('output')).toBeNull();
+                expect(document.querySelector('meta[name="robots"]')?.getAttribute('content')).toBe(
+                    'noindex, nofollow'
+                );
+
+                // Act
+                await act(async () => respond(Response.json(user)));
+
+                // Assert
+                await vi.waitFor(() => expect(mounted).toHaveBeenCalledOnce());
+                expect(output.querySelector('output')?.textContent).toBe('Private organizations');
+                expect(output.querySelector('[role="status"]')).toBeNull();
+            },
+            '/user/organizations'
+        );
+    } finally {
+        transport.mockRestore();
+        localStorage.removeItem('longlink:appearance');
+    }
 });
 
 it.each([401, 503])(
