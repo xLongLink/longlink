@@ -54,18 +54,25 @@ jobs:
                   echo "$HOME/.opencode/bin" >> "$GITHUB_PATH"
                   export PATH="$HOME/.opencode/bin:$PATH"
                   git clone --branch main https://github.com/Sau1707/openconfig.git "$HOME/.config/opencode"
+                  python3 - <<'PY'
+                  import json
+                  from pathlib import Path
+
+                  path = Path.home() / '.config/opencode/opencode.json'
+                  config = json.loads(path.read_text())
+                  config['model'] = 'opencode/seaglass-alpha-free'
+                  config.pop('small_model', None)
+                  path.write_text(json.dumps(config, indent=2) + '\n')
+                  PY
                   opencode --version
 
             - name: Implement cleanup findings
               if: steps.pending.outputs.skip != 'true'
               timeout-minutes: 35
-              env:
-                  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
               run: |
-                  test -n "$OPENAI_API_KEY" || { echo 'Missing OPENAI_API_KEY secret.'; exit 1; }
-                  opencode run --standalone --auto --agent loop "@cleanup Find simplification opportunities"
-                  opencode run --standalone --auto --continue --agent build "Implement everything High or Medium"
-                  opencode run --standalone --auto --continue --agent build "Generate a Markdown pull request description based on the final diff and actual verification results from this session. Write the description to the absolute path in CLEANUP_REPORT. Use the headings ## Summary and ## Validation. Include a summary of the implemented changes, checks that passed or failed, and any remaining limitations. If nothing changed, state that explicitly. Do not include secrets or raw environment output. Do not modify repository files, commit, push, or create a pull request."
+                  opencode run --standalone --auto --model opencode/seaglass-alpha-free#high --agent loop "@cleanup Find simplification opportunities"
+                  opencode run --standalone --auto --model opencode/seaglass-alpha-free#high --continue --agent build "Implement everything High or Medium"
+                  opencode run --standalone --auto --model opencode/seaglass-alpha-free#high --continue --agent build "Generate a Markdown pull request description based on the final diff and actual verification results from this session. Write the description to the absolute path in CLEANUP_REPORT. Use the headings ## Summary and ## Validation. Include a summary of the implemented changes, checks that passed or failed, and any remaining limitations. If nothing changed, state that explicitly. Do not include secrets or raw environment output. Do not modify repository files, commit, push, or create a pull request."
 
             - name: Validate the resulting changes
               if: steps.pending.outputs.skip != 'true'
