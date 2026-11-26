@@ -60,8 +60,30 @@ jobs:
 
                   path = Path.home() / '.config/opencode/opencode.json'
                   config = json.loads(path.read_text())
-                  config['model'] = 'opencode/deepseek-v4.1-flash-free'
+                  config['model'] = 'cheapllm/deepseek-v4.1-flash-1017'
                   config.pop('small_model', None)
+                  config.setdefault('policies', []).append(
+                      {'action': 'provider.use', 'resource': 'cheapllm', 'effect': 'allow'}
+                  )
+                  config.setdefault('providers', {})['cheapllm'] = {
+                      'name': 'CheapLLM',
+                      'package': '@opencode/ai/providers/openai-compatible',
+                      'settings': {
+                          'baseURL': 'https://cheapllm.shop/v1',
+                          'apiKey': '{env:CHEAPLLM_API_KEY}',
+                      },
+                      'models': {
+                          'deepseek-v4.1-flash-1017': {
+                              'compatibility': {
+                                  'reasoningField': 'reasoning_content',
+                                  'maxTokensField': 'max_tokens',
+                              },
+                              'variants': [
+                                  {'id': 'high', 'body': {'reasoning_effort': 'high'}},
+                              ],
+                          },
+                      },
+                  }
                   path.write_text(json.dumps(config, indent=2) + '\n')
                   PY
                   opencode --version
@@ -69,10 +91,13 @@ jobs:
             - name: Implement cleanup findings
               if: steps.pending.outputs.skip != 'true'
               timeout-minutes: 35
+              env:
+                  CHEAPLLM_API_KEY: ${{ secrets.CHEAPLLM_API_KEY }}
               run: |
-                  opencode run --standalone --auto --model opencode/deepseek-v4.1-flash-free#high --agent loop "@cleanup Find simplification opportunities"
-                  opencode run --standalone --auto --model opencode/deepseek-v4.1-flash-free#high --continue --agent build "Implement everything High or Medium"
-                  opencode run --standalone --auto --model opencode/deepseek-v4.1-flash-free#high --continue --agent build "Generate a Markdown pull request description based on the final diff and actual verification results from this session. Write the description to the absolute path in CLEANUP_REPORT. Use the headings ## Summary and ## Validation. Include a summary of the implemented changes, checks that passed or failed, and any remaining limitations. If nothing changed, state that explicitly. Do not include secrets or raw environment output. Do not modify repository files, commit, push, or create a pull request."
+                  test -n "$CHEAPLLM_API_KEY" || { echo 'Missing CHEAPLLM_API_KEY secret.'; exit 1; }
+                  opencode run --standalone --auto --model cheapllm/deepseek-v4.1-flash-1017#high --agent loop "@cleanup Find simplification opportunities"
+                  opencode run --standalone --auto --model cheapllm/deepseek-v4.1-flash-1017#high --continue --agent build "Implement everything High or Medium"
+                  opencode run --standalone --auto --model cheapllm/deepseek-v4.1-flash-1017#high --continue --agent build "Generate a Markdown pull request description based on the final diff and actual verification results from this session. Write the description to the absolute path in CLEANUP_REPORT. Use the headings ## Summary and ## Validation. Include a summary of the implemented changes, checks that passed or failed, and any remaining limitations. If nothing changed, state that explicitly. Do not include secrets or raw environment output. Do not modify repository files, commit, push, or create a pull request."
 
             - name: Validate the resulting changes
               if: steps.pending.outputs.skip != 'true'
