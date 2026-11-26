@@ -787,6 +787,32 @@ def test_build_solution_preserves_workspace_manifests_without_unrelated_sources(
     assert not context.joinpath(member_directories["unrelated"], "source.py").exists()
 
 
+@pytest.mark.parametrize("member_name", ["unrelated[member]", "unrelated\nmember"])
+def test_build_solution_copies_literal_manifest_only_paths(build_project: Path, member_name: str) -> None:
+    """Copy unrelated manifests literally without admitting their source files."""
+
+    # Arrange
+    workspace = build_project.parent
+    workspace.joinpath("pyproject.toml").write_text('[tool.uv.workspace]\nmembers = ["solution", "members/*"]\n', encoding="utf-8")
+    workspace.joinpath("uv.lock").write_text("workspace lock", encoding="utf-8")
+    member = workspace / "members" / member_name
+    member.mkdir(parents=True)
+    manifest = member / "pyproject.toml"
+    manifest.write_text('[project]\nname = "unrelated"\nversion = "0.1.0"\n', encoding="utf-8")
+    member.joinpath("source.py").write_text("VALUE = 1\n", encoding="utf-8")
+    context = workspace / "context"
+    metadata = build.read_pyproject(build_project)
+
+    # Act
+    build.build_solution(build_project, context, pyproject_data=metadata)
+
+    # Assert
+    copied_member = context / "members" / member_name
+    assert copied_member.joinpath("pyproject.toml").read_bytes() == manifest.read_bytes()
+    assert not copied_member.joinpath("source.py").exists()
+    assert member_name not in context.joinpath("Dockerfile").read_text(encoding="utf-8")
+
+
 def test_build_solution_requires_workspace_lockfile(build_project: Path) -> None:
     """Reject a missing workspace lock even when the Solution has its own lockfile."""
 
@@ -836,13 +862,12 @@ def test_build_solution_rechecks_lockfile_after_model_import(build_project: Path
         pytest.param("\nunsafe", "line breaks", id="newline"),
         pytest.param("\runsafe", "line breaks", id="carriage-return"),
         pytest.param("*unsafe", "glob characters", id="asterisk"),
-        # Docker COPY metacharacters must not be interpreted as source patterns.
         pytest.param("?unsafe", "glob characters", id="question-mark"),
         pytest.param("[unsafe", "glob characters", id="bracket"),
     ],
 )
-def test_build_solution_rejects_unsafe_workspace_paths(build_project: Path, directory_suffix: str, message: str) -> None:
-    """Reject workspace paths that could inject instructions or expand Docker COPY globs."""
+def test_build_solution_rejects_unsafe_solution_paths(build_project: Path, directory_suffix: str, message: str) -> None:
+    """Reject unsafe Solution paths embedded in Docker instructions."""
 
     # Arrange
     workspace = build_project.parent

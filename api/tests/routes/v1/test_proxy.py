@@ -181,9 +181,9 @@ async def test_solution_proxy_forwards_safe_content(
     # A logged-in maintainer using the public viewer still receives only anonymous safe read grants.
     catalog = Catalog(
         endpoints=[
-            Endpoint(key="GET /anything", path="/anything", method="GET", roles=["read"]),
-            Endpoint(key="GET /private", path="/private", method="GET", roles=["write"]),
-            Endpoint(key="POST /anything", path="/anything", method="POST", roles=["read"]),
+            Endpoint(path="/anything", method="GET", roles=["read"]),
+            Endpoint(path="/private", method="GET", roles=["write"]),
+            Endpoint(path="/anything", method="POST", roles=["read"]),
         ]
     )
     async with session_scope() as session:
@@ -724,9 +724,9 @@ async def test_solution_proxy_allows_organization_read_members(
     definition = Catalog.model_validate(
         {
             "endpoints": [
-                {"key": "GET /api/tasks", "path": "/api/tasks", "method": "GET", "roles": ["read", "write"]},
-                {"key": "POST /api/approve", "path": "/api/approve", "method": "POST", "roles": ["approver"]},
-                {"key": "POST /api/tasks", "path": "/api/tasks", "method": "POST", "roles": ["write"]},
+                {"path": "/api/tasks", "method": "GET", "roles": ["read", "write"]},
+                {"path": "/api/approve", "method": "POST", "roles": ["approver"]},
+                {"path": "/api/tasks", "method": "POST", "roles": ["write"]},
             ]
         }
     )
@@ -764,6 +764,39 @@ async def test_solution_proxy_allows_organization_read_members(
         assert response.status_code == 200
         assert response.json() == {}
         assert grants[-1] == expected
+
+
+@pytest.mark.parametrize(("field", "value"), [("key", "GET /api/tasks"), ("summary", "tasks")])
+@pytest.mark.parametrize("public", [False, True])
+async def test_solution_proxy_rejects_legacy_catalog_before_gateway_access(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
+    field: str,
+    value: str,
+    public: bool,
+) -> None:
+    """Fail closed rather than signing a normalized catalog for a legacy runtime guard."""
+
+    # Arrange
+    solution, _compute = await create_running_solution(users[0])
+    async with session_scope() as session:
+        record = await session.get(PermissionCatalog, solution.deployed_revision_id)
+        assert record is not None
+        record.catalog = {"endpoints": [{"path": "/api/tasks", "method": "GET", "roles": ["read"], field: value}]}
+        persisted = await session.get(Solution, solution.id)
+        assert persisted is not None
+        persisted.public = public
+        await session.commit()
+    reject_gateway_access(monkeypatch)
+    prefix = "/api/v1/public/solutions" if public else "/api/v1/solutions"
+
+    # Act
+    response = await clients[0].get(f"{prefix}/{solution.id}/proxy/api/tasks")
+
+    # Assert
+    assert response.status_code == 409
+    assert response.json() == {"detail": "Rebuild and deploy the Solution to load endpoint permissions"}
 
 
 async def test_solution_proxy_rejects_cross_organization_access(

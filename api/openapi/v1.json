@@ -4954,11 +4954,6 @@
       },
       "Endpoint": {
         "properties": {
-          "key": {
-            "type": "string",
-            "maxLength": 520,
-            "title": "Key"
-          },
           "path": {
             "type": "string",
             "maxLength": 512,
@@ -4985,18 +4980,11 @@
               "OPTIONS"
             ],
             "title": "Method"
-          },
-          "summary": {
-            "type": "string",
-            "maxLength": 256,
-            "title": "Summary",
-            "default": ""
           }
         },
         "additionalProperties": false,
         "type": "object",
         "required": [
-          "key",
           "path",
           "roles",
           "method"

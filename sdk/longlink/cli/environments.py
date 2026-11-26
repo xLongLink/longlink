@@ -1,6 +1,5 @@
 import sys
 import json
-import runpy
 import importlib
 from pathlib import Path
 from pydantic import BaseModel
@@ -32,20 +31,19 @@ def read_model(root: Path, environment_import: str) -> list[dict[str, object]]:
     if not isinstance(environment_model, type) or not issubclass(environment_model, BaseModel):
         raise ValueError(f"Environment model must be a Pydantic model: {environment_import}")
 
-    # Load the SDK schema without reserving the Solution's possible longlink package name.
-    metadata = runpy.run_path(str(Path(__file__).parents[1] / "metadata.py"))
-    environment_metadata = metadata["EnvironmentMetadata"]
-
     # Emit only runtime requirements, string aliases, and authored descriptions, never defaults.
     prefix = environment_model.model_config.get("env_prefix", "") if issubclass(environment_model, BaseSettings) else ""
     environments: list[dict[str, object]] = []
     for field_name, field in environment_model.model_fields.items():
-        env_entry = environment_metadata(
-            name=field.validation_alias if isinstance(field.validation_alias, str) and field.validation_alias else f"{prefix}{field_name}",
-            required=field.is_required(),
-            description=field.description,
-        )
-        environments.append(env_entry.model_dump(exclude_none=True))
+        env_entry: dict[str, object] = {
+            "name": field.validation_alias
+            if isinstance(field.validation_alias, str) and field.validation_alias
+            else f"{prefix}{field_name}",
+            "required": field.is_required(),
+        }
+        if field.description is not None:
+            env_entry["description"] = field.description
+        environments.append(env_entry)
     return environments
 
 

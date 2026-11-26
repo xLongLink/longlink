@@ -20,15 +20,7 @@ class RouteDecorators:
 
         # Preserve standard OpenAPI extensions while replacing method-based role defaults.
         if roles is not None:
-            if isinstance(roles, str) or not isinstance(roles, Sequence):
-                raise ValueError("Roles must be a sequence of names")
-            roles = list(roles)
-            if (
-                len(roles) > 64
-                or any(not isinstance(name, str) or permissions.ROLE_PATTERN.fullmatch(name) is None for name in roles)
-                or len(set(roles)) != len(roles)
-            ):
-                raise ValueError("Roles must be unique lowercase identifiers of at most 64 characters, with at most 64 roles")
+            roles = permissions.validate_roles(roles)
             kwargs["openapi_extra"] = {**(kwargs.get("openapi_extra") or {}), "x-longlink-roles": roles}
 
         def decorator(endpoint: DecoratedCallable) -> DecoratedCallable:

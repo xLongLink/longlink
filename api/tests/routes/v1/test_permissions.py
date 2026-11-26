@@ -38,9 +38,7 @@ async def permission_solution(users: tuple[User, User, User]) -> tuple[Solution,
     await create_organization(foreign_owner, name="unrelated-tenant")
 
     # Use actual revision creation and catalog persistence without deployment infrastructure.
-    catalog = Catalog.model_validate(
-        {"endpoints": [{"key": "POST /api/approve", "path": "/api/approve", "method": "POST", "roles": ["approver"]}]}
-    )
+    catalog = Catalog.model_validate({"endpoints": [{"path": "/api/approve", "method": "POST", "roles": ["approver"]}]})
     solution = await create_solution(organization, catalog=catalog)
     return solution, member, foreign_owner
 
@@ -203,3 +201,38 @@ async def test_member_access_requires_a_deployed_catalog(
     # Assert
     assert response.status_code == 409
     assert response.json() == {"detail": "Rebuild and deploy the Solution to load endpoint permissions"}
+
+
+@pytest.mark.parametrize(("field", "value"), [("key", "POST /api/approve"), ("summary", "approve")])
+async def test_legacy_catalog_requires_redeployment_before_permission_management(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient], permission_solution: tuple[Solution, User, User], field: str, value: str
+) -> None:
+    """Reject legacy permission reads and writes without changing stored access or catalog data."""
+
+    # Arrange
+    solution, member, _foreign_owner = permission_solution
+    legacy = {"endpoints": [{"path": "/api/approve", "method": "POST", "roles": ["approver"], field: value}]}
+    async with session_scope() as session:
+        record = await session.get(PermissionCatalog, solution.deployed_revision_id)
+        assert record is not None
+        record.catalog = legacy
+        session.add(SolutionMemberAccess(user_id=member.id, solution_id=solution.id, organization_id=solution.organization_id, role="read"))
+        await session.commit()
+    access_url = f"/api/v1/solutions/{solution.id}/members/{member.id}/access"
+
+    # Act
+    settings = await clients[1].get(f"/api/v1/solutions/{solution.id}/permissions")
+    access = await clients[1].get(access_url)
+    update = await clients[1].put(access_url, json={"role": "approver", "revision_id": str(solution.deployed_revision_id)})
+
+    # Assert
+    for response in (settings, access, update):
+        assert response.status_code == 409
+        assert response.json() == {"detail": "Rebuild and deploy the Solution to load endpoint permissions"}
+    async with session_scope() as session:
+        unchanged = await session.get(PermissionCatalog, solution.deployed_revision_id)
+        assignment = await session.get(SolutionMemberAccess, (member.id, solution.id))
+        assert unchanged is not None
+        assert unchanged.catalog == legacy
+        assert assignment is not None
+        assert assignment.role == "read"

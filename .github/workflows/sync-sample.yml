@@ -94,7 +94,6 @@ jobs:
 
                   gh auth setup-git
                   cd "$RUNNER_TEMP/sample"
-                  git init --initial-branch=scaffold
                   git remote add origin https://github.com/xlongLink/sample.git
                   git add --all
                   git -c user.name="longlink-bot" -c user.email="bot@longlink.dev" commit -m "chore: sync LongLink scaffold"

@@ -41,11 +41,23 @@ async def load_solution(session: AsyncSession, solution_id: UUID, user_id: UUID)
     return solution
 
 
+def _parse_catalog(catalog: dict[str, object]) -> permissions.Catalog:
+    """Reject legacy manifests before validating deployed endpoint permissions."""
+
+    # Legacy runtime guards use a different digest; never normalize their catalogs.
+    endpoints = catalog.get("endpoints")
+    if isinstance(endpoints, list) and any(
+        isinstance(endpoint, dict) and ("key" in endpoint or "summary" in endpoint) for endpoint in endpoints
+    ):
+        raise HTTPException(status_code=409, detail="Rebuild and deploy the Solution to load endpoint permissions")
+    return permissions.Catalog.model_validate(catalog)
+
+
 async def catalog(session: AsyncSession, solution: Solution) -> permissions.Catalog | None:
     """Select defaults only from the successfully deployed revision."""
 
     record = await session.get(PermissionCatalog, solution.deployed_revision_id) if solution.deployed_revision_id else None
-    return permissions.Catalog.model_validate(record.catalog) if record is not None else None
+    return _parse_catalog(record.catalog) if record is not None else None
 
 
 async def member(session: AsyncSession, solution: Solution, user_id: UUID) -> dict[str, object]:
@@ -55,7 +67,7 @@ async def member(session: AsyncSession, solution: Solution, user_id: UUID) -> di
 
     # Read the deployed catalog and this member's assignment without identity-map state.
     result = await session.execute(
-        select(col(PermissionCatalog.revision_id), col(SolutionMemberAccess.role))
+        select(col(PermissionCatalog.revision_id), col(PermissionCatalog.catalog), col(SolutionMemberAccess.role))
         .outerjoin(
             SolutionMemberAccess, (col(SolutionMemberAccess.user_id) == user_id) & (col(SolutionMemberAccess.solution_id) == solution.id)
         )
@@ -64,6 +76,7 @@ async def member(session: AsyncSession, solution: Solution, user_id: UUID) -> di
     access = result.one_or_none()
     if access is None:
         raise HTTPException(status_code=409, detail="Rebuild and deploy the Solution to load endpoint permissions")
+    _parse_catalog(access.catalog)
     return {"role": access.role, "revision_id": access.revision_id}
 
 
