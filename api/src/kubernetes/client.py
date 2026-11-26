@@ -1,10 +1,9 @@
 import kr8s
 import asyncio
 from typing import cast
-from contextlib import AsyncExitStack, asynccontextmanager
+from contextlib import AsyncExitStack
 from kr8s.asyncio import Api
-from collections.abc import AsyncGenerator
-from kr8s.asyncio.objects import Service, Namespace
+from kr8s.asyncio.objects import Namespace
 
 # Retain each loop's borrowed clients until the Platform lifespan stops their consumers.
 _api_clients: dict[asyncio.AbstractEventLoop, set[Api]] = {}
@@ -25,7 +24,7 @@ async def dispose_clients() -> None:
 
 # Keep shared API connections separate from operation-owned tunnels.
 class Kubernetes:
-    """Borrow one Compute API connection and provide workflow-owned Kubernetes tunnels.
+    """Borrow one Compute API connection for resource workflows.
 
     Database resources have dedicated Organization namespaces; Solutions run in
     the Organization compute namespace. Resource operations borrow this client's
@@ -60,13 +59,3 @@ class Kubernetes:
         if not isinstance(uid, str) or not uid:
             raise RuntimeError("Kubernetes cluster identity is unavailable")
         return uid
-
-    @asynccontextmanager
-    async def forward_storage(self) -> AsyncGenerator[int, None]:
-        """Own the private RustFS administration tunnel for one storage workflow."""
-
-        # Forward the cluster service directly so administrator requests never traverse the public storage proxy.
-        service = Service("rustfs-svc", namespace="rustfs", api=await self.api())
-        await service.refresh()
-        async with service.portforward(9000, local_port="auto") as port:
-            yield port

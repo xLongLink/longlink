@@ -10,6 +10,7 @@ from src.database.models.users import User
 from src.database.models.solutions import Solution
 from src.database.models.association import UserOrganization
 from src.database.models.permissions import PermissionCatalog, SolutionMemberAccess
+from src.database.models.organizations import Organization
 
 
 @pytest_asyncio.fixture
@@ -144,6 +145,36 @@ async def test_administrator_can_assign_declared_role_and_explicitly_disable_mem
         disabled_access = await session.get(SolutionMemberAccess, (member.id, solution.id))
         assert disabled_access is not None
         assert disabled_access.role is None
+
+
+async def test_unassigned_member_does_not_inherit_other_user_or_solution_access(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User], permission_solution: tuple[Solution, User, User]
+) -> None:
+    """Keep absent assignments null even when both join dimensions have unrelated grants."""
+
+    # Arrange
+    solution, member, _foreign_owner = permission_solution
+    async with session_scope() as session:
+        organization = await session.get(Organization, solution.organization_id)
+        assert organization is not None
+    other_solution = await create_solution(organization, name="other")
+    async with session_scope() as session:
+        session.add_all(
+            [
+                SolutionMemberAccess(user_id=users[2].id, solution_id=solution.id, organization_id=solution.organization_id, role="write"),
+                SolutionMemberAccess(
+                    user_id=member.id, solution_id=other_solution.id, organization_id=solution.organization_id, role="read"
+                ),
+            ]
+        )
+        await session.commit()
+
+    # Act
+    response = await clients[1].get(f"/api/v1/solutions/{solution.id}/members/{member.id}/access")
+
+    # Assert
+    assert response.status_code == 200
+    assert response.json() == {"role": None, "revision_id": str(solution.deployed_revision_id)}
 
 
 @pytest.mark.parametrize("missing", ["revision", "catalog"])

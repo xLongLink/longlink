@@ -183,8 +183,10 @@ async def reconciling(organization_id: UUID) -> AsyncGenerator[Lease | None]:
 async def prepare(lease: Lease, organization: Organization, cluster: Kubernetes, database_storage_class: str) -> None:
     """Prepare the captured database assignment under the caller's admitted lease."""
 
-    # An available database needs no repeated PostgreSQL initialization.
+    # Verify available infrastructure without repeating initialization or changing its published state.
     if organization.database_state == DatabaseState.available:
+        await lease.check()
+        await database_resources.wait_ready(cluster, organization.id)
         return
     organization_id = organization.id
 

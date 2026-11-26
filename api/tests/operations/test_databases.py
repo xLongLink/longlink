@@ -2,7 +2,7 @@ import pytest
 import asyncio
 from uuid import UUID, uuid4
 from types import SimpleNamespace
-from conftest import DatabasePostgres
+from conftest import DatabasePostgres, reject_provider_construction
 from datetime import UTC, datetime, timedelta
 from factories import create_organization
 from src.operations import databases
@@ -105,6 +105,57 @@ async def test_prepare_verifies_readiness_before_opening_postgres(
         persisted = await session.get(Organization, organization.id)
         assert persisted is not None
         assert persisted.database_state == DatabaseState.available
+
+
+@pytest.mark.usefixtures("database_runtime")
+@pytest.mark.parametrize("ready", [True, False], ids=["ready", "unready"])
+async def test_prepare_available_database_checks_readiness_without_reinitializing(
+    users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch, ready: bool
+) -> None:
+    """Own existing database readiness without rewriting its published availability."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+    async with session_scope() as session:
+        current = await session.get(Organization, organization.id)
+        assert current is not None
+        current.database_state = DatabaseState.available
+        await session.commit()
+        target = await organizations.infrastructure(session, organization.id)
+        assert target is not None
+        snapshot, compute = target
+    cluster = databases.Kubernetes(compute.kubeconfig)
+    verified = False
+
+    async def wait_ready(client: object, organization_id: UUID) -> None:
+        """Check the captured infrastructure without opening SQL."""
+
+        nonlocal verified
+        assert client is cluster
+        assert organization_id == organization.id
+        verified = True
+        if not ready:
+            raise RuntimeError("database is unready")
+
+    monkeypatch.setattr(databases.database_resources, "wait_ready", wait_ready)
+    reject_provider_construction(monkeypatch, (databases.database_resources, "apply"), (databases.database_resources.postgres, "Postgres"))
+
+    # Act
+    async with databases.reconciling(organization.id) as lease:
+        assert lease is not None
+        if ready:
+            await databases.prepare(lease, snapshot, cluster, compute.database_storage_class)
+        else:
+            with pytest.raises(RuntimeError, match="database is unready"):
+                await databases.prepare(lease, snapshot, cluster, compute.database_storage_class)
+
+    # Assert
+    assert verified
+    async with session_scope() as session:
+        current = await session.get(Organization, organization.id)
+        assert current is not None
+        assert current.database_state == DatabaseState.available
+        assert await session.get(OrganizationActivity, organization.id) is None
 
 
 @pytest.mark.usefixtures("database_runtime")

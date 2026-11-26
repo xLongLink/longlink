@@ -19,6 +19,7 @@ from src.models.organizations import (
     OrganizationInvitationResponse,
     OrganizationMemberAccessResponse,
 )
+from src.database.models.users import User
 from src.database.models.solutions import Solution
 from src.database.models.association import UserOrganization
 from src.database.models.invitations import OrganizationInvitation
@@ -55,15 +56,26 @@ async def get_organization_solutions(session: auth.Session, membership: auth.Org
 async def get_organization_usage(session: auth.Session, membership: auth.OrganizationMember) -> dict[str, int | bool | str | None]:
     """Show current users, Solutions, and the same monthly rates used for invoicing."""
 
-    # Read membership counts and payment authorization for this Organization.
-    users = await organizations.member_count(session, membership.organization_id)
-    solutions = await session.scalar(
+    # Scope accepted active members and active Solutions to this Organization.
+    users = (
+        select(func.count())
+        .select_from(UserOrganization)
+        .join(User, col(User.id) == col(UserOrganization.user_id))
+        .where(col(UserOrganization.organization_id) == membership.organization_id, col(User.deleted_at).is_(None))
+        .scalar_subquery()
+    )
+    solutions = (
         select(func.count())
         .select_from(Solution)
         .where(col(Solution.organization_id) == membership.organization_id, col(Solution.deleted_at).is_(None))
+        .scalar_subquery()
     )
+
+    # Read counts, capacity, and payment authorization in one database snapshot.
     capacity = await session.execute(
         select(
+            users.label("users"),
+            solutions.label("solutions"),
             col(Organization.compute_ram_bytes),
             col(Organization.storage_bytes),
             col(Organization.compute_cpu_millicores),
@@ -74,7 +86,7 @@ async def get_organization_usage(session: auth.Session, membership: auth.Organiz
             col(Organization.status),
         ).where(col(Organization.id) == membership.organization_id)
     )
-    return {**capacity.mappings().one(), "users": users, "solutions": solutions, "stripe_enabled": env.stripe_enabled}
+    return {**capacity.mappings().one(), "stripe_enabled": env.stripe_enabled}
 
 
 @router.patch("/organizations/{organization_id}/usage", response_model=OrganizationUsage)
