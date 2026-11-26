@@ -17,7 +17,8 @@ STRUCTURE:
 │   ├── views/        # View (UI) files
 │   ├── routes/       # API routes - One file per resource
 │   ├── schemas/      # Pydantic schemas - One file per schema
-│   ├── utils/        # Reusable helpers and integrations - One file per domain or service
+│   ├── services/     # Business logic and integrations - One file per domain or service
+│   ├── utils/        # Generic reusable helpers - One file per domain
 │   └── envs.py       # Environments
 ├── tests/            # Project tests
 └── main.py           # Entry point
@@ -31,11 +32,12 @@ RULES:
 - USE `ctx.user` to access the current user informations
 - DO run formatting, linting, type checking, and relevant existing tests.
 
-UTILS:
-- USE `src/utils/` for reusable helpers and integrations, with one module per domain or service (`dates.py`, `mail.py`, `s3.py`); AVOID catch-all modules.
+SERVICES AND UTILS:
+- USE `src/services/` for business logic and integrations, with one module per domain or service (`tasks.py`, `mail.py`, `s3.py`).
+- USE `src/utils/` for generic reusable helpers (`dates.py`); AVOID business logic, integrations, and catch-all modules.
 - REUSE existing modules; keep single-use logic with its caller unless extraction improves clarity.
-- IMPORT modules (`from src.utils import dates`) and call `dates.next_month(...)`; AVOID re-exports.
-- KEEP utilities independent of routes and views, with explicit inputs; PREFER functions unless state or resource lifecycles require classes.
+- IMPORT modules (`from src.services import mail`, `from src.utils import dates`) and call their functions; AVOID re-exports.
+- KEEP services and utilities independent of routes and views, with explicit inputs; PREFER functions unless state or resource lifecycles require classes.
 
 PYTHON:
 - AVOID renaming imports.
