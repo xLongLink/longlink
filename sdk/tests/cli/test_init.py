@@ -26,6 +26,7 @@ def test_init_copies_github_project_scaffold_with_custom_name(tmp_path: Path, fo
             "src/views",
             "src/routes",
             "src/schemas",
+            "src/services",
             "tests/test_app.py",
             ".github/workflows/release.yml",
             ".github/workflows/tests.yml",
