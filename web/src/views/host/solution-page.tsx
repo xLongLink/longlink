@@ -76,7 +76,7 @@ export function SolutionPage({
         views
             .filter((view) => view.route !== '/' && !view.route.includes('/', 1) && !view.route.includes('/:'))
             .map((view) => ({ route: view.route, label: viewLabel(view.path), icon: undefined }));
-    const activeView = routePath || navigationTabs.length === 0 ? match?.route.view : undefined;
+    const activeView = match?.route.view;
 
     const activeViewTitle = activeView
         ? (navigationTabs.find((tab) => tab.route === activeView.route)?.label ?? viewLabel(activeView.path))

@@ -7,6 +7,83 @@ import { ApiErrorContext } from '@/lib/errors';
 import userEvent from '@testing-library/user-event';
 import SolutionPermissions from '@/platform/routes/orgs/dialogs/solution-permissions';
 
+it.each(['read', null])('discards a reverted role draft when the saved role is %s', async (savedRole) => {
+    // Arrange
+    const revision = '00000000-0000-4000-8000-000000000001';
+    const member = '00000000-0000-4000-8000-000000000002';
+    const writes: unknown[] = [];
+    const close = vi.fn();
+    const reportError = vi.fn();
+    const user = userEvent.setup();
+    const transport = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, options) => {
+        const request = input instanceof Request ? input : new Request(input, options);
+        const path = new URL(request.url).pathname;
+
+        if (request.method === 'GET' && path === '/api/v1/solutions/orders/permissions') {
+            return Response.json({ roles: ['read', 'write'], revision_id: revision });
+        }
+
+        if (request.method === 'GET' && path === '/api/v1/organizations/acme/members') {
+            return Response.json([
+                { user: { id: member, name: 'Alex', email: 'alex@example.com', avatar: '' }, role: 'read' }
+            ]);
+        }
+
+        if (path === `/api/v1/solutions/orders/members/${member}/access`) {
+            if (request.method === 'GET') return Response.json({ role: savedRole, revision_id: revision });
+            if (request.method === 'PUT') {
+                writes.push(await request.json());
+                return new Response(null, { status: 204 });
+            }
+        }
+
+        throw new Error(`Unexpected request: ${request.method} ${path}`);
+    });
+
+    try {
+        await withMounted(
+            <ApiErrorContext value={reportError}>
+                <Suspense fallback="Loading permissions">
+                    <SolutionPermissions organizationId="acme" solutionId="orders" onClose={close} />
+                </Suspense>
+            </ApiErrorContext>,
+            async (output) => {
+                await vi.waitFor(() =>
+                    expect(output.querySelector('[aria-label="Role for Alex"]')?.textContent).toBe(
+                        savedRole ?? 'No access'
+                    )
+                );
+                const trigger = output.querySelector<HTMLButtonElement>('[aria-label="Role for Alex"]');
+                const save = Array.from(output.querySelectorAll('button')).find(
+                    (button) => button.textContent === 'Save'
+                );
+                if (!trigger || !save) throw new Error('Expected permissions controls');
+
+                // Act
+                for (const role of ['write', savedRole ?? 'No access']) {
+                    await act(async () => user.click(trigger));
+                    const list = document.getElementById(trigger.getAttribute('aria-controls') ?? '');
+                    const option = Array.from(list?.querySelectorAll<HTMLElement>('[role="option"]') ?? []).find(
+                        (item) => item.textContent === role
+                    );
+                    if (!option) throw new Error(`Expected role option ${role}`);
+                    await act(async () => user.click(option));
+
+                    // Assert
+                    expect(trigger.textContent).toBe(role);
+                    expect(save.disabled || save.getAttribute('aria-disabled') === 'true').toBe(role !== 'write');
+                }
+
+                await act(async () => user.click(save));
+                expect(writes).toEqual([]);
+                expect(close).not.toHaveBeenCalled();
+            }
+        );
+    } finally {
+        transport.mockRestore();
+    }
+});
+
 it('retains an explicit no-access draft after save failure and retries against the deployed revision', async () => {
     // Only transport is replaced: queries, selection, disabled save state, and retry stay real.
     const revision = '00000000-0000-4000-8000-000000000001';

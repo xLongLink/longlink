@@ -1,13 +1,14 @@
 import type { z } from 'zod';
+import { useRef } from 'react';
 import { api } from '@/lib/api';
 import { Info, X } from 'lucide-react';
+import { useFilters } from './use-filters';
 import { useMetadata } from './use-metadata';
 import { useApi } from '@/lib/hooks/use-api';
 import { Link } from '@/components/longlink/action/link';
 import { Input } from '@/components/longlink/form/input';
 import { Text } from '@/components/longlink/display/text';
 import { Stack } from '@/components/longlink/layout/stack';
-import { useDeferredValue, useRef, useState } from 'react';
 import { Badge } from '@/components/longlink/display/badge';
 import { Button } from '@/components/longlink/action/button';
 import { Dialog } from '@/components/longlink/layout/dialog';
@@ -31,29 +32,25 @@ type OrganizationIdentity = z.infer<typeof zOrganizationIdentity>;
 
 /** Lists organizations and confirms administrator deletion. */
 export default function Organizations() {
-    const [filters, setFilters] = useState({ search: '', pagination: { pageIndex: 0, pageSize: 25 } });
-    const { search, pagination } = useDeferredValue(filters);
+    const { search, pagination, suffix, setSearch, setPagination } = useFilters();
     const input = useRef<HTMLInputElement>(null);
-    const suffix = `?page=${pagination.pageIndex + 1}&page_size=25&search=${encodeURIComponent(search.trim())}`;
     const searchField = (
         <Stack direction="horizontal" gap={1} align="center">
             <Input
                 ref={input}
                 aria-label="Search organizations"
                 placeholder="Search by name"
-                value={filters.search}
-                onChange={(event) =>
-                    setFilters({ search: event.target.value, pagination: { pageIndex: 0, pageSize: 25 } })
-                }
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
             />
-            {filters.search !== '' && (
+            {search !== '' && (
                 <Button
                     size="icon"
                     variant="ghost"
                     aria-label="Clear Search organizations"
                     onMouseDown={(event) => event.preventDefault()}
                     onClick={() => {
-                        setFilters({ search: '', pagination: { pageIndex: 0, pageSize: 25 } });
+                        setSearch('');
                         input.current?.focus({ preventScroll: true });
                     }}
                 >
@@ -111,12 +108,8 @@ export default function Organizations() {
         getRowId: (organization) => organization.id,
         manualPagination: true,
         rowCount: organizations.total,
-        state: { pagination: filters.pagination },
-        onPaginationChange: (updater) =>
-            setFilters((current) => ({
-                ...current,
-                pagination: typeof updater === 'function' ? updater(current.pagination) : updater
-            })),
+        state: { pagination },
+        onPaginationChange: setPagination,
         enableSorting: false
     });
 

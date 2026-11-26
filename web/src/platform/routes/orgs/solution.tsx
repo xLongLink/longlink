@@ -13,25 +13,16 @@ import { Empty } from '@/components/longlink/display/empty';
 import { Heading } from '@/components/longlink/display/heading';
 import { OrganizationSwitcher } from '@/components/ui/organization-switcher';
 import { OrganizationBreadcrumb } from '@/components/ui/organization-breadcrumb';
+import { zUserOrganizationMembership } from '@/lib/generated/platform-api-v1/zod.gen';
+import { useOrganizationSolutions } from '@/platform/hooks/use-organization-solutions';
 import { CodeBlock, CodeBlockContent, CodeBlockCopyButton } from '@/components/reui/code-block/code-block';
-import { zUserOrganizationMembership, zOrganizationSolutionSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Renders one proxy-backed organization solution after membership resolves. */
 export default function OrganizationSolution() {
     const { solution = '' } = useParams();
     const membership = useOutletContext<z.output<typeof zUserOrganizationMembership>>();
 
-    // Fetch accessible solutions after membership resolves and poll pending deployments.
-    const [solutions] = useApi(
-        `/api/v1/organizations/${membership.organization.id}/solutions`,
-        zOrganizationSolutionSummary.array(),
-        {
-            refetchInterval: (query) =>
-                query.state.data?.some((solution) => solution.status === 'creating' || solution.deployment_pending)
-                    ? 5000
-                    : false
-        }
-    );
+    const [solutions] = useOrganizationSolutions(membership.organization.id);
 
     // Keep the solution lookup and its existence check together.
     const solutionAccess = solutions.find((item) => item.id === solution);

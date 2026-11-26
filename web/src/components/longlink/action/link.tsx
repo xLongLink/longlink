@@ -47,9 +47,6 @@ type LinkProps = (NavigationProps | CallbackProps) &
 
 /** Renders navigation as an anchor and callback actions as link-styled buttons. */
 export function Link(props: LinkProps) {
-    const navigationContext = useContext(LinkNavigationContext);
-    const { isPending, inFlight: downloadInFlight, run } = useConfirmAction();
-    const router = useInRouterContext();
     const {
         variant = 'link',
         size = variant === 'link' ? null : 'default',
@@ -69,6 +66,18 @@ export function Link(props: LinkProps) {
         return <ActionLink {...link} ref={elementRef} className={className} />;
     }
 
+    return <NavigationLink {...link} ref={elementRef} className={className} isExternalLink={isExternalLink} />;
+}
+
+function NavigationLink({
+    isExternalLink = false,
+    ref: elementRef,
+    className,
+    ...link
+}: NavigationProps & { ref?: RefCallback<HTMLElement>; className: string }) {
+    const navigationContext = useContext(LinkNavigationContext);
+    const { isPending, inFlight: downloadInFlight, run } = useConfirmAction();
+    const router = useInRouterContext();
     const {
         disabled,
         onClick,
