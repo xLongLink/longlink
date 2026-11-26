@@ -350,19 +350,50 @@ it('commits callback state updates before the returned promise settles', async (
 });
 
 it.each([false, true])('recovers from an already-reported action failure (async: %s)', async (asynchronous) => {
+    // Arrange
     const failure = new ReportedError('Request already reported');
+    const action = vi.fn();
 
-    const action = vi.fn(() => {
-        if (asynchronous) return Promise.reject(failure);
-        throw failure;
-    });
+    function Action() {
+        const [message, setMessage] = useState('Ready');
 
-    await withMounted(<Link onClick={action}>Retry</Link>, async (output) => {
-        await act(async () => output.querySelector('button')?.click());
-        expect(output.textContent).toBe('Retry');
-        expect(output.querySelector('button')?.hasAttribute('aria-busy')).toBe(false);
-        await act(async () => output.querySelector('button')?.click());
+        return (
+            <>
+                <output>{message}</output>
+                <Link
+                    onClick={() => {
+                        action();
+                        if (action.mock.calls.length === 1) {
+                            if (asynchronous) return Promise.reject(failure);
+                            throw failure;
+                        }
+                        setMessage('Saved');
+                        if (asynchronous) return Promise.resolve();
+                    }}
+                >
+                    Retry
+                </Link>
+            </>
+        );
+    }
+
+    await withMounted(<Action />, async (output) => {
+        const control = output.querySelector('button');
+
+        if (!control) throw new Error('Expected retry action');
+        const user = userEvent.setup();
+
+        // Act
+        await act(async () => user.click(control));
+
+        // Assert
+        expect(action).toHaveBeenCalledTimes(1);
+        expect(output.querySelector('output')?.textContent).toBe('Ready');
+        expect(control.hasAttribute('aria-busy')).toBe(false);
+        await act(async () => user.click(control));
         expect(action).toHaveBeenCalledTimes(2);
+        expect(output.querySelector('output')?.textContent).toBe('Saved');
+        expect(control.hasAttribute('aria-busy')).toBe(false);
     });
 });
 

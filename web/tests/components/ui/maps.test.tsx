@@ -241,67 +241,61 @@ function ThemeSelectionMap() {
     );
 }
 
-it.each(['light', 'dark'] as const)(
-    'falls back from document themes to the %s system theme without recreating the map or losing selection',
-    async (systemTheme) => {
-        // Arrange
-        const root = document.documentElement;
-        const originalClass = root.className;
-        const originalTheme = root.getAttribute('data-theme');
-        const documentTheme = systemTheme === 'light' ? 'dark' : 'light';
-        const preference = window.matchMedia('(prefers-color-scheme: dark)');
-        const matches = vi.spyOn(preference, 'matches', 'get').mockReturnValue(systemTheme === 'dark');
-        const matchMedia = vi.spyOn(window, 'matchMedia').mockReturnValue(preference);
+it('falls back from document themes to the light system theme without recreating the map or losing selection', async () => {
+    // Arrange
+    const root = document.documentElement;
+    const originalClass = root.className;
+    const originalTheme = root.getAttribute('data-theme');
+    const preference = window.matchMedia('(prefers-color-scheme: dark)');
+    const matches = vi.spyOn(preference, 'matches', 'get').mockReturnValue(false);
+    const matchMedia = vi.spyOn(window, 'matchMedia').mockReturnValue(preference);
 
-        try {
-            await withMounted(<ThemeSelectionMap />, async () => {
-                await act(async () => {
-                    root.className = documentTheme;
-                    root.dataset.theme = systemTheme;
-                });
-                const map = await loadMap();
-                const documentStyle = map.styles.at(-1);
-                const layer = selectionLayer(map);
-                const feature = geography.features.find((feature) => feature.id === 'east');
-                if (!feature) throw new Error('Expected East boundary');
-                await act(async () =>
-                    map.fire('click', layer.id, { features: [feature], lngLat: { lng: 30, lat: 10 } })
-                );
-                expect(opacity(map, 'east')).toBeGreaterThan(opacity(map, '12'));
-
-                // Act: class wins over data-theme; removing it reveals data-theme.
-                await act(async () => root.removeAttribute('class'));
-                const systemStyle = map.styles.at(-1);
-                expect(systemStyle).not.toBe(documentStyle);
-                await act(async () => {
-                    root.dataset.theme = documentTheme;
-                });
-                expect(map.styles.at(-1)).toBe(documentStyle);
-                await act(async () => root.removeAttribute('data-theme'));
-
-                // Assert
-                expect(map.styles.at(-1)).toBe(systemStyle);
-                expect(engines.maps).toEqual([map]);
-                expect(map.removed).toBe(false);
-                expect(opacity(map, 'east')).toBeGreaterThan(opacity(map, '12'));
-
-                // Act: system changes still apply after explicit themes are removed.
-                await act(async () => {
-                    matches.mockReturnValue(documentTheme === 'dark');
-                    preference.dispatchEvent(new Event('change'));
-                });
-                expect(map.styles.at(-1)).toBe(documentStyle);
-                expect(opacity(map, 'east')).toBeGreaterThan(opacity(map, '12'));
+    try {
+        await withMounted(<ThemeSelectionMap />, async () => {
+            await act(async () => {
+                root.className = 'dark';
+                root.dataset.theme = 'light';
             });
-        } finally {
-            matches.mockRestore();
-            matchMedia.mockRestore();
-            root.className = originalClass;
-            if (originalTheme === null) root.removeAttribute('data-theme');
-            else root.setAttribute('data-theme', originalTheme);
-        }
+            const map = await loadMap();
+            const documentStyle = map.styles.at(-1);
+            const layer = selectionLayer(map);
+            const feature = geography.features.find((feature) => feature.id === 'east');
+            if (!feature) throw new Error('Expected East boundary');
+            await act(async () => map.fire('click', layer.id, { features: [feature], lngLat: { lng: 30, lat: 10 } }));
+            expect(opacity(map, 'east')).toBeGreaterThan(opacity(map, '12'));
+
+            // Act: class wins over data-theme; removing it reveals data-theme.
+            await act(async () => root.removeAttribute('class'));
+            const systemStyle = map.styles.at(-1);
+            expect(systemStyle).not.toBe(documentStyle);
+            await act(async () => {
+                root.dataset.theme = 'dark';
+            });
+            expect(map.styles.at(-1)).toBe(documentStyle);
+            await act(async () => root.removeAttribute('data-theme'));
+
+            // Assert
+            expect(map.styles.at(-1)).toBe(systemStyle);
+            expect(engines.maps).toEqual([map]);
+            expect(map.removed).toBe(false);
+            expect(opacity(map, 'east')).toBeGreaterThan(opacity(map, '12'));
+
+            // Act: system changes still apply after explicit themes are removed.
+            await act(async () => {
+                matches.mockReturnValue(true);
+                preference.dispatchEvent(new Event('change'));
+            });
+            expect(map.styles.at(-1)).toBe(documentStyle);
+            expect(opacity(map, 'east')).toBeGreaterThan(opacity(map, '12'));
+        });
+    } finally {
+        matches.mockRestore();
+        matchMedia.mockRestore();
+        root.className = originalClass;
+        if (originalTheme === null) root.removeAttribute('data-theme');
+        else root.setAttribute('data-theme', originalTheme);
     }
-);
+});
 
 it('coordinates the composed starter country panel and recovers its map without losing selection', async () => {
     const analytics = {

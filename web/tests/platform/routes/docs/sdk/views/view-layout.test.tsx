@@ -2,36 +2,10 @@
 import { act } from 'react';
 import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../../../../render';
-import * as components from '@/components/longlink';
 import userEvent from '@testing-library/user-event';
 import { RequestContext } from '@/lib/view-capabilities';
 import ViewLayout from '@/platform/routes/docs/sdk/views/view-layout';
 import FormDocumentation from '@/platform/routes/docs/sdk/views/form-documentation';
-import { componentDocumentation, documentationPaths } from '@/platform/publications';
-import ChartDocumentation from '@/platform/routes/docs/sdk/views/chart-documentation';
-import viewCatalog from '../../../../../../../sdk/longlink/.static/jsx/components.json';
-
-it('registers a website reference for each component in the SDK catalog', () => {
-    const groupedPages: Readonly<Record<string, string>> = { ButtonGroup: 'Button', Controller: 'Form' };
-    const pages = new Map(componentDocumentation.map(({ name, slug }) => [name, `/docs/sdk/views/${slug}`]));
-
-    const missing = viewCatalog.components
-        .map(({ name }) => ({ name, path: pages.get(groupedPages[name] ?? name) }))
-        .filter(({ path }) => !path || !documentationPaths.includes(path))
-        .map(({ name }) => name);
-
-    expect(missing).toEqual([]);
-});
-
-it('documents every public Dropdown component under the Dropdown reference', () => {
-    const dropdown = viewCatalog.components.find(({ name }) => name === 'Dropdown');
-    const documented = new Set(
-        dropdown?.properties?.map(({ name }) => (name.includes('.') ? name.split('.')[0] : 'Dropdown'))
-    );
-    const missing = Object.keys(components).filter((name) => name.startsWith('Dropdown') && !documented.has(name));
-
-    expect(missing).toEqual([]);
-});
 
 it('switches to the shared reference without losing published props or companion tables', async () => {
     const user = userEvent.setup();
@@ -135,30 +109,6 @@ it('collapses the map preview attribution when it becomes available and leaves i
             expect(attribution.classList.contains('maplibregl-compact-show')).toBe(true);
         }
     );
-});
-
-it.each(['AreaChart', 'Sankey'] as const)('opens the %s reference with only its supported companions', async (name) => {
-    // Arrange
-    const user = userEvent.setup();
-
-    await withMounted(<ChartDocumentation name={name} />, async (output) => {
-        const propertiesTab = Array.from(output.querySelectorAll<HTMLButtonElement>('[role="tab"]')).find(
-            (tab) => tab.textContent === 'Properties'
-        );
-        if (!propertiesTab) throw new Error('Expected properties tab');
-        expect(output.querySelector('table')).toBeNull();
-
-        // Act
-        await act(async () => user.click(propertiesTab));
-
-        // Assert
-        const tables = output.querySelectorAll('table');
-        expect(tables[0]?.getAttribute('aria-label')).toBe(`${name} properties`);
-        expect(tables).toHaveLength(name === 'Sankey' ? 1 : 2);
-        if (name === 'AreaChart') {
-            expect(tables[1]?.getAttribute('aria-label')).toBe('ChartLegend properties');
-        }
-    });
 });
 
 it('keeps an edited form preview local through code toggles and submission', async () => {

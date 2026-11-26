@@ -188,6 +188,13 @@ it('refreshes literal row keys without accepting row styling or treating zero as
         expect(output.querySelector('[role="status"]')).toBeNull();
         expect(output.querySelector('[role="alert"]')).toBeNull();
         expect(output.querySelector('svg')).not.toBeNull();
+        await act(async () => chart.focus());
+        await act(async () => user.keyboard('{Enter}'));
+        await vi.waitFor(() => {
+            const tooltip = output.querySelector('.recharts-tooltip-wrapper');
+            expect(tooltip?.textContent).toContain('Shipments0');
+            expect(tooltip?.textContent).not.toContain('12');
+        });
 
         await act(async () => user.click(invalid));
         expect(output.querySelector('[role="alert"]')?.textContent).toContain('finite numbers');
@@ -196,6 +203,14 @@ it('refreshes literal row keys without accepting row styling or treating zero as
         await act(async () => user.click(recover));
         await vi.waitFor(() => expect(output.querySelector('svg')).not.toBeNull());
         expect(output.querySelector('[role="alert"]')).toBeNull();
+        const recoveredChart = output.querySelector<SVGSVGElement>('svg[role="application"]');
+
+        if (!recoveredChart) throw new Error('Expected recovered keyboard-accessible chart');
+        await act(async () => recoveredChart.focus());
+        await act(async () => user.keyboard('{ArrowRight}'));
+        await vi.waitFor(() =>
+            expect(output.querySelector('.recharts-tooltip-wrapper')?.textContent).toContain('Shipments12')
+        );
     });
 });
 

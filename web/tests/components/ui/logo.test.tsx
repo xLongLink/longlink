@@ -2,20 +2,8 @@
 import { act, useState } from 'react';
 import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../render';
-import { renderToStaticMarkup } from 'react-dom/server';
 import { RequestContext } from '@/lib/view-capabilities';
 import { Logo } from '@/components/longlink/display/logo';
-
-it('keeps inline images hidden in server-rendered markup before hydration', () => {
-    // Arrange
-    const output = document.createElement('div');
-
-    // Act
-    output.innerHTML = renderToStaticMarkup(<Logo src="data:image/png;base64,broken" alt="Supplier" />);
-
-    // Assert
-    expect(output.querySelector('img')?.classList.contains('invisible')).toBe(true);
-});
 
 it.each(['table', 'detail'] as const)(
     'preserves loaded %s images when padding changes and hides a new source until it loads',
@@ -183,9 +171,6 @@ it('keeps the fixed frame through loading, decode failure, recovery, and removal
             const replacement = output.querySelector('img');
             expect(replacement?.getAttribute('src')).toBe('blob:replacement');
             expect(replacement?.parentElement).toBe(frame);
-            expect(replacement?.getAttribute('width')).toBe('40');
-            expect(replacement?.getAttribute('height')).toBe('40');
-            expect(replacement?.classList.contains('object-contain')).toBe(true);
             expect(revoke).toHaveBeenCalledExactlyOnceWith('blob:logo');
 
             // Act

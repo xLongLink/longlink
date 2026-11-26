@@ -167,6 +167,9 @@ it('switches the shipped usage period with keyboard controls and clears stale re
                 </RequestContext>
             </QueryClientProvider>,
             async (output) => {
+                await act(async () => {
+                    await import('@/views/charts');
+                });
                 await vi.waitFor(() =>
                     expect(output.querySelector('[role="group"][aria-label="Usage period"]')).not.toBeNull()
                 );
@@ -176,10 +179,10 @@ it('switches the shipped usage period with keyboard controls and clears stale re
 
                 if (!usageCard) throw new Error('Expected model usage card');
 
-                await vi.waitFor(() =>
-                    expect(usageCard.querySelector('[data-slot="chart"]')?.textContent).toContain('10-01')
-                );
-                expect(usageCard.querySelector('[data-slot="chart-legend"]')?.textContent).toContain('Claude3M');
+                await vi.waitFor(() => {
+                    expect(usageCard.querySelector('[data-slot="chart"]')?.textContent).toContain('10-01');
+                    expect(usageCard.querySelector('[data-slot="chart-legend"]')?.textContent).toContain('Claude3M');
+                });
 
                 const option = [...usageCard.querySelectorAll<HTMLButtonElement>('button')].find(
                     (item) => item.textContent === 'Last 7 days'

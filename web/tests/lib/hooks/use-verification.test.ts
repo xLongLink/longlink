@@ -8,22 +8,16 @@ import { useVerification, type VerificationRequest } from '@/lib/hooks/use-verif
 
 it('ignores late successes and failures from canceled verification attempts', async () => {
     // Arrange
-    const attempts: { request: VerificationRequest; resolve: (value: string) => void }[] = [];
+    const attempts: {
+        request: VerificationRequest;
+        resolve: (value: string) => void;
+        reject: (reason: Error) => void;
+    }[] = [];
 
     /** Settle canceled work even when its underlying operation ignores cancellation. */
     function verify(request: VerificationRequest): Promise<string> {
-        const replay = attempts.length === 0;
-
         return new Promise((resolve, reject) => {
-            attempts.push({ request, resolve });
-            request.signal.addEventListener(
-                'abort',
-                () => {
-                    if (replay) resolve('stale');
-                    else reject(new Error('Canceled exchange failed'));
-                },
-                { once: true }
-            );
+            attempts.push({ request, resolve, reject });
         });
     }
 
@@ -72,6 +66,18 @@ it('ignores late successes and failures from canceled verification attempts', as
 
             await act(async () => attempts[3]?.resolve('verified'));
             expect(output.querySelector('output')?.textContent).toBe('verified');
+
+            await act(async () => attempts[0]?.resolve('stale'));
+            expect(output.querySelector('output')?.textContent).toBe('verified');
+            expect(output.textContent).not.toContain('Failure');
+
+            await act(async () => attempts[1]?.reject(new Error('Canceled exchange failed')));
+            expect(output.querySelector('output')?.textContent).toBe('verified');
+            expect(output.textContent).not.toContain('Failure');
+
+            await act(async () => attempts[2]?.resolve('stale retry'));
+            expect(output.querySelector('output')?.textContent).toBe('verified');
+            expect(output.textContent).not.toContain('Failure');
         } finally {
             await act(async () => root.unmount());
         }

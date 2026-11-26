@@ -322,6 +322,7 @@ it('returns binary file replies without opening a host preview', async () => {
     const script = '/* Preview bootstrap */';
     const version = 'a'.repeat(64);
     const text = '<script>window.previewExecuted = true</script><img src=x onerror="alert(1)">';
+    const postMessage = vi.spyOn(workers.MessagePort.prototype, 'postMessage');
     const fetch = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
         const path = new URL(input instanceof Request ? input.url : String(input)).pathname;
 
@@ -380,21 +381,44 @@ it('returns binary file replies without opening a host preview', async () => {
                     const commands = ports[0];
 
                     // Act
-                    const pdfReply = new Promise<unknown>((resolve) => commands.once('message', resolve));
+                    const pdfReply = new Promise<void>((resolve) => commands.once('message', () => resolve()));
 
                     await act(async () => {
                         commands.postMessage({ id: 0, type: 'request', path: 'report', method: 'GET', binary: true });
-                        await expect(pdfReply).resolves.toEqual({ id: 0, ok: true, data: { type: 'application/pdf' } });
+                        await pdfReply;
                     });
                     // Assert
+                    const pdf: unknown = postMessage.mock.lastCall?.[0];
+
+                    if (!pdf || typeof pdf !== 'object' || !('data' in pdf) || !(pdf.data instanceof Blob)) {
+                        throw new Error('Expected PDF Blob reply');
+                    }
+                    expect(postMessage).toHaveBeenLastCalledWith({ id: 0, ok: true, data: pdf.data });
+                    expect(pdf.data.type).toBe('application/pdf');
+                    expect(new Uint8Array(await pdf.data.arrayBuffer())).toEqual(
+                        new Uint8Array([0x25, 0x50, 0x44, 0x46, 0xff])
+                    );
                     expect(document.querySelector('[role="dialog"]')).toBeNull();
 
-                    const textReply = new Promise<unknown>((resolve) => commands.once('message', resolve));
+                    const textReply = new Promise<void>((resolve) => commands.once('message', () => resolve()));
 
                     await act(async () => {
                         commands.postMessage({ id: 1, type: 'request', path: 'source', method: 'GET', binary: true });
-                        await expect(textReply).resolves.toEqual({ id: 1, ok: true, data: { type: 'text/html' } });
+                        await textReply;
                     });
+                    const source: unknown = postMessage.mock.lastCall?.[0];
+
+                    if (
+                        !source ||
+                        typeof source !== 'object' ||
+                        !('data' in source) ||
+                        !(source.data instanceof Blob)
+                    ) {
+                        throw new Error('Expected HTML Blob reply');
+                    }
+                    expect(postMessage).toHaveBeenLastCalledWith({ id: 1, ok: true, data: source.data });
+                    expect(source.data.type).toBe('text/html');
+                    expect(await source.data.text()).toBe(text);
                     expect(document.querySelector('[role="dialog"]')).toBeNull();
                     expect(reportError).not.toHaveBeenCalled();
                 } finally {
@@ -404,5 +428,6 @@ it('returns binary file replies without opening a host preview', async () => {
         );
     } finally {
         fetch.mockRestore();
+        postMessage.mockRestore();
     }
 });

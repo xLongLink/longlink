@@ -1,21 +1,53 @@
 // @vitest-environment happy-dom
-import { it, expect } from 'vitest';
+// @vitest-environment-options {"url":"http://localhost"}
+import { useEffect } from 'react';
+import { it, expect, vi } from 'vitest';
+import { withMounted } from '../../render';
+import { Route, Routes } from 'react-router';
 import Layout from '@/platform/layouts/admin';
-import { renderPlatform, user } from '../render';
+import { ErrorBoundary } from 'react-error-boundary';
+import { TestAccountProvider, user } from '../render';
 
-it('does not reveal administrator navigation to a regular Platform user', () => {
-    // Act
-    const output = renderPlatform(<Layout />, '/admin/users');
+function ProtectedAdmin({ onMount }: { onMount: () => void }) {
+    useEffect(onMount, [onMount]);
 
-    // Assert
-    expect(output.querySelector('h1')?.textContent).toBe("We can't find that page");
-    expect(output.querySelector('a[href="/admin/compute"]')).toBeNull();
-    expect(output.querySelector('nav[aria-label="Breadcrumb"]')).toBeNull();
-});
+    return <p>Protected administration</p>;
+}
 
-it('shows administrator navigation to an authorized user', () => {
-    const output = renderPlatform(<Layout />, '/admin/users', [['/api/v1/me', { ...user, administrator: true }]]);
+it.each([false, true])(
+    'admits nested administration only for administrators (administrator: %s)',
+    async (administrator) => {
+        // Arrange
+        const mounted = vi.fn();
 
-    expect(output.querySelector('nav[aria-label="Breadcrumb"] [aria-current="page"]')).not.toBeNull();
-    expect(output.querySelector('a[href="/admin/compute"]')).not.toBeNull();
-});
+        // Act
+        await withMounted(
+            <TestAccountProvider account={{ ...user, administrator }}>
+                <ErrorBoundary fallback={<p>Unexpected error</p>}>
+                    <Routes>
+                        <Route element={<Layout />}>
+                            <Route path="/admin/users" element={<ProtectedAdmin onMount={mounted} />} />
+                        </Route>
+                    </Routes>
+                </ErrorBoundary>
+            </TestAccountProvider>,
+            async (output) => {
+                // Assert
+                if (!administrator) {
+                    expect(output.querySelector('h1')?.textContent).toBe("We can't find that page");
+                    expect(mounted).not.toHaveBeenCalled();
+                    expect(output.textContent).not.toContain('Protected administration');
+                    expect(output.querySelector('a[href="/admin/compute"]')).toBeNull();
+                    expect(output.querySelector('nav[aria-label="Breadcrumb"]')).toBeNull();
+                    return;
+                }
+
+                expect(mounted).toHaveBeenCalledOnce();
+                expect(output.textContent).toContain('Protected administration');
+                expect(output.querySelector('nav[aria-label="Breadcrumb"] [aria-current="page"]')).not.toBeNull();
+                expect(output.querySelector('a[href="/admin/compute"]')).not.toBeNull();
+            },
+            '/admin/users'
+        );
+    }
+);

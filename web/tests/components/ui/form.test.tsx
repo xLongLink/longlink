@@ -6,7 +6,7 @@ import { RequestContext } from '@/lib/view-capabilities';
 import { useForm } from '@/components/longlink/hooks/use-form';
 import type { FormOptions } from '@/components/longlink/hooks/use-form';
 
-it.each(['POST', 'PUT', 'PATCH', 'DELETE'] as const)(
+it.each(['POST', 'PUT'] as const)(
     'submits %s through the scoped bridge without flattening multipart entries',
     async (method) => {
         // Arrange

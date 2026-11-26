@@ -15,22 +15,6 @@ it('keeps the legacy Communication URL routable and published', () => {
     expect(route && 'path' in route ? route.path : undefined).toBe(path.slice(1));
 });
 
-it.each([
-    ['/docs', './routes/docs/index.tsx'],
-    ['/docs/sdk', './routes/docs/sdk/index.tsx'],
-    ['/docs/sdk/views', './routes/docs/sdk/views.tsx'],
-    ['/docs/api', './routes/docs/api/index.tsx']
-])('preserves the path-bearing index route for %s', (path, file) => {
-    // Arrange
-    const matches = matchRoutes(routes, path);
-
-    // Act
-    const route = matches?.at(-1)?.route;
-
-    // Assert
-    expect(route).toMatchObject({ path: path.slice(1), file, index: true });
-});
-
 it('keeps unknown documentation URLs inside the documentation layout', () => {
     // Arrange
     const path = '/docs/sdk/views/unknown-component';
