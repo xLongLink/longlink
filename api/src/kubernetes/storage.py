@@ -103,7 +103,7 @@ class Storage:
             await admin.revoke(solution)
 
         # Remove data only after revocation succeeds and its transport closes.
-        await self._storage.delete_prefix(self.bucket_name(organization), f"solutions/{solution.hex}/")
+        await self._storage.delete_prefix(self.bucket_name(organization), s3.solution_prefix(solution))
 
     async def apply(self, organization: UUID, *, quota_bytes: int) -> None:
         """Create an Organization bucket and apply its RustFS hard byte quota."""

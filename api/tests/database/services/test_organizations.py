@@ -5,17 +5,48 @@ from factories import add_member, create_compute, fetch_operations, create_organ
 from src.models.roles import OrganizationRoles
 from src.models.types import Image
 from src.models.metadata import LongLinkMetadata
+from src.models.statuses import Status
 from longlink.permissions import Catalog
 from src.database.session import session_scope
 from src.models.solutions import SolutionCreate
 from src.database.services import solutions, invitations, organizations
+from src.models.operations import OperationKind
 from src.models.pagination import Pagination
-from src.models.organizations import OrganizationInvitationCreate
+from src.models.organizations import OrganizationUsageUpdate, OrganizationInvitationCreate
 from src.database.models.users import User
 from src.database.models.solutions import Solution
+from src.database.models.operations import Operation
 from src.database.models.association import UserOrganization
 from src.database.models.invitations import OrganizationInvitation
 from src.database.models.organizations import Organization
+
+
+async def test_usage_edit_rejects_unleased_allocation_after_nonallocation_work(users: tuple[User, User, User]) -> None:
+    """Block capacity edits when another unfinished creation carries an allocation."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+    async with session_scope() as session:
+        persisted = await session.get(Organization, organization.id)
+        assert persisted is not None
+        persisted.status = Status.running
+        payload = OrganizationUsageUpdate.model_validate(persisted, from_attributes=True)
+        first = Operation(kind=OperationKind.organization_create, target_id=organization.id)
+        second = Operation(kind=OperationKind.organization_create, target_id=organization.id, allocation=payload.model_dump())
+        session.add_all([first, second])
+        await session.commit()
+
+    # Act
+    async with session_scope() as session:
+        with pytest.raises(HTTPException, match="409: Organization capacity reconciliation is pending"):
+            await organizations.update_usage(session, organization.id, users[0].id, payload)
+
+    # Assert
+    async with session_scope() as session:
+        persisted = await session.get(Organization, organization.id)
+        assert persisted is not None
+        assert persisted.status == Status.running
+        assert len(await fetch_operations()) == 2
 
 
 async def test_fetch_ignores_deleted_organizations(users: tuple[User, User, User]) -> None:

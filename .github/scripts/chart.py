@@ -19,7 +19,6 @@ def main() -> None:
         ],
         check=True,
     )
-    subprocess.run(["helm", "repo", "update", "cnpg"], check=True)
     result = subprocess.run(
         ["helm", "search", "repo", "cnpg/cloudnative-pg", "--output", "json"],
         check=True,

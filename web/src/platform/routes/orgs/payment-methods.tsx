@@ -2,7 +2,6 @@ import { api } from '@/lib/api';
 import { useApiError } from '@/lib/errors';
 import { useApi } from '@/lib/hooks/use-api';
 import { ApiBoundary } from '@/components/api';
-import { ReportedError } from '@/lib/reported';
 import { Text } from '@/components/longlink/display/text';
 import { Separator } from '@/components/shadcn/separator';
 import { Stack } from '@/components/longlink/layout/stack';
@@ -30,7 +29,7 @@ export default function PaymentMethods({ base, canManage }: { base: string; canM
                 // Redirect only after validating the API's hosted URL.
                 window.location.assign(response.url);
             } catch (cause) {
-                if (!(cause instanceof ReportedError)) reportError(cause);
+                reportError(cause);
             }
         });
     }

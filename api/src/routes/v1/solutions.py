@@ -19,7 +19,7 @@ router = APIRouter()
 
 async def _inspect_update(
     session: AsyncSession, solution: Solution, user_id: UUID, expected_revision_id: UUID | None = None
-) -> tuple[Revision, LongLinkMetadata]:
+) -> tuple[Solution, Revision, LongLinkMetadata]:
     """Inspect the repository's latest image and revalidate the desired revision."""
 
     # Reuse authorized Solution access without holding command locks across registry calls.
@@ -48,7 +48,7 @@ async def _inspect_update(
     solution = await solutions.access(session, solution_id, user_id)
     if solution.desired_revision_id != revision_id:
         raise HTTPException(status_code=409, detail="Desired revision changed during inspection. Check again.")
-    return revision, metadata
+    return solution, revision, metadata
 
 
 @router.patch("/solutions/{solution_id}/visibility", response_model=SolutionVisibility)
@@ -70,7 +70,7 @@ async def check_update(session: auth.Session, user: auth.CurrentUser, solution: 
     """Inspect the repository's latest image without changing deployment state."""
 
     # Expose the reviewed revision and configured names, never environment values.
-    revision, metadata = await _inspect_update(session, solution, user.id)
+    _, revision, metadata = await _inspect_update(session, solution, user.id)
     return {
         "current_image": revision.image,
         "current_version": revision.version,
@@ -85,7 +85,7 @@ async def apply_update(session: auth.Session, user: auth.CurrentUser, solution: 
     """Re-resolve latest and deploy a changed immutable image or configuration."""
 
     # Inspect without command locks, then revalidate the desired state and maintenance access.
-    revision, metadata = await _inspect_update(session, solution, user.id, payload.expected_revision_id)
+    solution, revision, metadata = await _inspect_update(session, solution, user.id, payload.expected_revision_id)
 
     # Apply explicit environment edits while preserving untouched secrets.
     environment = dict(revision.envs)

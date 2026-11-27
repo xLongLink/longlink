@@ -5,9 +5,7 @@ from src import auth
 from kr8s import ServerError, NotFoundError, APITimeoutError, ConnectionClosedError
 from uuid import UUID
 from fastapi import APIRouter, HTTPException
-from sqlmodel import col
 from src.utils import mail, roles
-from sqlalchemy import func, select
 from sqlalchemy.exc import SQLAlchemyError
 from src.kubernetes import databases
 from collections.abc import Sequence
@@ -26,11 +24,9 @@ from src.models.organizations import (
     OrganizationInvitationResponse,
     OrganizationMemberAccessResponse,
 )
-from src.database.models.users import User
 from src.database.models.solutions import Solution
 from src.database.models.association import UserOrganization
 from src.database.models.invitations import OrganizationInvitation
-from src.database.models.organizations import Organization
 
 router = APIRouter()
 
@@ -63,37 +59,8 @@ async def get_organization_solutions(session: auth.Session, membership: auth.Org
 async def get_organization_usage(session: auth.Session, membership: auth.OrganizationMember) -> dict[str, int | bool | str | None]:
     """Show current users, Solutions, and the same monthly rates used for invoicing."""
 
-    # Scope accepted active members and active Solutions to this Organization.
-    users = (
-        select(func.count())
-        .select_from(UserOrganization)
-        .join(User, col(User.id) == col(UserOrganization.user_id))
-        .where(col(UserOrganization.organization_id) == membership.organization_id, col(User.deleted_at).is_(None))
-        .scalar_subquery()
-    )
-    solutions = (
-        select(func.count())
-        .select_from(Solution)
-        .where(col(Solution.organization_id) == membership.organization_id, col(Solution.deleted_at).is_(None))
-        .scalar_subquery()
-    )
-
-    # Read counts, capacity, and payment authorization in one database snapshot.
-    capacity = await session.execute(
-        select(
-            users.label("users"),
-            solutions.label("solutions"),
-            col(Organization.compute_ram_bytes),
-            col(Organization.storage_bytes),
-            col(Organization.compute_cpu_millicores),
-            col(Organization.database_ram_bytes),
-            col(Organization.database_storage_bytes),
-            col(Organization.database_cpu_millicores),
-            col(Organization.stripe_payment_method_id).is_not(None).label("has_payment_method"),
-            col(Organization.status),
-        ).where(col(Organization.id) == membership.organization_id)
-    )
-    return {**capacity.mappings().one(), "stripe_enabled": env.stripe_enabled}
+    usage = await organizations.usage(session, membership.organization_id)
+    return {**usage, "stripe_enabled": env.stripe_enabled}
 
 
 @router.patch("/organizations/{organization_id}/usage", response_model=OrganizationUsage)
@@ -105,7 +72,8 @@ async def update_organization_usage(
     # Revalidate ownership under the Organization lock before changing billable capacity.
     await organizations.update_usage(session, membership.organization_id, membership.user_id, payload)
     await session.commit()
-    return await get_organization_usage(session, membership)
+    usage = await organizations.usage(session, membership.organization_id)
+    return {**usage, "stripe_enabled": env.stripe_enabled}
 
 
 @router.get("/organizations/{organization_id}/storage", response_model=OrganizationByteUsage)

@@ -1,4 +1,3 @@
-import { siteName } from '@/site';
 import type { ReactNode } from 'react';
 
 /** Renders page content with its document metadata. */
@@ -11,7 +10,7 @@ export function Page({ title, description, children }: { title: string; descript
             <meta property="og:title" content={title} />
             <meta property="og:description" content={description} />
             <meta property="og:type" content="website" />
-            <meta property="og:site_name" content={siteName} />
+            <meta property="og:site_name" content="LongLink" />
             <meta name="twitter:card" content="summary" />
             <meta name="twitter:title" content={title} />
             <meta name="twitter:description" content={description} />

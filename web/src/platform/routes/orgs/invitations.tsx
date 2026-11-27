@@ -1,7 +1,6 @@
 import { api } from '@/lib/api';
 import { useApiError } from '@/lib/errors';
 import { useApi } from '@/lib/hooks/use-api';
-import { ReportedError } from '@/lib/reported';
 import { Button } from '@/components/shadcn/button';
 import * as permissions from '@/platform/permissions';
 import { useSelection } from '@/lib/hooks/use-selection';
@@ -38,7 +37,7 @@ export default function InvitationsSection({ base, role }: { base: string; role:
                 await api.delete(`${base}/invitations/${id}`);
                 await invalidateInvitations();
             } catch (cause) {
-                if (!(cause instanceof ReportedError)) reportError(cause);
+                reportError(cause);
             }
         });
     }

@@ -41,19 +41,18 @@ export function TagForm({
         defaultValues: { name: tag?.name ?? '', icon: tag?.icon ?? 'tag' }
     });
 
-    async function save(json: z.output<typeof tagSchema>) {
-        if (tag) {
-            await api.patch(`${base}/tags/${tag.id}`, { json });
-        } else {
-            await api.post(`${base}/tags`, { json });
-        }
+    const submit = useSubmit(
+        async (json: z.output<typeof tagSchema>) => {
+            if (tag) {
+                await api.patch(`${base}/tags/${tag.id}`, { json });
+            } else {
+                await api.post(`${base}/tags`, { json });
+            }
 
-        await onSuccess();
-    }
-
-    const submit = useSubmit(save, {
-        onError: () => form.setError('root', { message: 'Could not save the tab. Please try again.' })
-    });
+            await onSuccess();
+        },
+        { onError: () => form.setError('root', { message: 'Could not save the tab. Please try again.' }) }
+    );
 
     return (
         <Dialog

@@ -36,7 +36,7 @@ class RustFS:
 
         # Service-account policies are identity policies, so no bucket principal matching is required.
         arn = f"arn:aws:s3:::{bucket}"
-        prefix = f"solutions/{solution.hex}/"
+        prefix = s3.solution_prefix(solution)
         reads = ["s3:GetObject", "s3:GetObjectVersion"]
         writes = ["s3:PutObject", "s3:DeleteObject", "s3:DeleteObjectVersion", "s3:AbortMultipartUpload", "s3:ListMultipartUploadParts"]
         statements: list[dict[str, object]] = [

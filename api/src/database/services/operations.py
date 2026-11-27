@@ -224,6 +224,22 @@ async def release(session: AsyncSession, operation: Operation) -> bool:
     return result.rowcount == 1
 
 
+async def has_pending_allocation(session: AsyncSession, organization_id: UUID) -> bool:
+    """Check for unfinished capacity reconciliation, including unleased work."""
+
+    pending = await session.scalar(
+        select(col(Operation.id))
+        .where(
+            col(Operation.target_id) == organization_id,
+            col(Operation.kind) == OperationKind.organization_create,
+            col(Operation.finished_at).is_(None),
+            col(Operation.allocation).is_not(None),
+        )
+        .limit(1)
+    )
+    return pending is not None
+
+
 async def fail(session: AsyncSession, operation: Operation, reason: str) -> bool:
     """Fail one leased Operation."""
 
@@ -244,17 +260,7 @@ async def fail(session: AsyncSession, operation: Operation, reason: str) -> bool
 
     # Expose failed creation on its target without changing deletion lifecycle state.
     if operation.kind == OperationKind.organization_create:
-        pending = await session.scalar(
-            select(col(Operation.id))
-            .where(
-                col(Operation.target_id) == operation.target_id,
-                col(Operation.kind) == OperationKind.organization_create,
-                col(Operation.finished_at).is_(None),
-                col(Operation.allocation).is_not(None),
-            )
-            .limit(1)
-        )
-        if pending is None:
+        if not await has_pending_allocation(session, operation.target_id):
             await session.execute(
                 update(Organization)
                 .where(col(Organization.id) == operation.target_id, col(Organization.status) == Status.creating)

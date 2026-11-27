@@ -114,7 +114,6 @@ async def issue(session: AsyncSession, invoice_id: UUID) -> None:
             items = await connection.v1.invoice_items.list_async({"invoice": remote.id, "limit": 100})
             existing_items = [item async for item in items.auto_paging_iter()]
             discount = 0
-            total = 0
 
             # Historical pending invoices retain their original quantities, allowances, and recovery keys.
             if invoice.pricing_version == 1:
@@ -133,7 +132,6 @@ async def issue(session: AsyncSession, invoice_id: UUID) -> None:
                     gross = int((quantity * unit_price).quantize(Decimal("1"), rounding=ROUND_HALF_UP))
                     net = int((billable * unit_price).quantize(Decimal("1"), rounding=ROUND_HALF_UP))
                     discount += gross - net
-                    total += net
                     charges.append((resource, description, quantity, unit_price, gross))
 
             # Paid allocation invoices charge totals without free allowances or double-counting database allocations.
@@ -168,7 +166,6 @@ async def issue(session: AsyncSession, invoice_id: UUID) -> None:
                         int(storage_amount),
                     ),
                 ]
-                total = int(cpu_amount) + int(ram_amount) + int(storage_amount)
             else:
                 raise HTTPException(status_code=409, detail="Invoice pricing version requires administrator review")
 
@@ -252,6 +249,7 @@ async def issue(session: AsyncSession, invoice_id: UUID) -> None:
 
             # Reject unexpected edits that change the calculated invoice total.
             remote = await connection.v1.invoices.retrieve_async(remote.id)
+            total = sum(charge[4] for charge in charges) - discount
             if remote.total != total:
                 raise HTTPException(status_code=409, detail="Stripe invoice total does not match measured usage")
             await connection.v1.invoices.finalize_invoice_async(
