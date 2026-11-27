@@ -101,7 +101,7 @@ export default function InvitationsSection({ base, role }: { base: string; role:
                     base={base}
                     canInviteAdmin={canInviteAdmin}
                     onSettled={invalidateInvitations}
-                    onOpenChange={closeInvitation}
+                    onClose={closeInvitation}
                 />
             )}
         </>

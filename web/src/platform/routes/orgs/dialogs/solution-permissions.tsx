@@ -19,20 +19,22 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@
 export function SolutionPermissionsDialog({
     solutionId,
     organizationId,
-    onOpenChange
+    onClose
 }: {
-    onOpenChange: (open: boolean) => void;
+    onClose: () => void;
     solutionId: string;
     organizationId: string;
 }) {
     return (
-        <Dialog open onOpenChange={onOpenChange} title="Solution permissions">
+        <Dialog
+            open
+            onOpenChange={(open) => {
+                if (!open) onClose();
+            }}
+            title="Solution permissions"
+        >
             <ApiBoundary key={solutionId}>
-                <SolutionPermissions
-                    solutionId={solutionId}
-                    organizationId={organizationId}
-                    onClose={() => onOpenChange(false)}
-                />
+                <SolutionPermissions solutionId={solutionId} organizationId={organizationId} onClose={onClose} />
             </ApiBoundary>
         </Dialog>
     );

@@ -48,7 +48,7 @@ it('gates creation on inspection and validation, retaining configuration through
                 onSuccess={() => {
                     completions.push('created');
                 }}
-                onOpenChange={() => undefined}
+                onClose={() => undefined}
             />,
             async () => {
                 const events = userEvent.setup();
@@ -171,7 +171,7 @@ it('reports failed inspection and allows retrying the same image without losing 
     try {
         await withMounted(
             <ApiErrorContext value={reportError}>
-                <CreateSolution organizationId="organization" onSuccess={onSuccess} onOpenChange={() => undefined} />
+                <CreateSolution organizationId="organization" onSuccess={onSuccess} onClose={() => undefined} />
             </ApiErrorContext>,
             async () => {
                 const events = userEvent.setup();

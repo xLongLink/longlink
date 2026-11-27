@@ -8,17 +8,17 @@ import { Button } from '@/components/longlink/action/button';
 import { Dialog } from '@/components/longlink/layout/dialog';
 import { CodeBlock, CodeBlockContent, CodeBlockCopyButton } from '@/components/reui/code-block/code-block';
 
-export function SolutionLogsDialog({
-    solutionId,
-    onOpenChange
-}: {
-    onOpenChange: (open: boolean) => void;
-    solutionId: string;
-}) {
+export function SolutionLogsDialog({ solutionId, onClose }: { solutionId: string; onClose: () => void }) {
     return (
-        <Dialog open onOpenChange={onOpenChange} title="Solution logs">
+        <Dialog
+            open
+            onOpenChange={(open) => {
+                if (!open) onClose();
+            }}
+            title="Solution logs"
+        >
             <ApiBoundary key={solutionId}>
-                <SolutionLogs solutionId={solutionId} onClose={() => onOpenChange(false)} />
+                <SolutionLogs solutionId={solutionId} onClose={onClose} />
             </ApiBoundary>
         </Dialog>
     );

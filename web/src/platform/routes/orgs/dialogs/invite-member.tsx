@@ -19,10 +19,10 @@ export function InviteMember({
     base,
     canInviteAdmin,
     onSettled,
-    onOpenChange
+    onClose
 }: {
     base: string;
-    onOpenChange: (open: boolean) => void;
+    onClose: () => void;
     canInviteAdmin: boolean;
     onSettled: () => Promise<void>;
 }) {
@@ -47,7 +47,7 @@ export function InviteMember({
     async function inviteMember(data: z.output<typeof schema>) {
         try {
             await api.post(`${base}/invitations`, { json: data });
-            onOpenChange(false);
+            onClose();
         } finally {
             // Failed email delivery can still persist the invitation.
             await onSettled();
@@ -59,7 +59,15 @@ export function InviteMember({
     });
 
     return (
-        <Dialog open onOpenChange={onOpenChange} title="Invite user" showHeader={false} bodyPadding={false}>
+        <Dialog
+            open
+            onOpenChange={(open) => {
+                if (!open) onClose();
+            }}
+            title="Invite user"
+            showHeader={false}
+            bodyPadding={false}
+        >
             <IllustratedForm
                 image={{ src: '/images/organization.png', width: 1254, height: 1254 }}
                 onSubmit={form.handleSubmit(submit)}
@@ -118,7 +126,7 @@ export function InviteMember({
                     />
                     <FieldError errors={[form.formState.errors.root]} />
                     <Stack direction="horizontal" align="center" justify="between" gap={2}>
-                        <Button type="button" variant="link" onClick={() => onOpenChange(false)}>
+                        <Button type="button" variant="link" onClick={onClose}>
                             Cancel
                         </Button>
                         <Button type="submit">Invite</Button>

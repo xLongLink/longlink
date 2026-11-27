@@ -194,13 +194,13 @@ export default function SolutionSettings({ membership }: { membership: Organizat
                 </Table>
             </Stack>
             {selected?.kind === 'create' && (
-                <CreateSolution organizationId={organization.id} onSuccess={onSuccess} onOpenChange={closeSelected} />
+                <CreateSolution organizationId={organization.id} onSuccess={onSuccess} onClose={closeSelected} />
             )}
             {selected?.kind === 'permissions' && (
                 <SolutionPermissionsDialog
                     solutionId={selected.id}
                     organizationId={organization.id}
-                    onOpenChange={closeSelected}
+                    onClose={closeSelected}
                 />
             )}
             {selected?.kind === 'tags' && (
@@ -218,12 +218,12 @@ export default function SolutionSettings({ membership }: { membership: Organizat
                     key={selected.item.id}
                     item={selected.item}
                     onSuccess={onSuccess}
-                    onOpenChange={closeSelected}
+                    onClose={closeSelected}
                 />
             )}
-            {selected?.kind === 'logs' && <SolutionLogsDialog solutionId={selected.id} onOpenChange={closeSelected} />}
+            {selected?.kind === 'logs' && <SolutionLogsDialog solutionId={selected.id} onClose={closeSelected} />}
             {/* Offer direct MCP connection details and the selected Solution's credential-free package. */}
-            {selected?.kind === 'mcp' && <SolutionMcpDialog solutionId={selected.id} onOpenChange={closeSelected} />}
+            {selected?.kind === 'mcp' && <SolutionMcpDialog solutionId={selected.id} onClose={closeSelected} />}
             {confirmation.element}
         </>
     );

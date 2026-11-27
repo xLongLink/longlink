@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { act } from 'react';
+import { act, useState } from 'react';
 import { withMounted } from '../../../render';
 import { describe, expect, it, vi } from 'vitest';
 import userEvent from '@testing-library/user-event';
@@ -30,6 +30,44 @@ const secretCandidate = {
 };
 
 describe('DeploymentReview', () => {
+    it.each(['Cancel', 'Escape'])('preserves the draft on Back and dismisses with %s', async (dismissal) => {
+        // Arrange
+        const user = userEvent.setup();
+        await withReview(
+            () => Response.json(secretCandidate),
+            async (submissions) => {
+                // Act
+                await act(async () => user.click(button('Next')));
+                await act(async () => user.type(input('NEW_SECRET'), 'draft-value'));
+                await act(async () => user.click(button('Next')));
+                await act(async () => user.click(button('Back')));
+
+                // Assert
+                expect(document.querySelector('[role="dialog"]')).not.toBeNull();
+                expect(input('NEW_SECRET').value).toBe('draft-value');
+                expect(submissions).toEqual([]);
+
+                // Act
+                await act(async () => user.click(button('Back')));
+
+                // Assert
+                expect(document.body.textContent).toContain('sha256:bbbbbbbbbbbb');
+                expect(document.querySelector('[role="dialog"]')).not.toBeNull();
+                expect(submissions).toEqual([]);
+
+                // Act
+                await act(async () => {
+                    if (dismissal === 'Cancel') await user.click(button('Cancel'));
+                    else await user.keyboard('{Escape}');
+                });
+
+                // Assert
+                expect(document.querySelector('[role="dialog"]')).toBeNull();
+                expect(submissions).toEqual([]);
+            }
+        );
+    });
+
     it('retries a failed inspection and deploys the recovered reviewed revision', async () => {
         // Arrange
         const recoveredRevisionId = '00000000-0000-4000-8000-000000000003';
@@ -295,19 +333,12 @@ describe('DeploymentReview', () => {
             return inspect();
         });
         try {
-            await withMounted(
-                <DeploymentReview
-                    item={{ id: solutionId, name: 'Sample' }}
-                    onSuccess={onSuccess}
-                    onOpenChange={() => {}}
-                />,
-                async () => {
-                    await act(async () =>
-                        vi.waitFor(() => expect(document.body.textContent).not.toContain('Checking for updates…'))
-                    );
-                    await check(submissions);
-                }
-            );
+            await withMounted(<ReviewHost onSuccess={onSuccess} />, async () => {
+                await act(async () =>
+                    vi.waitFor(() => expect(document.body.textContent).not.toContain('Checking for updates…'))
+                );
+                await check(submissions);
+            });
         } finally {
             transport.mockRestore();
         }
@@ -341,3 +372,15 @@ describe('DeploymentReview', () => {
         return found;
     }
 });
+
+function ReviewHost({ onSuccess }: { onSuccess: () => void }) {
+    const [open, setOpen] = useState(true);
+
+    return open ? (
+        <DeploymentReview
+            item={{ id: solutionId, name: 'Sample' }}
+            onSuccess={onSuccess}
+            onClose={() => setOpen(false)}
+        />
+    ) : null;
+}

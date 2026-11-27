@@ -4864,6 +4864,10 @@
       },
       "Consent": {
         "properties": {
+          "expires_in": {
+            "type": "integer",
+            "title": "Expires In"
+          },
           "client_name": {
             "type": "string",
             "title": "Client Name"
@@ -4875,15 +4879,11 @@
           "solution_name": {
             "type": "string",
             "title": "Solution Name"
-          },
-          "expires_in": {
-            "type": "integer",
-            "title": "Expires In",
-            "default": 2592000
           }
         },
         "type": "object",
         "required": [
+          "expires_in",
           "client_name",
           "redirect_uri",
           "solution_name"

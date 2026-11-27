@@ -143,7 +143,7 @@ export default function MembersSection({ base, role }: { base: string; role: Org
                             : `Change ${selectedMember.user.name} to ${member.action.role}?`
                     }
                     actionLabel={member.action.kind === 'remove' ? 'Remove member' : 'Confirm'}
-                    onOpenChange={closeMember}
+                    onClose={closeMember}
                     onConfirm={async () => {
                         // Update access on the server before refreshing the member list.
                         if (member.action.kind === 'remove') {

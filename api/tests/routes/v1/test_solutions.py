@@ -397,6 +397,7 @@ async def test_solution_responses_do_not_expose_environment_secrets(
     assert (await clients[2].patch(f"/api/v1/solutions/{solution_id}/visibility", json={"public": True})).status_code == 403
     published = await clients[0].patch(f"/api/v1/solutions/{solution_id}/visibility", json={"public": True})
     assert published.status_code == 200
+    assert published.json() == {"public": True}
     public_response = await client.get(f"/api/v1/public/solutions/{solution_id}")
     assert public_response.status_code == 200
     assert public_response.json()["public"] is True
@@ -408,7 +409,9 @@ async def test_solution_responses_do_not_expose_environment_secrets(
     assert [item["id"] for item in page["items"]] == [solution_id]
     assert page["items"][0]["banner"] == banner
     assert page["total"] == 1
-    await clients[0].patch(f"/api/v1/solutions/{solution_id}/visibility", json={"public": False})
+    unpublished = await clients[0].patch(f"/api/v1/solutions/{solution_id}/visibility", json={"public": False})
+    assert unpublished.status_code == 200
+    assert unpublished.json() == {"public": False}
     assert (await client.get(f"/api/v1/public/solutions/{solution_id}")).status_code == 404
     assert (await client.get("/api/v1/public/solutions")).json() == {"items": [], "total": 0}
 

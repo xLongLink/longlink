@@ -109,6 +109,7 @@ it.each([
                 consentRequests.push(request.url);
 
                 return Response.json({
+                    expires_in: 2592000,
                     client_name: 'Review client',
                     solution_name: 'Review solution',
                     redirect_uri: 'https://client.example/callback'

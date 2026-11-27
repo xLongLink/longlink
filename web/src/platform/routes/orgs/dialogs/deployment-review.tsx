@@ -17,7 +17,7 @@ import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/sh
 
 type DeploymentReviewProps = {
     item: { id: string; name: string };
-    onOpenChange: (open: boolean) => void;
+    onClose: () => void;
     onSuccess: () => void | Promise<void>;
 };
 
@@ -30,7 +30,7 @@ function imageDigest(image: string) {
 }
 
 /** Owns fresh inspection, the deployment draft, and submission for one review attempt. */
-export default function DeploymentReview({ item, onSuccess, onOpenChange }: DeploymentReviewProps) {
+export default function DeploymentReview({ item, onSuccess, onClose }: DeploymentReviewProps) {
     const formId = useId();
     const [step, setStep] = useState(0);
     const advancing = useRef(false);
@@ -124,7 +124,15 @@ export default function DeploymentReview({ item, onSuccess, onOpenChange }: Depl
 
     // Keep version review and environment edits in the same revision-fenced form.
     return (
-        <Dialog open onOpenChange={onOpenChange} title={`Update ${item.name}`} showHeader={false} bodyPadding={false}>
+        <Dialog
+            open
+            onOpenChange={(open) => {
+                if (!open) onClose();
+            }}
+            title={`Update ${item.name}`}
+            showHeader={false}
+            bodyPadding={false}
+        >
             <div className="grid min-h-full grid-cols-1 sm:grid-cols-2">
                 <Stack justify="center" gap={4} padding={6} className="min-w-0">
                     <Heading level={2} size={4} align="center">
@@ -291,7 +299,7 @@ export default function DeploymentReview({ item, onSuccess, onOpenChange }: Depl
                             disabled={form.formState.isSubmitting}
                             onClick={() => {
                                 if (candidate && step > 0) setStep(step - 1);
-                                else onOpenChange(false);
+                                else onClose();
                             }}
                         >
                             {candidate && step > 0 ? 'Back' : 'Cancel'}
