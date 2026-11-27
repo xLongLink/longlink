@@ -1,4 +1,5 @@
 import aiobotocore.session
+from uuid import UUID
 from typing import TYPE_CHECKING, cast
 from itertools import chain, batched
 from contextlib import nullcontext, asynccontextmanager
@@ -11,6 +12,12 @@ from botocore.exceptions import ClientError
 if TYPE_CHECKING:
     from types_aiobotocore_s3.client import S3Client
     from types_aiobotocore_s3.type_defs import ObjectIdentifierTypeDef
+
+
+def solution_prefix(solution: UUID) -> str:
+    """Resolve the private object prefix shared by authorization and lifecycle operations."""
+
+    return f"solutions/{solution.hex}/"
 
 
 @dataclass(frozen=True)

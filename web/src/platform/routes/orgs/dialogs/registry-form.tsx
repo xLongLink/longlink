@@ -25,14 +25,13 @@ export function RegistryForm({
 }) {
     const form = useForm({ resolver: zodResolver(schemas.zRegistryCreateWritable), defaultValues: { credential: '' } });
 
-    async function save(data: { credential: string }) {
-        await api.post(`${base}/registries`, { json: data });
-        await onSuccess();
-    }
-
-    const submit = useSubmit(save, {
-        onError: () => form.setError('root', { message: 'Could not save the registry. Please try again.' })
-    });
+    const submit = useSubmit(
+        async (data: { credential: string }) => {
+            await api.post(`${base}/registries`, { json: data });
+            await onSuccess();
+        },
+        { onError: () => form.setError('root', { message: 'Could not save the registry. Please try again.' }) }
+    );
 
     return (
         <Dialog

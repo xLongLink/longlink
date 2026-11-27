@@ -163,6 +163,44 @@ async def test_operations_service_records_bounded_failure_reason() -> None:
     assert persisted.failed == ("migration job failed" * 100)[:500]
 
 
+async def test_failed_creation_waits_for_other_unfinished_allocation() -> None:
+    """Keep creation pending until every unfinished allocation has failed."""
+
+    # Arrange
+    compute = await create_compute()
+    async with session_scope() as session:
+        organization = Organization(name="Acme", compute_id=compute.id)
+        session.add(organization)
+        await session.flush()
+        first = Operation(kind=OperationKind.organization_create, target_id=organization.id, allocation={"storage_bytes": 1024})
+        second = Operation(kind=OperationKind.organization_create, target_id=organization.id, allocation={"storage_bytes": 2048})
+        session.add_all([first, second])
+        await session.commit()
+    claimed = await claim_operation()
+    assert claimed is not None
+
+    # Act
+    assert await fail_operation(claimed, "Provider failed") is True
+
+    # Assert
+    async with session_scope() as session:
+        persisted = await session.get(Organization, organization.id)
+        assert persisted is not None
+        assert persisted.status == Status.creating
+
+    # Act
+    remaining = await claim_operation()
+    assert remaining is not None
+    assert remaining.id != claimed.id
+    assert await fail_operation(remaining, "Provider failed again") is True
+
+    # Assert
+    async with session_scope() as session:
+        persisted = await session.get(Organization, organization.id)
+        assert persisted is not None
+        assert persisted.status == Status.failed
+
+
 async def test_operations_service_failed_creation_updates_targets_and_resolves_resource_names() -> None:
     """Expose failed creation work with its concrete failed resource names."""
 

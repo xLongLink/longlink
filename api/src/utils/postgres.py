@@ -9,6 +9,12 @@ from sqlalchemy.ext.asyncio import AsyncConnection, create_async_engine
 from sqlalchemy.sql.elements import quoted_name
 
 
+def _solution_role(organization: UUID, solution: UUID) -> str:
+    """Resolve the stable runtime role used for provisioning and deletion."""
+
+    return f"longlink_{organization.hex[:16]}_{solution.hex[:16]}"
+
+
 class Postgres:
     """Provision organization databases and Solution schemas using cluster-owned PostgreSQL credentials.
 
@@ -108,7 +114,7 @@ class Postgres:
         """
 
         # Derive the solution-scoped role while the cluster-owned password remains stable across retries.
-        runtime_username = f"longlink_{organization.hex[:16]}_{solution.hex[:16]}"
+        runtime_username = _solution_role(organization, solution)
 
         # Create the solution schema and bind the runtime role inside the organization database.
         async with self.connection(organization.hex) as conn:
@@ -152,7 +158,7 @@ class Postgres:
             if await conn.scalar(text("SELECT 1 FROM pg_database WHERE datname = :name"), {"name": organization.hex}) is None:
                 return
 
-        runtime_username = f"longlink_{organization.hex[:16]}_{solution.hex[:16]}"
+        runtime_username = _solution_role(organization, solution)
 
         # Remove the Solution's schema and global role atomically within its Organization database.
         async with self.connection(organization.hex) as conn:

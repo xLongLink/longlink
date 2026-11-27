@@ -3,6 +3,7 @@ from uuid import UUID
 from typing import cast
 from datetime import UTC, datetime
 from sqlmodel import col
+from src.utils import s3
 from sqlalchemy import delete as sql_delete
 from sqlalchemy import update
 from src.kubernetes import databases as database_resources
@@ -59,7 +60,7 @@ async def deploy(revision_id: UUID) -> None:
         "LONGLINK_DATABASE_PORT": "5432",
         "LONGLINK_DATABASE_SCHEMA": solution.id.hex,
         "LONGLINK_STORAGE_BUCKET": storage.bucket_name(organization.id),
-        "LONGLINK_STORAGE_PREFIX": f"solutions/{solution.id.hex}/",
+        "LONGLINK_STORAGE_PREFIX": s3.solution_prefix(solution.id),
         "LONGLINK_STORAGE_REGION": "us-east-1",
         # Workloads always reach object storage through the cluster-local TLS proxy.
         "LONGLINK_STORAGE_ENDPOINT_URL": "https://longlink-storage.rustfs.svc:443",

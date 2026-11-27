@@ -15,7 +15,7 @@ from collections.abc import Sequence
 from src.models.tags import TagIcon, TagKind
 from src.environments import env
 from src.models.roles import OrganizationRoles
-from sqlalchemy.engine import CursorResult
+from sqlalchemy.engine import RowMapping, CursorResult
 from src.database.types import attr
 from botocore.exceptions import ClientError, BotoCoreError
 from src.models.statuses import Status
@@ -394,23 +394,50 @@ async def lock_active_access(
     return organization, membership
 
 
+async def usage(session: AsyncSession, organization_id: UUID) -> RowMapping:
+    """Read member counts, active Solutions, and capacity in one snapshot."""
+
+    # Scope accepted active members and active Solutions to this Organization.
+    users = (
+        select(func.count())
+        .select_from(UserOrganization)
+        .join(User, col(User.id) == col(UserOrganization.user_id))
+        .where(col(UserOrganization.organization_id) == organization_id, col(User.deleted_at).is_(None))
+        .scalar_subquery()
+    )
+    solutions = (
+        select(func.count())
+        .select_from(Solution)
+        .where(col(Solution.organization_id) == organization_id, col(Solution.deleted_at).is_(None))
+        .scalar_subquery()
+    )
+
+    # Read counts, capacity, and payment authorization in one database snapshot.
+    capacity = await session.execute(
+        select(
+            users.label("users"),
+            solutions.label("solutions"),
+            col(Organization.compute_ram_bytes),
+            col(Organization.storage_bytes),
+            col(Organization.compute_cpu_millicores),
+            col(Organization.database_ram_bytes),
+            col(Organization.database_storage_bytes),
+            col(Organization.database_cpu_millicores),
+            col(Organization.stripe_payment_method_id).is_not(None).label("has_payment_method"),
+            col(Organization.status),
+        ).where(col(Organization.id) == organization_id)
+    )
+    return capacity.mappings().one()
+
+
 async def update_usage(session: AsyncSession, organization_id: UUID, user_id: UUID, payload: OrganizationUsageUpdate) -> None:
     """Authorize capacity changes, preserve live data, and queue infrastructure reconciliation."""
 
     # Serialize payment authorization, capacity changes, and ownership revocation.
     organization, _ = await lock_active_access(session, user_id, organization_id, OrganizationRoles.owner)
     values = payload.model_dump()
-    pending = await session.scalar(
-        select(col(Operation.id))
-        .where(
-            col(Operation.target_id) == organization_id,
-            col(Operation.kind) == OperationKind.organization_create,
-            col(Operation.finished_at).is_(None),
-            col(Operation.allocation).is_not(None),
-        )
-        .limit(1)
-    )
-    if pending is not None or organization.status not in (Status.running, Status.failed):
+    pending = await operations.has_pending_allocation(session, organization_id)
+    if pending or organization.status not in (Status.running, Status.failed):
         raise HTTPException(status_code=409, detail="Organization capacity reconciliation is pending")
     if organization.status == Status.running and all(getattr(organization, name) == value for name, value in values.items()):
         return

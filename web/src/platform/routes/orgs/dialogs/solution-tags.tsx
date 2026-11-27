@@ -45,14 +45,13 @@ export function SolutionTags({
         defaultValues: { tag_ids: solution.tag_ids ?? [] }
     });
 
-    async function save(data: z.output<typeof schemas.zSolutionTagsWrite>) {
-        await api.patch(`${base}/solutions/${solution.id}/tags`, { json: data });
-        await onSuccess();
-    }
-
-    const submit = useSubmit(save, {
-        onError: () => form.setError('root', { message: 'Could not save the tags. Please try again.' })
-    });
+    const submit = useSubmit(
+        async (data: z.output<typeof schemas.zSolutionTagsWrite>) => {
+            await api.patch(`${base}/solutions/${solution.id}/tags`, { json: data });
+            await onSuccess();
+        },
+        { onError: () => form.setError('root', { message: 'Could not save the tags. Please try again.' }) }
+    );
 
     return (
         <Dialog
