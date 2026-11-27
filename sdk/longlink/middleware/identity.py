@@ -1,7 +1,7 @@
 import jwt
 from uuid import UUID
 from typing import Literal
-from longlink import identity
+from longlink import identity, permissions
 from pydantic import ValidationError
 from urllib.parse import unquote
 from starlette.types import Send, Scope, ASGIApp, Receive
@@ -44,12 +44,11 @@ class IdentityMiddleware:
         # Verify the Platform-signed user assertion before exposing it to Solution code.
         request = Request(scope)
         user = None
-        verified = False
+        signed_access: permissions.Access | None = None
         if self.identity_secret:
             try:
-                user, access = identity.identity_token_data(request.headers.get("x-longlink-identity", ""), self.identity_secret)
-                scope["longlink.access"] = access
-                verified = True
+                user, signed_access = identity.identity_token_data(request.headers.get("x-longlink-identity", ""), self.identity_secret)
+                scope["longlink.access"] = signed_access
 
             # Invalid assertions remain anonymous until the route's identity policy is enforced.
             except jwt.PyJWTError:
@@ -57,7 +56,7 @@ class IdentityMiddleware:
 
         # Local profiles come from the SDK frontend, never from production credentials.
         development_cookie = request.cookies.get("longlink-development-user") if self.mode == "development" else None
-        if not verified and user is None and development_cookie is not None:
+        if signed_access is None and user is None and development_cookie is not None:
             try:
                 development_identity = identity.DevelopmentIdentity.model_validate_json(unquote(development_cookie))
             except ValidationError:
@@ -71,14 +70,18 @@ class IdentityMiddleware:
             scope["longlink.access"] = catalog.access(development_identity.role)
 
         # Only verified Platform assertions or Kubernetes probes are admitted in production.
-        if self.mode == "production" and not verified and not (request.method == "GET" and request.url.path in {"/health", "/ready"}):
+        if (
+            self.mode == "production"
+            and signed_access is None
+            and not (request.method == "GET" and request.url.path in {"/health", "/ready"})
+        ):
             response = JSONResponse({"detail": "Authentication required"}, status_code=401)
             await response(scope, receive, send)
             return
 
         # Guest identities cannot initialize or resume the mutation-capable MCP transport.
         if (
-            verified
+            signed_access is not None
             and user is None
             and (request.method not in {"GET", "HEAD", "OPTIONS"} or request.url.path.strip("/").split("/", 1)[0] == "mcp")
         ):
@@ -92,7 +95,7 @@ class IdentityMiddleware:
 
         # Reset audit identity after response streaming, background work, or failure.
         actor_id = user.id if user is not None else None
-        if not verified and self.mode != "production" and user is None:
+        if signed_access is None and self.mode != "production" and user is None:
             actor_id = self.local_user_id
         with audit.actor(actor_id):
             await self.app(scope, receive, send)

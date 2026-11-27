@@ -29,19 +29,29 @@ def identity_headers(user_id: UUID) -> dict[str, str]:
     }
 
 
-@pytest.mark.parametrize(("secret", "identity_header"), [(IDENTITY_SECRET, "invalid-token"), ("", None)])
-def test_context_middleware_treats_untrusted_identity_as_anonymous(secret: str, identity_header: str | None) -> None:
-    """Treat invalid tokens and missing credentials as anonymous."""
+@pytest.mark.parametrize(
+    ("secret", "identity_header", "actor_id"),
+    [
+        (IDENTITY_SECRET, "invalid-token", str(UUID(int=1))),
+        ("", None, str(UUID(int=1))),
+        (IDENTITY_SECRET, identity.create_identity_token(None, IDENTITY_SECRET, permissions.Access(catalog="a" * 64, endpoints=[])), None),
+    ],
+)
+def test_context_middleware_distinguishes_signed_guests_from_untrusted_identity(
+    secret: str, identity_header: str | None, actor_id: str | None
+) -> None:
+    """Use the local audit identity only for unsigned callers, never signed guests."""
 
     # Install the real context middleware around the shared anonymous probe route.
     app = FastAPI()
-    app.add_middleware(IdentityMiddleware, identity_secret=secret, mode="testing", local_user_id=None)
+    app.add_middleware(IdentityMiddleware, identity_secret=secret, mode="testing", local_user_id=UUID(int=1))
 
-    @app.get("/", response_model=dict[str, bool])
-    async def get_identity() -> dict[str, bool]:
+    @app.get("/", response_model=dict[str, str | None])
+    async def get_identity() -> dict[str, str | None]:
         """Expose whether the middleware accepted the supplied identity."""
 
-        return {"authenticated": audit.current_actor.get() is not None}
+        actor = audit.current_actor.get()
+        return {"actor_id": str(actor) if actor is not None else None}
 
     client = TestClient(app)
 
@@ -54,7 +64,7 @@ def test_context_middleware_treats_untrusted_identity_as_anonymous(secret: str, 
 
     # Assert
     assert response.status_code == 200
-    assert response.json() == {"authenticated": False}
+    assert response.json() == {"actor_id": actor_id}
 
 
 @pytest.fixture

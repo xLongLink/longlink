@@ -46,19 +46,11 @@ class UserOrganizationMembership(BaseModel):
     role: OrganizationRoles
 
 
-class UserOrganizationInvitation(BaseModel):
+class UserOrganizationInvitation(UserOrganizationMembership):
     """Represent one pending Organization invitation for the current user."""
-
-    model_config = ConfigDict(from_attributes=True)
 
     # Identifier
     id: UUID
-
-    # Relationships
-    organization: OrganizationIdentity
-
-    # Access
-    role: OrganizationRoles
 
 
 class UserSummary(UserIdentity):

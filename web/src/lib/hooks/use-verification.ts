@@ -1,12 +1,19 @@
+import { ApiError } from '@/lib/api';
 import { useErrorBoundary } from 'react-error-boundary';
 import { useEffect, useEffectEvent, useRef, useState } from 'react';
 
 export type VerificationRequest = { signal: AbortSignal; token: string };
 
 /** Owns credential-exchange state and cancellation without choosing the page's token policy. */
-export function useVerification<T>(token: string, verify: (request: VerificationRequest) => Promise<T | undefined>) {
+export function useVerification<T>(
+    token: string,
+    storageKey: string,
+    verify: (request: VerificationRequest) => Promise<T>
+) {
     const controller = useRef<AbortController | null>(null);
-    const [verification, setVerification] = useState<T | null>(null);
+    const [verification, setVerification] = useState<{ status: 'verified'; data: T } | { status: 'error' } | null>(
+        null
+    );
     const { showBoundary } = useErrorBoundary();
 
     /** Replaces the active credential exchange with a cancellable request. */
@@ -17,11 +24,20 @@ export function useVerification<T>(token: string, verify: (request: Verification
         controller.current = nextController;
         setVerification(null);
 
-        // Only the active attempt can publish its outcome or an unexpected failure.
         try {
-            const outcome = await verify({ signal: nextController.signal, token: verificationToken });
+            let outcome: { status: 'verified'; data: T } | { status: 'error' };
+            try {
+                const data = await verify({ signal: nextController.signal, token: verificationToken });
+                outcome = { status: 'verified', data };
+            } catch (cause) {
+                if (nextController.signal.aborted) return;
+                if (!(cause instanceof ApiError) || cause.status !== 400) throw cause;
+                outcome = { status: 'error' };
+            }
 
-            if (!nextController.signal.aborted && outcome !== undefined) setVerification(outcome);
+            if (nextController.signal.aborted) return;
+            sessionStorage.removeItem(storageKey);
+            setVerification(outcome);
         } catch (cause) {
             if (!nextController.signal.aborted) showBoundary(cause);
         }

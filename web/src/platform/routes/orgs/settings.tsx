@@ -7,9 +7,9 @@ import MembersSection from './members';
 import InvitationsSection from './invitations';
 import PaymentMethods from './payment-methods';
 import { ApiBoundary } from '@/components/api';
+import SolutionSettings from './solution-settings';
 import { Button } from '@/components/shadcn/button';
 import * as permissions from '@/platform/permissions';
-import SolutionManagement from './solution-management';
 import { Text } from '@/components/longlink/display/text';
 import { Separator } from '@/components/shadcn/separator';
 import { Stack } from '@/components/longlink/layout/stack';
@@ -79,10 +79,7 @@ export default function OrganizationSettings() {
             ]
         }
     ];
-    const solutions = {
-        id: 'solutions',
-        content: <SolutionManagement membership={membership} presentation="settings" />
-    };
+    const solutions = { id: 'solutions', content: <SolutionSettings membership={membership} /> };
     const section =
         [solutions, ...groups.flatMap((group) => group.sections)].find((item) => item.id === requested) ?? general;
 

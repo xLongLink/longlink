@@ -6,7 +6,7 @@ import { withMounted } from '../../../render';
 import { ApiProvider } from '@/components/api';
 import { act, Suspense, useState } from 'react';
 import userEvent from '@testing-library/user-event';
-import Management from '@/platform/routes/orgs/solution-management';
+import SolutionSettings from '@/platform/routes/orgs/solution-settings';
 import type { OrganizationContext } from '@/platform/layouts/organization';
 import { SolutionLogsDialog } from '@/platform/routes/orgs/dialogs/solution-logs';
 
@@ -44,10 +44,7 @@ it.each([
         await withMounted(
             <ApiProvider platformSession>
                 <Suspense fallback={<p>Loading solutions</p>}>
-                    <Management
-                        membership={{ ...membership, role: 'read', tags: [], activeTag: undefined }}
-                        presentation="settings"
-                    />
+                    <SolutionSettings membership={{ ...membership, role: 'read', tags: [], activeTag: undefined }} />
                 </Suspense>
             </ApiProvider>,
             async (output) => {
@@ -91,7 +88,7 @@ it('joins repeated log refreshes, retains logs after failure, and recovers befor
         return Response.json(['Deployment recovered']);
     });
 
-    /** Mounts each logs attempt using the same visibility ownership as Solution management. */
+    /** Mounts each logs attempt using the same visibility ownership as Solution settings. */
     function Logs() {
         const [open, setOpen] = useState(true);
 
@@ -202,10 +199,7 @@ async function withSolutions(role: OrganizationContext['role'], check: (output: 
         await withMounted(
             <ApiProvider platformSession>
                 <Suspense fallback={<p>Loading solutions</p>}>
-                    <Management
-                        membership={{ ...membership, role, tags: [], activeTag: undefined }}
-                        presentation="settings"
-                    />
+                    <SolutionSettings membership={{ ...membership, role, tags: [], activeTag: undefined }} />
                 </Suspense>
             </ApiProvider>,
             async (output) => {
@@ -263,10 +257,7 @@ it('opens row tags with the existing assignment and saves edits before closing',
         await withMounted(
             <ApiProvider platformSession>
                 <Suspense fallback={<p>Loading solutions</p>}>
-                    <Management
-                        membership={{ ...membership, tags: [], activeTag: undefined }}
-                        presentation="settings"
-                    />
+                    <SolutionSettings membership={{ ...membership, tags: [], activeTag: undefined }} />
                 </Suspense>
             </ApiProvider>,
             async (output) => {

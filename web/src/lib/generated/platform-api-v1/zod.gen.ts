@@ -851,9 +851,9 @@ export const zOrganizationMemberAccessResponse = z.object({
  * Represent one pending Organization invitation for the current user.
  */
 export const zUserOrganizationInvitation = z.object({
-    id: z.uuid(),
     organization: zOrganizationIdentity,
-    role: zOrganizationRoles
+    role: zOrganizationRoles,
+    id: z.uuid()
 });
 
 /**

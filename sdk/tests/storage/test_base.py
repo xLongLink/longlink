@@ -22,6 +22,8 @@ UNSAFE_STORAGE_SCOPES = [
     ("acme", "../shared/", "Storage prefixes must be relative paths inside a bucket"),
     ("acme", "/shared/", "Storage prefixes must be relative paths inside a bucket"),
     ("acme", ".", "Storage prefixes must be relative paths inside a bucket"),
+    ("acme", "solutions\\dashboard", "Storage prefixes must be relative paths inside a bucket"),
+    ("acme", "solutions/\x00dashboard", "Storage prefixes must be relative paths inside a bucket"),
     (".", "solutions/dashboard", "Storage buckets must be bucket names"),
     ("/acme", "solutions/dashboard", "Storage buckets must be bucket names"),
     ("acme/../shared", "solutions/dashboard", "Storage buckets must be bucket names"),
@@ -275,7 +277,9 @@ async def test_s3_streams_and_mutates_only_its_configured_scope(
     """Exercise native S3 I/O without disclosing or changing another Solution's objects."""
 
     # Arrange
-    settings = Envs.model_validate(production_settings | {"STORAGE_ENDPOINT_URL": object_server.url})
+    settings = Envs.model_validate(
+        production_settings | {"STORAGE_ENDPOINT_URL": object_server.url, "STORAGE_PREFIX": "./solutions//dashboard/"}
+    )
     objects = storage.create_storage(settings)
     content = bytes(range(256)) * 8193
     object_server.objects["/acme/other/report.bin"] = b"another Solution"

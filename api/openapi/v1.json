@@ -6849,23 +6849,23 @@
       },
       "UserOrganizationInvitation": {
         "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Id"
-          },
           "organization": {
             "$ref": "#/components/schemas/OrganizationIdentity"
           },
           "role": {
             "$ref": "#/components/schemas/OrganizationRoles"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
           }
         },
         "type": "object",
         "required": [
-          "id",
           "organization",
-          "role"
+          "role",
+          "id"
         ],
         "title": "UserOrganizationInvitation",
         "description": "Represent one pending Organization invitation for the current user."
