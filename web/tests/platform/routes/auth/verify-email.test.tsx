@@ -184,10 +184,6 @@ it.each(['transport failure', 'invalid response'])('retains email proof for retr
 
         if (path === '/api/v1/me') return Response.json({ detail: 'Not authenticated' }, { status: 401 });
 
-        if (path === '/api/v1/auth/register/setup' && proofs.length === 2) {
-            return Response.json({ email: 'new@example.com' });
-        }
-
         if (path === '/api/v1/auth/verify' && request.method === 'POST') {
             proofs.push(await request.json());
 

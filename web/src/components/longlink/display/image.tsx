@@ -1,9 +1,9 @@
 import { cn } from 'cn';
+import { useState, type ComponentProps } from 'react';
 import { Skeleton } from '@/components/shadcn/skeleton';
 import { useMergedRefs } from '@base-ui/utils/useMergedRefs';
-import { useBinaryQuery } from '@/lib/hooks/use-binary-query';
 import { AspectRatio } from '@/components/shadcn/aspect-ratio';
-import { useEffect, useRef, useState, type ComponentProps } from 'react';
+import { useImageBody, useImageResource } from './use-image-resource';
 
 type ImageProps = Omit<ComponentProps<'img'>, 'src' | 'alt'> & {
     /** Scoped Solution image path, or an image data/blob URL. */
@@ -28,9 +28,8 @@ export function Image(props: ImageProps) {
 }
 
 function ScopedImage(props: ImageProps) {
-    const { data, isError } = useBinaryQuery(props.src);
-    const body = data?.type.startsWith('image/') ? data : undefined;
-    return <ImageContent {...props} src={undefined} body={body} unavailable={isError || !!(data && !body)} />;
+    const resource = useImageResource(props.src);
+    return <ImageContent {...props} src={undefined} {...resource} />;
 }
 
 function ImageContent({
@@ -48,21 +47,9 @@ function ImageContent({
     dangerouslySetInnerHTML: _html,
     ...props
 }: Omit<ImageProps, 'src'> & { src?: string; body?: Blob; unavailable?: boolean }) {
-    const image = useRef<HTMLImageElement>(null);
+    const image = useImageBody(body);
     const mergedRef = useMergedRefs(image, ref);
     const [broken, setBroken] = useState<Blob | string>();
-
-    useEffect(() => {
-        const element = image.current;
-        if (!body || !element) return;
-        const url = URL.createObjectURL(body);
-        element.src = url;
-
-        return () => {
-            element.removeAttribute('src');
-            URL.revokeObjectURL(url);
-        };
-    }, [body]);
 
     // Keep framing opt-in and prevent native source overrides from bypassing the host.
     const content =

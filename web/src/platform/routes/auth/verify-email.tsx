@@ -17,7 +17,6 @@ import { Separator } from '@/components/shadcn/separator';
 import { Stack } from '@/components/longlink/layout/stack';
 import { useCurrentUser } from '@/platform/hooks/use-user';
 import { useVerification } from '@/lib/hooks/use-verification';
-import { useFragmentToken } from '@/lib/hooks/use-fragment-token';
 import { zEmailPayload } from '@/lib/generated/platform-api-v1/zod.gen';
 
 const REGISTRATION_TOKEN_KEY = 'longlink.registration.token';
@@ -34,7 +33,6 @@ export default function VerifyEmail() {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
     const { refetch } = useCurrentUser();
-    const token = useFragmentToken(REGISTRATION_TOKEN_KEY);
 
     const form = useForm<RegistrationCompleteValues>({
         defaultValues: { name: '', password: '' },
@@ -42,7 +40,6 @@ export default function VerifyEmail() {
     });
 
     const { verification, startVerification } = useVerification(
-        token,
         REGISTRATION_TOKEN_KEY,
         async ({ signal, token: registrationToken }) =>
             registrationToken

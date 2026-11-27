@@ -1,13 +1,15 @@
 import type { FieldProps } from './fields';
 import * as field from '@/components/shadcn/field';
-import { useEffect, useRef, useState, Fragment, type ReactNode, type Ref } from 'react';
+import { useEffect, useId, useRef, useState, Fragment, type ReactNode, type Ref } from 'react';
 
-type FieldLayoutProps = Pick<FieldProps, 'label' | 'description' | 'error'> & {
-    id: string;
+type ControlAttributes = Required<Pick<FieldProps, 'id'>> & Omit<FieldProps, 'id' | 'label' | 'description' | 'error'>;
+
+type FieldLayoutProps = {
+    field: FieldProps;
     disabled?: boolean;
     horizontal?: boolean;
     group?: boolean;
-    children: ReactNode;
+    children: (attributes: ControlAttributes) => ReactNode;
 };
 
 /** Restores composite control state after an uncanceled form reset. */
@@ -38,23 +40,38 @@ export function FieldFrame({ form, children, ...props }: FieldLayoutProps & { fo
 
     return (
         <FieldLayout {...props} ref={root}>
-            <Fragment key={reset}>{children}</Fragment>
+            {(attributes) => <Fragment key={reset}>{children(attributes)}</Fragment>}
         </FieldLayout>
     );
 }
 
 /** Owns field presentation without changing the control's lifecycle. */
 export function FieldLayout({
-    id,
-    label,
-    description,
-    error,
+    field: props,
     disabled,
     ref,
     horizontal = false,
     group = false,
     children
 }: FieldLayoutProps & { ref?: Ref<HTMLDivElement> }) {
+    const generatedId = useId();
+    const { label, description, error } = props;
+    const id = props.id ?? generatedId;
+    const attributes: ControlAttributes = {
+        id,
+        'aria-label': props['aria-label'],
+        'aria-labelledby': props['aria-labelledby'] ?? (label ? `${id}-label` : undefined),
+        'aria-describedby':
+            [
+                props['aria-describedby'],
+                description ? `${id}-description` : undefined,
+                error ? `${id}-error` : undefined
+            ]
+                .filter(Boolean)
+                .join(' ') || undefined,
+        'aria-invalid': error ? true : props['aria-invalid']
+    };
+    const control = children(attributes);
     const feedback = (
         <>
             {description && <field.FieldDescription id={`${id}-description`}>{description}</field.FieldDescription>}
@@ -86,7 +103,7 @@ export function FieldLayout({
         >
             {horizontal ? (
                 <>
-                    {children}
+                    {control}
                     {(heading || description || error) && (
                         <field.FieldContent>
                             {heading}
@@ -97,7 +114,7 @@ export function FieldLayout({
             ) : (
                 <>
                     {heading}
-                    {children}
+                    {control}
                     {feedback}
                 </>
             )}

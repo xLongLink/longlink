@@ -1,13 +1,17 @@
 // @vitest-environment happy-dom
+import { ApiError } from '@/lib/api';
 import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../render';
 import { createRoot } from 'react-dom/client';
 import { ErrorBoundary } from 'react-error-boundary';
-import { act, createElement, StrictMode, useState } from 'react';
+import { MemoryRouter, useNavigate } from 'react-router';
+import { act, createElement, StrictMode, useLayoutEffect } from 'react';
 import { useVerification, type VerificationRequest } from '@/lib/hooks/use-verification';
 
 it('ignores late successes and failures from canceled verification attempts', async () => {
     // Arrange
+    const originalUrl = window.location.href;
+    const originalState: unknown = window.history.state;
     const attempts: {
         request: VerificationRequest;
         resolve: (value: string) => void;
@@ -23,18 +27,19 @@ it('ignores late successes and failures from canceled verification attempts', as
 
     /** Exercise both user retries and token-driven replacement. */
     function Probe() {
-        const [token, setToken] = useState('proof');
-        const { verification, startVerification } = useVerification(token, 'verification.token', verify);
+        const navigate = useNavigate();
+        const { verification, startVerification } = useVerification('verification.token', verify);
 
         return createElement(
             'div',
             null,
             createElement('output', null, verification?.status === 'verified' ? verification.data : 'Pending'),
-            createElement('button', { onClick: () => void startVerification(token) }, 'Retry'),
-            createElement('button', { onClick: () => setToken('replacement') }, 'Change token')
+            createElement('button', { onClick: () => void startVerification('proof') }, 'Retry'),
+            createElement('button', { onClick: () => void navigate('/verify#token=replacement') }, 'Change token')
         );
     }
 
+    sessionStorage.setItem('verification.token', 'proof');
     await withMounted(createElement('section'), async (output) => {
         const container = output.querySelector('section');
         if (!container) throw new Error('Missing mount container');
@@ -46,7 +51,11 @@ it('ignores late successes and failures from canceled verification attempts', as
                     createElement(
                         StrictMode,
                         null,
-                        createElement(ErrorBoundary, { fallback: 'Failure' }, createElement(Probe))
+                        createElement(
+                            MemoryRouter,
+                            null,
+                            createElement(ErrorBoundary, { fallback: 'Failure' }, createElement(Probe))
+                        )
                     )
                 )
             );
@@ -86,6 +95,7 @@ it('ignores late successes and failures from canceled verification attempts', as
         } finally {
             await act(async () => root.unmount());
             sessionStorage.removeItem('verification.token');
+            window.history.replaceState(originalState, '', originalUrl);
         }
     });
 });
@@ -99,7 +109,7 @@ it('surfaces credential consumption failures instead of classifying them as inva
 
     /** Completes the exchange before storage consumption fails. */
     function Probe() {
-        const { verification } = useVerification('proof', 'verification.token', async () => 'accepted');
+        const { verification } = useVerification('verification.token', async () => 'accepted');
         return createElement('output', null, verification?.status ?? 'Pending');
     }
 
@@ -118,3 +128,125 @@ it('surfaces credential consumption failures instead of classifying them as inva
         sessionStorage.removeItem('verification.token');
     }
 });
+
+it('captures fragment proof and preserves history state before layout observers run', async () => {
+    // Arrange
+    const originalUrl = window.location.href;
+    const originalState: unknown = window.history.state;
+    const state = { idx: 3, key: 'entry', usr: { returnTo: '/account' } };
+    const verify = vi.fn(async (_request: VerificationRequest) => 'accepted');
+    const observed: { hash: string; search: string; proof: string | null; state: unknown }[] = [];
+    window.history.replaceState(state, '', '/verify?keep=1#token=url-proof');
+    sessionStorage.setItem('verification.token', 'older-proof');
+
+    /** Observes credential capture during the same prepaint commit. */
+    function Probe() {
+        useVerification('verification.token', verify);
+        useLayoutEffect(() => {
+            observed.push({
+                hash: window.location.hash,
+                search: window.location.search,
+                proof: sessionStorage.getItem('verification.token'),
+                state: window.history.state
+            });
+        }, []);
+        return null;
+    }
+
+    try {
+        // Act
+        await withMounted(
+            createElement(ErrorBoundary, { fallback: 'Failure' }, createElement(Probe)),
+            async () => {
+                // Assert
+                expect(observed).toEqual([{ hash: '', search: '?keep=1', proof: 'url-proof', state }]);
+                expect(verify.mock.calls[0]?.[0].token).toBe('url-proof');
+                expect(sessionStorage.getItem('verification.token')).toBeNull();
+            },
+            '/verify?keep=1#token=url-proof'
+        );
+    } finally {
+        window.history.replaceState(originalState, '', originalUrl);
+        sessionStorage.removeItem('verification.token');
+    }
+});
+
+it.each(['accepted', 'rejected'])(
+    'consumes stored proof only after it is %s without starting setup recovery',
+    async (outcome) => {
+        // Arrange
+        sessionStorage.setItem('verification.token', 'stored-proof');
+        let resolve: (value: string) => void = () => undefined;
+        let reject: (reason: Error) => void = () => undefined;
+        const response = new Promise<string>((accept, fail) => {
+            resolve = accept;
+            reject = fail;
+        });
+        const verify = vi.fn(async (_request: VerificationRequest) => await response);
+
+        /** Uses stored proof without choosing a recovery request implicitly. */
+        function Probe() {
+            const { verification } = useVerification('verification.token', verify);
+            return createElement('output', null, verification?.status ?? 'Pending');
+        }
+
+        try {
+            // Act
+            await withMounted(
+                createElement(ErrorBoundary, { fallback: 'Failure' }, createElement(Probe)),
+                async (output) => {
+                    // Assert
+                    expect(verify.mock.calls[0]?.[0].token).toBe('stored-proof');
+                    expect(sessionStorage.getItem('verification.token')).toBe('stored-proof');
+                    expect(output.textContent).toBe('Pending');
+
+                    // Act
+                    await act(async () => {
+                        if (outcome === 'accepted') resolve('accepted');
+                        else reject(new ApiError('Invalid proof', 400));
+                    });
+
+                    // Assert
+                    expect(output.textContent).toBe(outcome === 'accepted' ? 'verified' : 'error');
+                    expect(sessionStorage.getItem('verification.token')).toBeNull();
+                    expect(verify).toHaveBeenCalledTimes(1);
+                }
+            );
+        } finally {
+            sessionStorage.removeItem('verification.token');
+        }
+    }
+);
+
+it.each(['getItem', 'setItem'] as const)(
+    'surfaces token storage %s failures without admitting credentials',
+    async (method) => {
+        // Arrange
+        const verify = vi.fn(async (_request: VerificationRequest) => 'accepted');
+        const storage = vi.spyOn(sessionStorage, method).mockImplementation(() => {
+            throw new DOMException('Storage unavailable', 'SecurityError');
+        });
+
+        /** Leaves storage errors to the owning error boundary. */
+        function Probe() {
+            useVerification('verification.token', verify);
+            return null;
+        }
+
+        try {
+            // Act
+            await withMounted(
+                createElement(ErrorBoundary, { fallback: 'Failure' }, createElement(Probe)),
+                async (output) => {
+                    // Assert
+                    expect(output.textContent).toBe('Failure');
+                    if (method === 'getItem') expect(verify).not.toHaveBeenCalled();
+                    else expect(verify.mock.calls[0]?.[0].signal.aborted).toBe(true);
+                },
+                method === 'setItem' ? '/verify#token=proof' : '/verify'
+            );
+        } finally {
+            storage.mockRestore();
+        }
+    }
+);

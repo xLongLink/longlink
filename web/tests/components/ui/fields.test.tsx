@@ -5,7 +5,7 @@ import { withMounted } from '../../render';
 import userEvent from '@testing-library/user-event';
 import { Controller, useForm } from 'react-hook-form';
 import { SliderExample } from '@/platform/routes/docs/sdk/views/slider';
-import { Input, Select, Slider, Combobox, RadioGroup } from '@/components/longlink';
+import { Input, Select, Slider, Switch, Checkbox, Combobox, Textarea, RadioGroup } from '@/components/longlink';
 
 it('focuses the invalid text field and preserves its descriptions after correction', async () => {
     function EmailForm() {
@@ -49,6 +49,57 @@ it('focuses the invalid text field and preserves its descriptions after correcti
         expect(document.getElementById('email-error')).toBeNull();
     });
 });
+
+it.each([Input, Textarea])(
+    'preserves explicit accessibility attributes when field feedback changes',
+    async (Control) => {
+        // Arrange
+        function Example() {
+            const [value, setValue] = useState('');
+
+            return (
+                <>
+                    <h2 id="account-heading">Account email</h2>
+                    <p id="account-policy">Only work accounts.</p>
+                    <Control
+                        id="account-email"
+                        label="Email"
+                        description="Your account email."
+                        aria-label="Work email"
+                        aria-labelledby="account-heading"
+                        aria-describedby="account-policy"
+                        aria-invalid="grammar"
+                        error={value ? undefined : 'Enter a work email.'}
+                        value={value}
+                        onChange={(event) => setValue(event.target.value)}
+                    />
+                </>
+            );
+        }
+
+        await withMounted(<Example />, async (output) => {
+            const control = output.querySelector<HTMLInputElement | HTMLTextAreaElement>('input, textarea');
+            if (!control) throw new Error('Expected an editable email field');
+            const user = userEvent.setup();
+            expect(control.getAttribute('aria-invalid')).toBe('true');
+
+            // Act
+            await act(async () => user.type(control, 'mara@example.com'));
+
+            // Assert
+            expect(control.id).toBe('account-email');
+            expect(control.labels?.[0]?.textContent).toBe('Email');
+            expect(control.getAttribute('aria-label')).toBe('Work email');
+            expect(control.getAttribute('aria-labelledby')).toBe('account-heading');
+            expect(control.getAttribute('aria-describedby')?.split(' ')).toEqual([
+                'account-policy',
+                'account-email-description'
+            ]);
+            expect(control.getAttribute('aria-invalid')).toBe('grammar');
+            expect(document.getElementById('account-email-error')).toBeNull();
+        });
+    }
+);
 
 it.each([Select, Combobox, RadioGroup])(
     'focuses the owned control when form validation rejects an empty selection',
@@ -109,10 +160,13 @@ it.each([Select, Combobox])(
     async (Control) => {
         await withMounted(
             <form>
+                <p id="teams-policy">Choose your teams.</p>
                 <Control
                     multiple
                     name="teams"
                     label="Teams"
+                    description="Teams with access."
+                    aria-describedby="teams-policy"
                     defaultValue={['design']}
                     options={[
                         { value: 'design', label: 'Design' },
@@ -135,6 +189,9 @@ it.each([Select, Combobox])(
                 const reset = output.querySelector<HTMLButtonElement>('button[type="reset"]');
 
                 if (!form || !trigger || !reset) throw new Error('Expected a multiple-selection form');
+                const id = trigger.id;
+                const labelledBy = trigger.getAttribute('aria-labelledby');
+                const describedBy = trigger.getAttribute('aria-describedby');
                 const user = userEvent.setup();
                 await act(async () => user.click(trigger));
                 await vi.waitFor(() =>
@@ -158,10 +215,59 @@ it.each([Select, Combobox])(
                 expect(new FormData(form).getAll('teams')).toEqual(['design', 'engineering']);
                 await act(async () => user.click(reset));
                 await vi.waitFor(() => expect(new FormData(form).getAll('teams')).toEqual(['design']));
+                const restored = output.querySelector<HTMLElement>('[role="combobox"]');
+                expect(restored?.id).toBe(id);
+                expect(restored?.getAttribute('aria-labelledby')).toBe(labelledBy);
+                expect(document.getElementById(labelledBy ?? '')?.textContent).toBe('Teams');
+                expect(restored?.getAttribute('aria-describedby')).toBe(describedBy);
+                expect(describedBy?.split(' ').map((id) => document.getElementById(id)?.textContent)).toEqual([
+                    'Choose your teams.',
+                    'Teams with access.'
+                ]);
                 expect(
                     output.querySelector('[data-slot="select-value"]')?.textContent ??
                         output.querySelector('[data-slot="combobox-chip"]')?.textContent
                 ).toContain('Design');
+            }
+        );
+    }
+);
+
+it.each([Checkbox, Switch])(
+    'resets a field associated with an external form without changing its label',
+    async (Control) => {
+        // Arrange
+        await withMounted(
+            <>
+                <form id="preferences">
+                    <button type="reset">Reset</button>
+                </form>
+                <Control form="preferences" name="updates" label="Updates" defaultChecked />
+            </>,
+            async (output) => {
+                const form = output.querySelector('form');
+                const control = output.querySelector<HTMLElement>('[role="checkbox"], [role="switch"]');
+                const reset = output.querySelector('button[type="reset"]');
+                if (!form || !control || !reset) throw new Error('Expected preferences and an associated control');
+                const id = output.querySelector('label')?.htmlFor;
+                if (!id) throw new Error('Expected a label associated with the native control');
+                const user = userEvent.setup();
+
+                // Act
+                await act(async () => user.click(control));
+                expect(new FormData(form).has('updates')).toBe(false);
+                await act(async () => user.click(reset));
+
+                // Assert
+                const restored = output.querySelector<HTMLElement>('[role="checkbox"], [role="switch"]');
+                const nativeControl = output.querySelector<HTMLInputElement>('input[name="updates"]');
+                expect(new FormData(form).has('updates')).toBe(true);
+                expect(output.querySelector('label')?.htmlFor).toBe(id);
+                expect(nativeControl?.id).toBe(id);
+                expect(nativeControl?.form).toBe(form);
+                expect(document.getElementById(restored?.getAttribute('aria-labelledby') ?? '')?.textContent).toBe(
+                    'Updates'
+                );
             }
         );
     }
@@ -345,7 +451,16 @@ it('preserves thumb focus and range values while editing the internally composed
 
         return (
             <form ref={measureSlider}>
-                <Slider name="range" label="Budget" value={value} onValueChange={setValue} min={0} max={100} step={5} />
+                <Slider
+                    name="range"
+                    label="Budget"
+                    description="Choose a budget range."
+                    value={value}
+                    onValueChange={setValue}
+                    min={0}
+                    max={100}
+                    step={5}
+                />
                 <output>{value.join(',')}</output>
             </form>
         );
@@ -361,6 +476,13 @@ it('preserves thumb focus and range values while editing the internally composed
         await act(async () => user.keyboard('{ArrowRight}{ArrowRight}'));
         expect(output.querySelector('output')?.textContent).toBe('30,80');
         expect(document.activeElement).toBe(focused);
+        const thumbs = Array.from(output.querySelectorAll<HTMLInputElement>('input[type="range"]'));
+        expect(thumbs.map((thumb) => thumb.getAttribute('aria-label'))).toEqual(['Budget 1', 'Budget 2']);
+        for (const thumb of thumbs) {
+            expect(document.getElementById(thumb.getAttribute('aria-describedby') ?? '')?.textContent).toBe(
+                'Choose a budget range.'
+            );
+        }
         expect(
             Array.from(output.querySelectorAll<HTMLInputElement>('input[type="range"]'), (thumb) => thumb.value)
         ).toEqual(['30', '80']);

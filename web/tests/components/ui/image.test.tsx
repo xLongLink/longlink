@@ -22,6 +22,28 @@ it('rejects alternate network sources supplied by untyped Views', () => {
     expect(output.querySelector('img')?.getAttribute('srcset')).toBeNull();
 });
 
+it('keeps whitespace in scoped image paths rather than treating them as caller URLs', async () => {
+    // Arrange
+    const request = vi.fn(async () => new Blob(['not an image'], { type: 'text/plain' }));
+
+    // Act
+    await withMounted(
+        <RequestContext value={request}>
+            <Image src=" blob:caller-photo " alt="Photo" />
+        </RequestContext>,
+        async (output) => {
+            await vi.waitFor(async () => {
+                await act(async () => {});
+                expect(output.textContent).toContain('Photo unavailable');
+            });
+
+            // Assert
+            expect(request).toHaveBeenCalledExactlyOnceWith(' blob:caller-photo ', { binary: true });
+            expect(output.querySelector('img')).toBeNull();
+        }
+    );
+});
+
 it('releases owned SVG previews on source changes and ignores late responses', async () => {
     // Arrange
     // Hold host responses independently so stale requests cannot overwrite the current photo.

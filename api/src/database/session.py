@@ -78,15 +78,17 @@ async def dispose_engine() -> None:
         await engine.dispose()
 
 
-@contextlib.asynccontextmanager
-async def session_scope() -> AsyncGenerator[AsyncSession, None]:
+async def session_dependency() -> AsyncGenerator[AsyncSession, None]:
     """Yield one SQLAlchemy session from the shared session factory."""
 
     session_factory = get_session()
 
     # Open one session for the caller's scoped work.
     async with session_factory() as session:
-        yield session
+        yield session  # noqa: ASYNC119
+
+
+session_scope = contextlib.asynccontextmanager(session_dependency)
 
 
 # Register shared audit listeners after the Platform audit models are available.

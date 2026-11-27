@@ -1,4 +1,5 @@
 import jwt
+import json
 import httpx2
 import pytest
 import asyncio
@@ -6,6 +7,7 @@ from uuid import UUID
 from types import SimpleNamespace
 from fastapi import FastAPI, WebSocket, BackgroundTasks
 from longlink import User, identity, permissions
+from urllib.parse import quote
 from collections.abc import Iterator
 from longlink.database import audit
 from fastapi.testclient import TestClient
@@ -15,6 +17,37 @@ from longlink.utils.settings import Envs
 from longlink.middleware.identity import IdentityMiddleware
 
 IDENTITY_SECRET = "test-identity-secret-01234567890"
+
+
+@pytest.mark.parametrize("role", ["", "Reviewer", "read\n", "a" * 65, None, 1, ["read"], {"name": "read"}])
+def test_development_cookie_rejects_malformed_role_before_dispatch(role: object) -> None:
+    """Reject malformed local role names at the HTTP identity boundary."""
+
+    # Arrange
+    app = FastAPI()
+    app.add_middleware(IdentityMiddleware, identity_secret=None, mode="development")
+    dispatched = False
+
+    @app.get("/", response_model=bool)
+    async def endpoint() -> bool:
+        """Record whether an invalid identity reached application code."""
+
+        nonlocal dispatched
+        dispatched = True
+        return True
+
+    profile = {"role": role, "user": {"id": str(UUID(int=1)), "name": "Test User", "email": "test@example.com"}}
+    client = TestClient(app)
+    client.cookies.set("longlink-development-user", quote(json.dumps(profile)))
+
+    # Act
+    with client:
+        response = client.get("/")
+
+    # Assert
+    assert response.status_code == 401
+    assert response.json() == {"detail": "Invalid development identity"}
+    assert not dispatched
 
 
 def identity_headers(user_id: UUID) -> dict[str, str]:

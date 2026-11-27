@@ -1,20 +1,27 @@
 import { ApiError } from '@/lib/api';
+import { useLocation } from 'react-router';
 import { useErrorBoundary } from 'react-error-boundary';
-import { useEffect, useEffectEvent, useRef, useState } from 'react';
+import { useEffect, useEffectEvent, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 export type VerificationRequest = { signal: AbortSignal; token: string };
 
-/** Owns credential-exchange state and cancellation without choosing the page's token policy. */
-export function useVerification<T>(
-    token: string,
-    storageKey: string,
-    verify: (request: VerificationRequest) => Promise<T>
-) {
+/** Captures emailed credentials and owns their exchange, consumption, and cancellation. */
+export function useVerification<T>(storageKey: string, verify: (request: VerificationRequest) => Promise<T>) {
+    const location = useLocation();
+    const fragmentToken = new URLSearchParams(location.hash.slice(1)).get('token');
+    const token = useMemo(() => fragmentToken || sessionStorage.getItem(storageKey) || '', [fragmentToken, storageKey]);
     const controller = useRef<AbortController | null>(null);
     const [verification, setVerification] = useState<{ status: 'verified'; data: T } | { status: 'error' } | null>(
         null
     );
     const { showBoundary } = useErrorBoundary();
+
+    useLayoutEffect(() => {
+        if (fragmentToken) {
+            sessionStorage.setItem(storageKey, fragmentToken);
+            window.history.replaceState(window.history.state, '', `${location.pathname}${location.search}`);
+        }
+    }, [fragmentToken, location.pathname, location.search, storageKey]);
 
     /** Replaces the active credential exchange with a cancellable request. */
     async function startVerification(verificationToken: string) {

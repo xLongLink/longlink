@@ -4,7 +4,7 @@ from typing import Annotated
 from fastapi import Cookie, Depends, Request, HTTPException
 from src.utils import roles, token
 from src.database import session as database
-from collections.abc import AsyncIterator, AsyncGenerator
+from collections.abc import AsyncGenerator
 from src.models.roles import OrganizationRoles
 from longlink.database import audit
 from src.utils.cookies import AUTH_COOKIE
@@ -14,15 +14,7 @@ from src.database.models.users import User
 from src.database.models.solutions import Solution
 from src.database.models.association import UserOrganization
 
-
-async def get_session() -> AsyncIterator[AsyncSession]:
-    """Yield one database session for authentication dependencies and routes."""
-
-    # Keep the shared session alive for the complete dependency request scope.
-    async with database.session_scope() as session:
-        yield session  # noqa: ASYNC119
-
-
+get_session = database.session_dependency
 Session = Annotated[AsyncSession, Depends(get_session)]
 
 
