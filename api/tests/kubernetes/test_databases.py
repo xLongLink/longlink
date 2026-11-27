@@ -61,7 +61,7 @@ async def test_database_provisioning_applies_exact_allocations(monkeypatch: pyte
     cluster = next(resource for resource in applied if resource.kind == "Cluster")
     assert cluster.spec["storage"]["size"] == "1000000000"
     assert cluster.spec["resources"] == {
-        "requests": {"cpu": "250m", "memory": "268435456"},
+        "requests": {"cpu": "50m", "memory": "268435456"},
         "limits": {"cpu": "250m", "memory": "1073741824"},
     }
 
@@ -151,6 +151,6 @@ async def test_database_resize_updates_live_compute_and_storage(monkeypatch: pyt
     assert mutations[1][1] == {
         "spec": {
             "storage": {"size": "2000000000"},
-            "resources": {"requests": {"cpu": "750m", "memory": "268435456"}, "limits": {"cpu": "750m", "memory": "750000000"}},
+            "resources": {"requests": {"cpu": "50m", "memory": "268435456"}, "limits": {"cpu": "750m", "memory": "750000000"}},
         }
     }
