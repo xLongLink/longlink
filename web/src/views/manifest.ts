@@ -80,6 +80,7 @@ export const manifestSchema = z
         views: viewsSchema,
         runtime: runtimeSchema,
         tabs: z.array(tabSchema).optional(),
+        role: z.string().optional(),
         development: z.boolean().optional()
     })
     .superRefine((manifest, context) => {

@@ -3,6 +3,8 @@ import type { ViewData, RequestOptions } from '@/views/protocol';
 
 export type { ViewData, RequestOptions } from '@/views/protocol';
 
+export const RoleContext = createContext<string | undefined>(undefined);
+
 export const RequestContext = createContext<((path: string, options?: RequestOptions) => Promise<ViewData>) | null>(
     null
 );

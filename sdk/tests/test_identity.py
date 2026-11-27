@@ -37,7 +37,7 @@ def test_identity_token_data_returns_identity_from_created_token() -> None:
     user_id = UUID("00000000-0000-0000-0000-000000000001")
     user = User(id=user_id, name="Test User", email="test@example.com", avatar="https://example.com/avatar.png")
     access = permissions.Access(catalog="a" * 64, endpoints=[0])
-    token = identity.create_identity_token(user, IDENTITY_SECRET, access)
+    token = identity.create_identity_token(user, IDENTITY_SECRET, access, role="reviewer")
 
     # Act
     result, result_access = identity.identity_token_data(token, IDENTITY_SECRET)
@@ -46,16 +46,22 @@ def test_identity_token_data_returns_identity_from_created_token() -> None:
     assert result is not None
     assert result.model_dump() == user.model_dump()
     assert result_access == access
+    assert identity.verify_identity_token(token, IDENTITY_SECRET).role == "reviewer"
     claims = jwt.decode(token, IDENTITY_SECRET, algorithms=["HS256"], audience="longlink:identity")
     assert claims["sub"] == str(user_id)
     assert claims["aud"] == "longlink:identity"
     assert claims["exp"] - claims["iat"] == 300
 
     # Anonymous assertions preserve grants without inventing a persisted user.
-    guest_token = identity.create_identity_token(None, IDENTITY_SECRET, access)
+    guest_token = identity.create_identity_token(None, IDENTITY_SECRET, access, role="reviewer")
     guest, guest_access = identity.identity_token_data(guest_token, IDENTITY_SECRET)
     assert guest is None
     assert guest_access == access
+    assert identity.verify_identity_token(guest_token, IDENTITY_SECRET).role is None
+
+    # Assertions minted before role support remain valid.
+    legacy_token = mint_identity_token(omit="role")
+    assert identity.verify_identity_token(legacy_token, IDENTITY_SECRET).role is None
 
 
 def test_identity_token_data_rejects_empty_identity_secret() -> None:
@@ -67,6 +73,8 @@ def test_identity_token_data_rejects_empty_identity_secret() -> None:
 
 
 INVALID_SIGNED_TOKENS = [
+    pytest.param(IDENTITY_SECRET, {"role": ["write"]}, jwt.InvalidTokenError, id="non-string-role"),
+    pytest.param(IDENTITY_SECRET, {"role": "Reviewer"}, jwt.InvalidTokenError, id="invalid-role"),
     pytest.param(IDENTITY_SECRET, {"access": None}, jwt.InvalidTokenError, id="null-access"),
     pytest.param(IDENTITY_SECRET, {"access": {"catalog": "invalid", "endpoints": []}}, jwt.InvalidTokenError, id="invalid-access"),
     pytest.param(IDENTITY_SECRET, {"exp": datetime(2000, 1, 1, tzinfo=UTC)}, jwt.ExpiredSignatureError, id="expired"),

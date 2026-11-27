@@ -10,13 +10,13 @@ import * as workers from 'node:worker_threads';
 import { JsxView } from '@/views/host/jsx-view';
 
 it.each([
-    { chunked: false, failTransfer: false },
-    { chunked: true, failTransfer: false },
-    { chunked: false, failTransfer: true },
-    { chunked: true, failTransfer: true }
+    { chunked: false, failTransfer: false, role: undefined },
+    { chunked: true, failTransfer: false, role: 'reviewer' },
+    { chunked: false, failTransfer: true, role: 'write' },
+    { chunked: true, failTransfer: true, role: undefined }
 ])(
     'revokes allocated capabilities for chunked=$chunked, failed transfer=$failTransfer',
-    async ({ chunked, failTransfer }) => {
+    async ({ chunked, failTransfer, role }) => {
         // Arrange
         const script = '/* Capability lifecycle bootstrap */';
         const modules = chunked ? { 'entry.js': 'a'.repeat(64) } : undefined;
@@ -39,6 +39,7 @@ it.each([
                 <ApiErrorContext value={() => undefined}>
                     <JsxView
                         source=""
+                        role={role}
                         params={{}}
                         requestBaseUrl="/proxy/"
                         navigationBaseUrl="/"
@@ -78,6 +79,8 @@ it.each([
                         expect(channels).toHaveLength(chunked ? 2 : 1);
                         const calls: readonly (readonly unknown[])[] = transfer.mock.calls;
                         expect(calls[0]?.[2]).toEqual(channels.map((channel) => channel.port2));
+                        if (role === undefined) expect(calls[0]?.[0]).not.toHaveProperty('role');
+                        else expect(calls[0]?.[0]).toHaveProperty('role', role);
 
                         if (failTransfer) {
                             expect(mounted.querySelector('iframe')).toBeNull();

@@ -162,6 +162,7 @@ const componentPages: {
     { name: 'Heading', category: 'Display', icon: Heading },
     { name: 'Hooks', category: 'Runtime', icon: Braces },
     { name: 'useApi', category: 'Hooks', icon: Database },
+    { name: 'useRole', category: 'Hooks', icon: Braces },
     { name: 'useForm', category: 'Hooks', icon: FileInput },
     { name: 'useConfirm', category: 'Hooks', icon: CircleHelp },
     { name: 'useTable', category: 'Hooks', icon: TableProperties },

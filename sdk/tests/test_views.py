@@ -1,6 +1,7 @@
 import pytest
+from uuid import UUID
 from pathlib import Path
-from longlink import LongLink
+from longlink import User, LongLink, identity
 from longlink.views import view_stem_route
 from longlink.testclient import TestClient
 
@@ -62,3 +63,53 @@ def test_view_width_is_published_per_registered_view(solution_source: Path, monk
     definitions = {view["route"]: view for view in response.json()["views"]}
     assert definitions["/dashboard"]["width"] == "wide"
     assert definitions["/settings"]["width"] == "compact"
+
+
+@pytest.mark.parametrize(
+    ("role", "member", "trusted", "expected"),
+    [
+        ("reviewer", True, True, "reviewer"),
+        ("read", True, True, "read"),
+        (None, True, True, None),
+        ("unknown", True, True, "unknown"),
+        ("reviewer", False, True, None),
+        ("write", True, False, None),
+    ],
+)
+def test_manifest_role_is_request_specific_and_does_not_grant_access(
+    solution_source: Path, monkeypatch: pytest.MonkeyPatch, role: str | None, member: bool, trusted: bool, expected: str | None
+) -> None:
+    """Expose only signed roles without changing endpoint grants or later requests."""
+
+    # Arrange
+    secret = "test-identity-secret-01234567890"
+    monkeypatch.setenv("LONGLINK_ENV", "testing")
+    monkeypatch.setenv("LONGLINK_IDENTITY_SECRET", secret)
+    app = LongLink()
+
+    @app.post("/protected", response_model=int, roles=["reviewer", "write"])
+    async def protected() -> int:
+        """Represent an operation requiring explicit endpoint grants."""
+
+        return 1
+
+    user = User(id=UUID(int=1), name="Reviewer", email="reviewer@example.com") if member else None
+    client = TestClient(app)
+
+    # Act
+    with client:
+        catalog = app.state.permission_catalog
+        token = identity.create_identity_token(
+            user, secret if trusted else "forged-identity-secret-01234567890", catalog.access("unknown"), role=role
+        )
+        response = client.get("/views.json", headers={"x-longlink-identity": token, "x-longlink-role": "write"})
+        rejected = client.post("/protected", headers={"x-longlink-identity": token}) if trusted else None
+        subsequent = client.get("/views.json")
+
+    # Assert
+    assert response.status_code == 200
+    assert response.json().get("role") == expected
+    assert response.headers["cache-control"] == "no-store"
+    assert subsequent.json().get("role") is None
+    if rejected is not None:
+        assert rejected.status_code == 403

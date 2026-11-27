@@ -44,11 +44,14 @@ class IdentityMiddleware:
         # Verify the Platform-signed user assertion before exposing it to Solution code.
         request = Request(scope)
         user = None
+        scope["longlink.role"] = None
         verified = False
         if self.identity_secret:
             try:
-                user, access = identity.identity_token_data(request.headers.get("x-longlink-identity", ""), self.identity_secret)
-                scope["longlink.access"] = access
+                claims = identity.verify_identity_token(request.headers.get("x-longlink-identity", ""), self.identity_secret)
+                user = claims.user
+                scope["longlink.access"] = claims.access
+                scope["longlink.role"] = claims.role
                 verified = True
 
             # Invalid assertions remain anonymous until the route's identity policy is enforced.
@@ -69,6 +72,11 @@ class IdentityMiddleware:
             user = development_identity.user
             catalog = request.app.state.permission_catalog
             scope["longlink.access"] = catalog.access(development_identity.role)
+            scope["longlink.role"] = development_identity.role
+
+        # Match the frontend's initial local role without overriding signed anonymous requests.
+        if self.mode == "development" and not verified and development_cookie is None:
+            scope["longlink.role"] = "write"
 
         # Only verified Platform assertions or Kubernetes probes are admitted in production.
         if self.mode == "production" and not verified and not (request.method == "GET" and request.url.path in {"/health", "/ready"}):

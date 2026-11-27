@@ -848,6 +848,74 @@ describe('SolutionPage', () => {
         }
     );
 
+    it('replaces the sandbox and revokes old capabilities when source or request role changes', async () => {
+        // Arrange
+        const views = [{ path: 'home.jsx', route: '/home' }];
+        const runtime = { version: createHash('sha256').update('\n').digest('hex') };
+        const NativeMessageChannel = globalThis.MessageChannel;
+        const closed: ReturnType<typeof vi.spyOn>[] = [];
+        vi.spyOn(globalThis, 'MessageChannel').mockImplementation(
+            class extends NativeMessageChannel {
+                constructor() {
+                    super();
+                    closed.push(vi.spyOn(this.port1, 'close'));
+                }
+            }
+        );
+        stubFetch((url) =>
+            url.endsWith('/views.json')
+                ? Response.json({ views, runtime, role: 'reviewer' })
+                : sourceResponse('export default function Home() { return null; }')
+        );
+        const output = await renderPage('/home');
+        let previous: HTMLIFrameElement | undefined;
+
+        for (const [index, role] of ['reviewer', 'write', undefined].entries()) {
+            // Act
+            if (index > 0) {
+                await act(async () => {
+                    mountedClient?.setQueryData(['api', '/views.json'], { views, runtime, role });
+                });
+                await vi.waitFor(async () => {
+                    await act(async () => {});
+                    expect(output.querySelector('iframe')).not.toBe(previous);
+                });
+            }
+            const { frame, session, transfer } = await observeView(output);
+            window.dispatchEvent(
+                new MessageEvent('message', { source: frame.contentWindow, origin: 'null', data: session })
+            );
+
+            // Assert
+            const payload: unknown = transfer.mock.calls[0]?.[0];
+            if (role === undefined) expect(payload).not.toHaveProperty('role');
+            else expect(payload).toHaveProperty('role', role);
+            if (previous) {
+                expect(frame).not.toBe(previous);
+                expect(previous.isConnected).toBe(false);
+                expect(closed[index - 1]).toHaveBeenCalled();
+            }
+            previous = frame;
+        }
+
+        // Act
+        await act(async () => {
+            mountedClient?.setQueryData(
+                ['api', 'solution-view', '/views.json', 'home.jsx'],
+                'export default function Updated() { return null; }'
+            );
+        });
+        await vi.waitFor(async () => {
+            await act(async () => {});
+            expect(output.querySelector('iframe')).not.toBe(previous);
+        });
+        const { frame } = await observeView(output);
+
+        // Assert
+        expect(frame).not.toBe(previous);
+        expect(closed[2]).toHaveBeenCalled();
+    });
+
     /** Observes the ready frame's capability transfer without dispatching a handshake. */
     async function observeView(output: HTMLElement) {
         await vi.waitFor(async () => {

@@ -133,6 +133,7 @@ export function SolutionPage({
                     Object.entries(match.params).filter((entry): entry is [string, string] => entry[1] != null)
                 )}
                 runtime={manifest.runtime}
+                role={manifest.role}
             />
         );
     } else if (manifest && !activeView) {

@@ -29,6 +29,7 @@ export function JsxView({
     requestBaseUrl,
     navigationBaseUrl,
     runtime,
+    role,
     kernel
 }: {
     source: string;
@@ -36,6 +37,7 @@ export function JsxView({
     requestBaseUrl: string;
     navigationBaseUrl: string;
     runtime: ViewRuntime;
+    role?: string;
     kernel: { script: string; styles: string };
 }) {
     const frame = useRef<HTMLIFrameElement>(null);
@@ -156,6 +158,7 @@ export function JsxView({
                     {
                         session,
                         source,
+                        ...(role === undefined ? {} : { role }),
                         params: parametersSchema.parse(JSON.parse(parameters)),
                         navigationBaseUrl: new URL(navigationBaseUrl, window.location.origin).href,
                         appearance: currentAppearance.current
@@ -346,7 +349,7 @@ export function JsxView({
 
         // Replacing or unmounting a View revokes its channel and cancels every outstanding operation.
         return dispose;
-    }, [source, parameters, requestBaseUrl, navigationBaseUrl, navigate, reportError, kernel, runtime]);
+    }, [source, role, parameters, requestBaseUrl, navigationBaseUrl, navigate, reportError, kernel, runtime]);
 
     if (bootstrapState.status === 'failed')
         return <PageError title="Unable to load this View" description={STARTUP_FAILURES[bootstrapState.stage]} />;
