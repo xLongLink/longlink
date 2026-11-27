@@ -75,6 +75,88 @@ def test_longlink_solution_serves_runtime_routes_and_frontend(monkeypatch: pytes
 
 
 @pytest.mark.usefixtures("solution_source")
+def test_development_users_follow_discovered_roles(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Use generated custom personas for endpoint authorization and persisted request identity."""
+
+    # Arrange
+    monkeypatch.setenv("LONGLINK_ENV", "development")
+    migrations.make_migrations()
+    migrations.apply_migrations()
+    app = LongLink()
+
+    @app.get("/api/review", roles=["reviewer"], response_model=str)
+    async def review(context: Context) -> str:
+        """Return the custom-role user's persisted profile."""
+
+        assert context.user is not None
+        return str(context.user.id)
+
+    @app.post("/api/write", response_model=bool)
+    async def write() -> bool:
+        """Expose an operation unavailable to the custom role."""
+
+        return True
+
+    client = TestClient(app)
+
+    # Act
+    with client:
+        manifest = client.get("/views.json").json()
+        profiles = {profile["role"]: profile for profile in manifest["development_users"]}
+        client.cookies.set("longlink-development-user", quote(json.dumps(profiles["reviewer"])))
+        allowed = client.get("/api/review")
+        forbidden = client.post("/api/write")
+        repeated = client.get("/views.json").json()["development_users"]
+        client.cookies.set("longlink-development-user", quote(json.dumps({**profiles["reviewer"], "role": "unknown"})))
+        invalid = client.get("/api/review")
+        recovery_manifest = client.get("/views.json")
+
+    # Assert
+    assert set(profiles) == {"read", "write", "reviewer"}
+    assert profiles["read"]["user"]["id"] == str(UUID(int=2))
+    assert profiles["write"]["user"]["id"] == str(UUID(int=3))
+    assert profiles["reviewer"]["user"]["name"] == "Reviewer user"
+    assert profiles["reviewer"]["user"]["email"] == "reviewer@example.com"
+    assert allowed.status_code == 200
+    assert allowed.json() == profiles["reviewer"]["user"]["id"]
+    assert forbidden.status_code == 403
+    assert invalid.status_code == 403
+    assert recovery_manifest.status_code == 200
+    assert repeated == manifest["development_users"]
+    independent_catalog = permissions.Catalog(endpoints=[permissions.Endpoint(path="/other", roles=["another", "reviewer"], method="GET")])
+    independent_profiles = {profile.role: profile.user for profile in identity.development_users(independent_catalog)}
+    assert str(independent_profiles["reviewer"].id) == profiles["reviewer"]["user"]["id"]
+
+
+@pytest.mark.usefixtures("solution_source")
+@pytest.mark.parametrize("environment", ["testing", "production"])
+def test_development_users_are_not_published_outside_development(
+    monkeypatch: pytest.MonkeyPatch, environment: str, production_settings: dict[str, str | int]
+) -> None:
+    """Keep generated local identities out of non-development manifests."""
+
+    # Arrange
+    if environment == "production":
+        for name, value in production_settings.items():
+            monkeypatch.setenv(f"LONGLINK_{name}", str(value))
+    monkeypatch.setenv("LONGLINK_ENV", environment)
+    monkeypatch.setenv("LONGLINK_IDENTITY_SECRET", "test-development-users-secret-0123456789")
+    app = LongLink()
+    client = TestClient(app)
+
+    # Act
+    with client:
+        token = identity.create_identity_token(
+            None, "test-development-users-secret-0123456789", app.state.permission_catalog.access("read")
+        )
+        response = client.get("/views.json", headers={"x-longlink-identity": token})
+
+    # Assert
+    assert response.status_code == 200
+    assert "development_users" not in response.json()
+
+
+@pytest.mark.usefixtures("solution_source")
 async def test_startup_disposes_initialized_database_when_mcp_construction_fails(monkeypatch: pytest.MonkeyPatch) -> None:
     """Close initialized runtime resources when MCP startup fails before serving requests."""
 

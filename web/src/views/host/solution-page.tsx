@@ -9,6 +9,7 @@ import { manifestSchema } from '@/views/manifest';
 import Platform from '@/components/layouts/platform';
 import type { IconName } from 'lucide-react/dynamic';
 import { Spinner } from '@/components/shadcn/spinner';
+import type { DevelopmentUser } from '@/views/manifest';
 import { Icon } from '@/components/longlink/display/icon';
 import { SolutionView } from '@/views/host/solution-view';
 import { Button } from '@/components/longlink/action/button';
@@ -37,7 +38,7 @@ export function SolutionPage({
 }: {
     action: ReactNode;
     breadcrumb: ReactNode;
-    developmentAction?: ReactNode;
+    developmentAction?: (users: readonly DevelopmentUser[]) => ReactNode;
     formatTitle: (title: string | undefined) => string;
     navigationBaseUrl?: string;
     sidebarHeader?: ReactNode;
@@ -152,7 +153,11 @@ export function SolutionPage({
 
     return (
         <Platform
-            action={manifest?.development ? (developmentAction ?? action) : action}
+            action={
+                manifest?.development && manifest.development_users?.length && developmentAction
+                    ? developmentAction(manifest.development_users)
+                    : action
+            }
             breadcrumb={breadcrumb}
             homeHref={homeHref}
             sidebarHeader={sidebarHeader}

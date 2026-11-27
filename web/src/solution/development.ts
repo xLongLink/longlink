@@ -1,27 +1,35 @@
+import type { DevelopmentUser } from '@/views/manifest';
+
 export const developmentCookie = 'longlink-development-user';
 
-export const developmentUsers = [
-    {
-        role: 'read',
-        user: { id: '00000000-0000-0000-0000-000000000002', name: 'Read user', email: 'read@example.com' }
-    },
-    {
-        role: 'write',
-        user: { id: '00000000-0000-0000-0000-000000000003', name: 'Write user', email: 'write@example.com' }
-    }
-] as const;
-
-/** Reads the local persona, defaulting to write access for development. */
-export function getDevelopmentUser() {
+/** Resolves the saved user ID to the current manifest identity, preferring write access by default. */
+export function getDevelopmentUser(users: readonly DevelopmentUser[]): DevelopmentUser | undefined {
     const cookie = document.cookie.split('; ').find((value) => value.startsWith(`${developmentCookie}=`));
     const value = cookie?.slice(developmentCookie.length + 1);
+    let userId: unknown;
+
+    if (value) {
+        try {
+            const profile: unknown = JSON.parse(decodeURIComponent(value));
+
+            if (typeof profile === 'object' && profile !== null && 'user' in profile) {
+                const { user } = profile;
+
+                if (typeof user === 'object' && user !== null && 'id' in user) userId = user.id;
+            }
+        } catch {
+            // Invalid cookies fall back to an available manifest user.
+        }
+    }
 
     return (
-        developmentUsers.find((profile) => encodeURIComponent(JSON.stringify(profile)) === value) ?? developmentUsers[1]
+        users.find((profile) => profile.user.id === userId) ??
+        users.find((profile) => profile.role === 'write') ??
+        users[0]
     );
 }
 
-/** Sends a frontend-defined identity only to the local Solution server. */
-export function setDevelopmentUser(profile: (typeof developmentUsers)[number]): void {
+/** Sends the manifest-defined identity only to the local Solution server. */
+export function setDevelopmentUser(profile: DevelopmentUser): void {
     document.cookie = `${developmentCookie}=${encodeURIComponent(JSON.stringify(profile))}; Path=/; SameSite=Strict`;
 }

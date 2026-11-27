@@ -1,8 +1,9 @@
 import jwt
-from typing import Literal, Annotated
+from uuid import UUID, NAMESPACE_URL, uuid5
+from typing import Annotated
 from datetime import UTC, datetime, timedelta
 from longlink import permissions
-from pydantic import BaseModel, ConfigDict, BeforeValidator, ValidationError
+from pydantic import Field, BaseModel, ConfigDict, BeforeValidator, ValidationError
 from longlink.database.users import User
 
 IDENTITY_TOKEN_ALGORITHM = "HS256"
@@ -11,13 +12,35 @@ IDENTITY_TOKEN_LIFETIME_SECONDS = 300
 
 
 class DevelopmentIdentity(BaseModel):
-    """Validate a frontend-defined identity accepted only in development."""
+    """Validate a local identity accepted only in development."""
 
     model_config = ConfigDict(extra="forbid")
 
     # Local profile and Solution role.
-    role: Literal["read", "write"]
+    role: str = Field(pattern=r"^[a-z][a-z0-9_-]{0,63}$")
     user: Annotated[User, BeforeValidator(User.model_validate)]
+
+
+def development_users(catalog: permissions.Catalog) -> list[DevelopmentIdentity]:
+    """Create stable local personas for the discovered Solution roles."""
+
+    users: list[DevelopmentIdentity] = []
+
+    # Preserve existing built-in identities while deriving custom ones from their role.
+    for role in catalog.roles:
+        user_id = (
+            UUID(int=2 if role == "read" else 3)
+            if role in {"read", "write"}
+            else uuid5(NAMESPACE_URL, f"https://longlink.dev/development/users/{role}")
+        )
+        user = User(
+            id=user_id,
+            name=f"{role.replace('_', ' ').replace('-', ' ').capitalize()} user",
+            email=f"{role}@example.com",
+            updated_at=datetime(1970, 1, 1, tzinfo=UTC),
+        )
+        users.append(DevelopmentIdentity(role=role, user=user))
+    return users
 
 
 def create_identity_token(user: User | None, secret: str, access: permissions.Access) -> str:
