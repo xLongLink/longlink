@@ -1,6 +1,6 @@
 import fsspec
 from pathlib import Path, PurePosixPath
-from longlink.storage.base import File, Storage, MissingFileError
+from longlink.storage.base import File, Storage, MissingFileError, relative_path
 from longlink.utils.settings import Envs
 from longlink.storage.filesystem import Filesystem
 from fsspec.implementations.dirfs import DirFileSystem
@@ -14,15 +14,16 @@ def create_storage(settings: Envs) -> Storage:
 
     # Validate configured scopes before constructing a backend.
     bucket = PurePosixPath(settings.STORAGE_BUCKET) if settings.STORAGE_BUCKET else None
-    prefix = PurePosixPath(settings.STORAGE_PREFIX) if settings.STORAGE_PREFIX else None
     if bucket is not None and (
         bucket.is_absolute() or len(bucket.parts) != 1 or ".." in bucket.parts or "\\" in str(bucket) or "\x00" in str(bucket)
     ):
         raise ValueError("Storage buckets must be bucket names")
-    if prefix is not None and (
-        prefix.is_absolute() or not prefix.parts or ".." in prefix.parts or "\\" in str(prefix) or "\x00" in str(prefix)
-    ):
-        raise ValueError("Storage prefixes must be relative paths inside a bucket")
+    prefix = None
+    if settings.STORAGE_PREFIX:
+        try:
+            prefix = PurePosixPath(relative_path(settings.STORAGE_PREFIX))
+        except ValueError as exc:
+            raise ValueError("Storage prefixes must be relative paths inside a bucket") from exc
     if prefix is not None and bucket is None:
         raise ValueError("Storage prefixes require a bucket")
 

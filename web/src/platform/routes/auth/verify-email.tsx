@@ -14,12 +14,11 @@ import { clearSessionQueries } from '@/lib/react-query';
 import { Link } from '@/components/longlink/action/link';
 import { Text } from '@/components/longlink/display/text';
 import { Separator } from '@/components/shadcn/separator';
-import { exchangeCredential } from './exchange-credential';
 import { Stack } from '@/components/longlink/layout/stack';
 import { useCurrentUser } from '@/platform/hooks/use-user';
+import { useVerification } from '@/lib/hooks/use-verification';
 import { useFragmentToken } from '@/lib/hooks/use-fragment-token';
 import { zEmailPayload } from '@/lib/generated/platform-api-v1/zod.gen';
-import { useVerification, type VerificationRequest } from '@/lib/hooks/use-verification';
 
 const REGISTRATION_TOKEN_KEY = 'longlink.registration.token';
 
@@ -42,26 +41,16 @@ export default function VerifyEmail() {
         resolver: zodResolver(registrationCompleteSchema)
     });
 
-    /** Exchanges the email credential or recovers the server-owned registration setup. */
-    async function verify({ signal, token: registrationToken }: VerificationRequest) {
-        return await exchangeCredential(
-            async () => {
-                const data = registrationToken
-                    ? await api('/api/v1/auth/verify', {
-                          json: { token: registrationToken },
-                          method: 'POST',
-                          signal
-                      }).json(zEmailPayload)
-                    : await api('/api/v1/auth/register/setup', { signal }).json(zEmailPayload);
-
-                return { status: 'verified', data };
-            },
-            signal,
-            REGISTRATION_TOKEN_KEY
-        );
-    }
-
-    const { verification, startVerification } = useVerification(token, verify);
+    const { verification, startVerification } = useVerification(
+        token,
+        REGISTRATION_TOKEN_KEY,
+        async ({ signal, token: registrationToken }) =>
+            registrationToken
+                ? await api('/api/v1/auth/verify', { json: { token: registrationToken }, method: 'POST', signal }).json(
+                      zEmailPayload
+                  )
+                : await api('/api/v1/auth/register/setup', { signal }).json(zEmailPayload)
+    );
     const verifiedEmail = verification?.status === 'verified' ? verification.data.email : null;
 
     /** Creates the account and clears the previous session's cached data. */

@@ -10,11 +10,10 @@ import { useSubmit } from '@/lib/hooks/use-submit';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link } from '@/components/longlink/action/link';
 import { Separator } from '@/components/shadcn/separator';
-import { exchangeCredential } from './exchange-credential';
 import { Stack } from '@/components/longlink/layout/stack';
 import { Button } from '@/components/longlink/action/button';
+import { useVerification } from '@/lib/hooks/use-verification';
 import { useFragmentToken } from '@/lib/hooks/use-fragment-token';
-import { useVerification, type VerificationRequest } from '@/lib/hooks/use-verification';
 
 const PASSWORD_RESET_TOKEN_KEY = 'longlink.password-reset.token';
 
@@ -38,28 +37,13 @@ export default function ResetPassword() {
 
     const confirmation = 'Your password has been reset. You can now sign in.';
 
-    /** Exchanges the reset credential or recovers the established setup cookie. */
-    async function verify({ signal, token: resetToken }: VerificationRequest) {
-        return await exchangeCredential(
-            async () => {
-                if (resetToken) {
-                    await api('/api/v1/auth/reset-password/verify', {
-                        json: { token: resetToken },
-                        method: 'POST',
-                        signal
-                    });
-                } else {
-                    await api('/api/v1/auth/reset-password/setup', { signal });
-                }
-
-                return { status: 'verified' };
-            },
-            signal,
-            PASSWORD_RESET_TOKEN_KEY
-        );
-    }
-
-    const { verification } = useVerification(token, verify);
+    const { verification } = useVerification(token, PASSWORD_RESET_TOKEN_KEY, async ({ signal, token: resetToken }) => {
+        if (resetToken) {
+            await api('/api/v1/auth/reset-password/verify', { json: { token: resetToken }, method: 'POST', signal });
+        } else {
+            await api('/api/v1/auth/reset-password/setup', { signal });
+        }
+    });
     const save = useSubmit(
         async (payload: ResetPasswordValues) => {
             try {

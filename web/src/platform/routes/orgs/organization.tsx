@@ -1,5 +1,5 @@
 import { useOutletContext } from 'react-router';
-import SolutionManagement from './solution-management';
+import { SolutionOverview } from './solution-overview';
 import type { OrganizationContext } from '@/platform/layouts/organization';
 
 /** Lists an organization's Solutions; the layout owns organization-scoped state resets. */
@@ -9,7 +9,7 @@ export default function Organization() {
     return (
         <>
             <title>Organization Solutions | LongLink</title>
-            <SolutionManagement membership={membership} presentation="overview" />
+            <SolutionOverview membership={membership} />
         </>
     );
 }

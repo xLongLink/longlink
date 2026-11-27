@@ -19,6 +19,7 @@ import DeploymentReview from '@/platform/routes/orgs/dialogs/deployment-review';
 import { SolutionMcpDialog } from '@/platform/routes/orgs/dialogs/solution-mcp';
 import { SolutionLogsDialog } from '@/platform/routes/orgs/dialogs/solution-logs';
 import { Ellipsis, Logs, Plug, RefreshCw, Shield, Tags, Trash } from 'lucide-react';
+import { useOrganizationSolutions } from '@/platform/hooks/use-organization-solutions';
 import { Table, TableBody, TableRow, TableCell } from '@/components/longlink/display/table';
 import { SolutionPermissionsDialog } from '@/platform/routes/orgs/dialogs/solution-permissions';
 import {
@@ -37,15 +38,8 @@ type SolutionAction =
     | { kind: 'mcp'; id: string };
 
 /** Owns settings actions and their dialogs while the settings section is active. */
-export default function SolutionSettings({
-    membership,
-    solutions,
-    invalidateSolutions
-}: {
-    membership: OrganizationContext;
-    solutions: z.output<typeof schemas.zOrganizationSolutionSummary>[];
-    invalidateSolutions: () => Promise<void>;
-}) {
+export default function SolutionSettings({ membership }: { membership: OrganizationContext }) {
+    const [solutions, invalidateSolutions] = useOrganizationSolutions(membership.organization.id);
     // Derive Solution actions from the same membership that supplies organization-scoped resources.
     const { organization, tags, role } = membership;
     const canMaintain = permissions.canMaintain(role);
