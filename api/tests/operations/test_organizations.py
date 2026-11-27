@@ -17,8 +17,9 @@ from src.database.session import session_scope
 from src.database.services import operations, organizations
 from src.models.organizations import DatabaseState, OrganizationUsageUpdate
 from src.database.models.users import User
-from src.database.models.solutions import Solution
+from src.database.models.solutions import Revision, Solution
 from src.database.models.operations import Operation
+from src.database.models.registries import RegistryConnection
 from src.database.models.organizations import Organization, OrganizationActivity
 
 
@@ -556,12 +557,29 @@ async def test_delete_tears_down_organization_boundaries_in_order(users: tuple[U
     solution = await create_solution(organization)
     sibling_organization = await create_organization(users[1], name="sibling", compute=compute)
     sibling_solution = await create_solution(sibling_organization)
+    registries: list[RegistryConnection] = []
+    revisions: list[Revision] = []
     async with session_scope() as session:
+        for target in (solution, sibling_solution):
+            registry = RegistryConnection(organization_id=target.organization_id, username="owner", credential="registry-token")
+            session.add(registry)
+            await session.flush()
+            revision = Revision(
+                solution_id=target.id, image="ghcr.io/owner/private@sha256:test", envs={}, registry_connection_id=registry.id
+            )
+            session.add(revision)
+            await session.flush()
+            current = await session.get(Solution, target.id)
+            assert current is not None
+            current.desired_revision_id = revision.id
+            current.deployed_revision_id = revision.id
+            registries.append(registry)
+            revisions.append(revision)
+
+        # Publish the deletion tombstone before starting external cleanup.
         row = await session.get(Organization, organization.id)
         assert row is not None
         row.deleted_at = datetime.now(UTC)
-
-        # Publish the deletion tombstone before starting external cleanup.
         await session.commit()
     calls: list[str] = []
 
@@ -594,8 +612,17 @@ async def test_delete_tears_down_organization_boundaries_in_order(users: tuple[U
     async with session_scope() as session:
         assert await session.get(Organization, organization.id) is None
         assert await session.get(Solution, solution.id) is None
+        assert await session.get(Revision, solution.desired_revision_id) is None
+        assert await session.get(Revision, revisions[0].id) is None
+        assert await session.get(RegistryConnection, registries[0].id) is None
         assert await session.get(Organization, sibling_organization.id) is not None
-        assert await session.get(Solution, sibling_solution.id) is not None
+        retained_solution = await session.get(Solution, sibling_solution.id)
+        assert retained_solution is not None
+        assert retained_solution.desired_revision_id == revisions[1].id
+        assert retained_solution.deployed_revision_id == revisions[1].id
+        assert await session.get(Revision, sibling_solution.desired_revision_id) is not None
+        assert await session.get(Revision, revisions[1].id) is not None
+        assert await session.get(RegistryConnection, registries[1].id) is not None
     assert calls == ["namespace", "database", "bucket"]
 
 
