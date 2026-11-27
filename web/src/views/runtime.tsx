@@ -12,6 +12,7 @@ import { Alert, AlertTitle, AlertDescription, AlertAction } from '@/components/r
 import { QueryClient, QueryClientProvider, QueryErrorResetBoundary } from '@tanstack/react-query';
 import {
     RequestContext,
+    RoleContext,
     LinkNavigationContext,
     MenuNavigationContext,
     DialogActivityContext
@@ -91,6 +92,7 @@ const initialization = z
     .object({
         session: z.string(),
         source: z.string(),
+        role: z.string().optional(),
         params: parametersSchema,
         appearance: appearanceSchema,
         navigationBaseUrl: z.url({ protocol: /^https?$/ })
@@ -290,7 +292,9 @@ function initialize(event: MessageEvent<unknown>): void {
                                     <MenuNavigationProvider>
                                         <DialogActivityContext value={modalActivity}>
                                             <RequestContext value={request}>
-                                                <View params={params} />
+                                                <RoleContext value={parsed.data.role}>
+                                                    <View params={params} />
+                                                </RoleContext>
                                             </RequestContext>
                                         </DialogActivityContext>
                                     </MenuNavigationProvider>

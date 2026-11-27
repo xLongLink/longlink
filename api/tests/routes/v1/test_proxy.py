@@ -137,9 +137,10 @@ async def test_solution_proxy_forwards_safe_content(
         captured["content"] = await request.aread()
         captured["content_type"] = request.headers.get("content-type")
         captured["has_content_type"] = "content-type" in request.headers
-        principal, access = identity.identity_token_data(request.headers["x-longlink-identity"], "test-identity-secret-01234567890")
-        captured["user_id"] = str(principal.id) if principal is not None else None
-        captured["access"] = access
+        claims = identity.verify_identity_token(request.headers["x-longlink-identity"], "test-identity-secret-01234567890")
+        captured["user_id"] = str(claims.user.id) if claims.user is not None else None
+        captured["access"] = claims.access
+        captured["role"] = claims.role
 
         def close() -> None:
             """Record upstream response cleanup."""
@@ -175,6 +176,7 @@ async def test_solution_proxy_forwards_safe_content(
     assert captured.get("url") == "https://gateway.example/anything?answer=42"
     assert captured.get("content") == b"payload"
     assert captured.get("user_id") == str(user.id)
+    assert captured["role"] == "write"
     assert captured["content_type"] == request_content_type
     assert captured["has_content_type"] is (request_content_type is not None)
 
@@ -197,6 +199,7 @@ async def test_solution_proxy_forwards_safe_content(
     response = await client.get(f"/api/v1/public/solutions/{solution.id}/proxy/anything")
     assert response.status_code == upstream_status
     assert captured["user_id"] is None
+    assert captured["role"] is None
     assert captured["access"] == catalog.access("read").model_copy(update={"endpoints": [0]})
     assert (await client.post(f"/api/v1/public/solutions/{solution.id}/proxy/anything")).status_code == 403
     assert (await client.get(f"/api/v1/public/solutions/{solution.id}/proxy/mcp")).status_code == 403

@@ -29,6 +29,7 @@ def test_longlink_solution_serves_runtime_routes_and_frontend(monkeypatch: pytes
     # Arrange
     monkeypatch.setenv("LONGLINK_ENV", environment)
     if environment == "development":
+        monkeypatch.setenv("LONGLINK_IDENTITY_SECRET", "test-identity-secret-01234567890")
         migrations.make_migrations()
         migrations.apply_migrations()
     app = LongLink()
@@ -45,6 +46,8 @@ def test_longlink_solution_serves_runtime_routes_and_frontend(monkeypatch: pytes
 
     # Act
     client = TestClient(app)
+    initial_manifest = client.get("/views.json")
+    assert initial_manifest.json().get("role") == ("write" if environment == "development" else None)
     if environment == "development":
         client.cookies.set(
             "longlink-development-user",
@@ -57,6 +60,19 @@ def test_longlink_solution_serves_runtime_routes_and_frontend(monkeypatch: pytes
         health_response = client.get("/health")
         ready_response = client.get("/ready")
         user_response = client.get("/api/me")
+        if environment == "development":
+            client.cookies.set(
+                "longlink-development-user",
+                quote(json.dumps({"role": "read", "user": {"id": str(UUID(int=3)), "name": name, "email": "write@example.com"}})),
+            )
+            assert client.get("/views.json").json()["role"] == "read"
+            anonymous = identity.create_identity_token(
+                None, "test-identity-secret-01234567890", app.state.permission_catalog.access("unknown")
+            )
+            assert client.get("/views.json", headers={"x-longlink-identity": anonymous}).json().get("role") is None
+            assert client.get("/views.json").json()["role"] == "read"
+            client.cookies.clear()
+            assert client.get("/views.json").json()["role"] == "write"
 
     # Assert
     assert frontend_response.status_code == 200
@@ -230,6 +246,7 @@ def test_dynamic_view_is_registered_from_jsx_without_sidecar_metadata(solution_s
         "runtime": runtime,
         "tabs": [],
         "development": True,
+        "role": "write",
     }
 
 
@@ -261,6 +278,7 @@ def test_view_catalog_orders_paths_and_redirects_to_first_static_view(solution_s
         "runtime": runtime,
         "tabs": [{"route": "/zebra"}],
         "development": True,
+        "role": "write",
     }
     assert root_response.status_code == 307
     assert root_response.headers["location"] == "/zebra"

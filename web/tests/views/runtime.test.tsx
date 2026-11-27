@@ -326,7 +326,7 @@ it('renders file bytes inside the View and releases them with authored effects o
 });
 
 /** Admits real authored source and restores the sandbox-owned document after each regression. */
-async function initializeRuntime(source: string) {
+async function initializeRuntime(source: string, role?: string) {
     vi.resetModules();
     const previousSession = window.__VIEW_SESSION__;
     const previousTheme = document.documentElement.getAttribute('data-theme');
@@ -342,6 +342,7 @@ async function initializeRuntime(source: string) {
             ports: [channel.port1],
             data: {
                 source,
+                ...(role === undefined ? {} : { role }),
                 session: 'appearance-test-session',
                 params: {},
                 navigationBaseUrl: 'https://platform.example/',
@@ -368,6 +369,36 @@ async function initializeRuntime(source: string) {
         }
     };
 }
+
+it.each([undefined, 'reviewer', 'write', 'read', 'Reviewer'])(
+    'supplies role %s before the authored first render without a request',
+    async (role) => {
+        // Arrange
+        const runtime = await initializeRuntime(
+            `export default function View() {
+                const reviewer = useRole('reviewer');
+                const reader = useRole('read');
+                const [initial] = useState(() => reviewer ? 'reviewer' : reader ? 'read' : 'none');
+                return <Text>{initial}</Text>;
+            }`,
+            role
+        );
+        const request = vi.fn();
+        runtime.channel.port2.onmessage = (event: MessageEvent<unknown>) => {
+            if (commandSchema.parse(event.data).type === 'request') request();
+        };
+
+        try {
+            // Assert
+            await vi.waitFor(() =>
+                expect(runtime.mount.textContent).toBe(role === 'reviewer' || role === 'read' ? role : 'none')
+            );
+            expect(request).not.toHaveBeenCalled();
+        } finally {
+            runtime.close();
+        }
+    }
+);
 
 it('keeps authored state and unsaved input through live appearance updates and returning to system mode', async () => {
     // A theme provider replacement must not discard View state or an uncontrolled draft.

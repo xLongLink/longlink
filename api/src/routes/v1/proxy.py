@@ -64,11 +64,19 @@ async def proxy_solution_request(
     await session.commit()
 
     # Share the transport boundary without changing authenticated member identity or grants.
-    return await forward(request, solution, registry, user, access, path, runtime)
+    return await forward(request, solution, registry, user, access, path, runtime, role=role)
 
 
 async def forward(
-    request: Request, solution: Solution, registry: ComputeRegistry, user: User | None, access: Access, path: str, runtime: AsyncExitStack
+    request: Request,
+    solution: Solution,
+    registry: ComputeRegistry,
+    user: User | None,
+    access: Access,
+    path: str,
+    runtime: AsyncExitStack,
+    *,
+    role: str | None = None,
 ) -> Response:
     """Forward a request with exactly the caller's resolved identity and endpoint grants."""
 
@@ -95,7 +103,7 @@ async def forward(
                 # Sign platform identity while keeping Knative's Host independent of the verified TLS hostname.
                 headers = {
                     "host": namespace.solution_hostname(solution.organization_id, solution.id),
-                    "x-longlink-identity": identity.create_identity_token(profile, identity_secret, access),
+                    "x-longlink-identity": identity.create_identity_token(profile, identity_secret, access, role=role),
                 }
 
                 # Preserve body encoding without forwarding arbitrary browser headers.

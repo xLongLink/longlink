@@ -14,12 +14,14 @@ export function SolutionView({
     path,
     viewsUrl,
     runtime,
+    role,
     params,
     navigationBaseUrl
 }: {
     path: string;
     viewsUrl: string;
     runtime: ViewRuntime;
+    role?: string;
     params: Record<string, string>;
     navigationBaseUrl: string;
 }) {
@@ -114,7 +116,9 @@ export function SolutionView({
     if (source !== undefined && kernel)
         return (
             <JsxView
+                key={JSON.stringify([source, role])}
                 source={source}
+                role={role}
                 params={params}
                 requestBaseUrl={requestBaseUrl}
                 navigationBaseUrl={navigationBaseUrl}

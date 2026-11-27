@@ -86,6 +86,7 @@ export const useMemo = React.useMemo;
 export const useRef = React.useRef;
 export { z } from 'zod';
 export { useApi } from '@/components/longlink/hooks/use-api';
+export { useRole } from '@/components/longlink/hooks/use-role';
 export { useForm, type FormOptions } from '@/components/longlink/hooks/use-form';
 export { useConfirm, type ConfirmOptions } from '@/components/longlink/hooks/use-confirm';
 export { Form, Controller } from '@/components/longlink/form/form';
