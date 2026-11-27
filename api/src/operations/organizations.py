@@ -3,7 +3,7 @@ from uuid import UUID
 from datetime import UTC, datetime
 from sqlmodel import col
 from src.utils import stripe
-from sqlalchemy import or_, select
+from sqlalchemy import or_, select, update
 from sqlalchemy import delete as sql_delete
 from src.kubernetes import utils, namespace, organizations
 from src.kubernetes import databases as database_resources
@@ -164,5 +164,13 @@ async def delete(organization_id: UUID) -> None:
 
         # Purge the tombstone only after all external resources are absent.
         async with session_scope() as session:
+            await session.execute(
+                update(Solution)
+                .where(col(Solution.organization_id) == organization.id)
+                .values(desired_revision_id=None, deployed_revision_id=None)
+            )
+
+            # Remove revisions before Organization cascades reach their registry connections.
+            await session.execute(sql_delete(Solution).where(col(Solution.organization_id) == organization.id))
             await session.execute(sql_delete(Organization).where(col(Organization.id) == organization.id))
             await session.commit()

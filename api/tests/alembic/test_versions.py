@@ -2,19 +2,26 @@ import pytest
 import asyncio
 import secrets
 import sqlalchemy
+import src.operations.organizations
 from uuid import UUID, uuid4
 from alembic import command
 from pathlib import Path
+from conftest import DatabaseKubernetes
 from datetime import UTC, datetime
+from factories import create_compute
 from src.utils import urls
-from src.database import models
+from src.database import models, session
+from unittest.mock import AsyncMock
 from alembic.config import Config
 from alembic.script import ScriptDirectory
 from collections.abc import Iterator
 from src.environments import env
 from sqlalchemy.engine import URL
 from sqlmodel.sql.sqltypes import UTCDateTime
-from sqlalchemy.ext.asyncio import create_async_engine
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+from src.database.models.solutions import Revision, Solution
+from src.database.models.registries import RegistryConnection
+from src.database.models.organizations import Organization, OrganizationActivity
 
 pytestmark = pytest.mark.no_db
 
@@ -58,6 +65,91 @@ def test_migrations_execute_and_match_current_metadata(monkeypatch: pytest.Monke
     config = Config(str(Path(__file__).resolve().parents[2] / "alembic.ini"))
     command.upgrade(config, "head")
     command.check(config)
+
+
+@pytest.mark.integration
+async def test_mysql_organization_deletion_removes_registry_backed_revisions(monkeypatch: pytest.MonkeyPatch, mysql_url: URL) -> None:
+    """Delete retained releases on migrated MySQL without touching another tenant."""
+
+    # Arrange the actual migrated schema and bind every application session to it.
+    migration_url = mysql_url.set(drivername="mysql+aiomysql", query={"ssl-mode": "DISABLED"}).render_as_string(hide_password=False)
+    monkeypatch.setattr(env, "DATABASE_URL", migration_url)
+    config = Config(str(Path(__file__).parents[2] / "alembic.ini"))
+    await asyncio.to_thread(command.upgrade, config, "head")
+    database = urls.database(migration_url)
+    engine = create_async_engine(
+        database.url, connect_args=database.connect_args, poolclass=sqlalchemy.NullPool, isolation_level="READ COMMITTED"
+    )
+    monkeypatch.setattr(session, "Session", async_sessionmaker(engine, expire_on_commit=False))
+    namespace_cleanup = AsyncMock()
+    storage_cleanup = AsyncMock()
+    monkeypatch.setattr(src.operations.organizations, "Kubernetes", DatabaseKubernetes)
+    monkeypatch.setattr(src.operations.organizations.utils, "delete_namespace", namespace_cleanup)
+    monkeypatch.setattr(src.operations.organizations.Storage, "delete", storage_cleanup)
+
+    try:
+        compute = await create_compute()
+        removed = Organization(name="Removed tenant", compute_id=compute.id, deleted_at=datetime.now(UTC))
+        sibling = Organization(name="Retained tenant", compute_id=compute.id)
+        removed_registry = RegistryConnection(organization_id=removed.id, username="removed", credential=secrets.token_urlsafe(32))
+        sibling_registry = RegistryConnection(organization_id=sibling.id, username="retained", credential=secrets.token_urlsafe(32))
+        active_solution = Solution(organization_id=removed.id, name="Active release", secrets={})
+        deleted_solution = Solution(organization_id=removed.id, name="Retained tombstone", secrets={}, deleted_at=datetime.now(UTC))
+        sibling_solution = Solution(organization_id=sibling.id, name="Sibling release", secrets={})
+        sibling_revisions: list[Revision] = []
+        async with session.session_scope() as connection:
+            connection.add_all([removed, sibling])
+            await connection.flush()
+            connection.add_all([removed_registry, sibling_registry, active_solution, deleted_solution, sibling_solution])
+            await connection.flush()
+            for solution, registry in (
+                (active_solution, removed_registry),
+                (deleted_solution, removed_registry),
+                (sibling_solution, sibling_registry),
+            ):
+                revisions = [
+                    Revision(
+                        solution_id=solution.id,
+                        registry_connection_id=registry.id,
+                        image=f"ghcr.io/example/app@sha256:{index:064x}",
+                        envs={},
+                    )
+                    for index in range(3)
+                ]
+                connection.add_all(revisions)
+                await connection.flush()
+                solution.desired_revision_id = revisions[2].id
+                solution.deployed_revision_id = revisions[1].id
+                if solution.id == sibling_solution.id:
+                    sibling_revisions = revisions
+            await connection.commit()
+
+        # Act through the real deletion lease, cleanup workflow, and final transaction.
+        await src.operations.organizations.delete(removed.id)
+
+        # Assert only the sibling's releases, credentials, and pointers survive.
+        async with session.session_scope() as connection:
+            result = await connection.scalars(sqlalchemy.select(Organization.id))
+            assert set(result) == {sibling.id}
+            result = await connection.scalars(sqlalchemy.select(Solution.id))
+            assert set(result) == {sibling_solution.id}
+            result = await connection.scalars(sqlalchemy.select(RegistryConnection.id))
+            assert set(result) == {sibling_registry.id}
+            result = await connection.scalars(sqlalchemy.select(Revision.id))
+            assert set(result) == {revision.id for revision in sibling_revisions}
+            retained = await connection.get(Solution, sibling_solution.id)
+            assert retained is not None
+            assert retained.desired_revision_id == sibling_revisions[2].id
+            assert retained.deployed_revision_id == sibling_revisions[1].id
+            assert await connection.get(OrganizationActivity, removed.id) is None
+            assert await connection.get(models.computes.ComputeRegistry, compute.id) is not None
+        assert namespace_cleanup.await_count == 2
+        storage_cleanup.assert_awaited_once()
+        organization_id, solution_ids = storage_cleanup.await_args.args
+        assert organization_id == removed.id
+        assert set(solution_ids) == {active_solution.id, deleted_solution.id}
+    finally:
+        await engine.dispose()
 
 
 async def test_invoice_timestamp_cleanup_preserves_billing_snapshots(monkeypatch: pytest.MonkeyPatch, migration_urls: str) -> None:
