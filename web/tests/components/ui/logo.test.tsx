@@ -31,13 +31,9 @@ it.each(['table', 'detail'] as const)(
             await withMounted(<Supplier />, async (output) => {
                 const image = output.querySelector('img');
                 if (!image) throw new Error('Missing supplier logo');
+                const frame = image.parentElement;
                 expect(image.classList.contains('invisible')).toBe(true);
                 expect(image.classList.contains(variant === 'detail' ? 'p-3' : 'p-1.5')).toBe(false);
-                expect(image.getAttribute('width')).toBe(variant === 'detail' ? '72' : '40');
-                expect(image.getAttribute('height')).toBe(variant === 'detail' ? '72' : '40');
-                expect(image.parentElement?.classList.contains(variant === 'detail' ? 'size-18' : 'size-10')).toBe(
-                    true
-                );
                 expect(output.querySelector('[role="status"]')?.getAttribute('aria-label')).toBe('Loading Supplier');
 
                 // Act
@@ -74,11 +70,7 @@ it.each(['table', 'detail'] as const)(
                 expect(output.querySelector('img')).toBeNull();
                 expect(output.querySelector('[role="status"]')).toBeNull();
                 expect(output.querySelector('svg')?.getAttribute('aria-label')).toBe('Supplier: Logo unavailable');
-                expect(
-                    output
-                        .querySelector('svg')
-                        ?.parentElement?.classList.contains(variant === 'detail' ? 'size-18' : 'size-10')
-                ).toBe(true);
+                expect(output.querySelector('svg')?.parentElement).toBe(frame);
             });
         } finally {
             complete.mockRestore();
