@@ -210,7 +210,7 @@ export default function SolutionSettings({ membership }: { membership: Organizat
                     tags={tags}
                     solution={selected.solution}
                     onSuccess={onSuccess}
-                    onOpenChange={closeSelected}
+                    onClose={closeSelected}
                 />
             )}
             {selected?.kind === 'update' && (

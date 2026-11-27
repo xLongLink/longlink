@@ -42,7 +42,6 @@ class ViewManifest:
     views: list[ViewDefinition]
     runtime: ViewRuntime
     tabs: list[ViewTab] | None = None
-    development: bool | None = None
     development_users: list[DevelopmentIdentity] | None = None
 
     def resolved_tabs(self) -> list[ViewTab]:

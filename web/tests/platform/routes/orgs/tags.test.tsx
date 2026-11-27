@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 // @vitest-environment-options {"url":"http://localhost"}
-import { act } from 'react';
+import { act, useState } from 'react';
 import { it, expect, vi } from 'vitest';
 import { membership } from '../../render';
 import { useApi } from '@/lib/hooks/use-api';
@@ -18,6 +18,60 @@ const tags = [
     { id: '00000000-0000-4000-8000-000000000002', name: 'Operations', icon: 'wrench', kind: 'tag' },
     { id: '00000000-0000-4000-8000-000000000003', name: 'All Solutions', icon: 'layers', kind: 'all' }
 ].map((tag) => zOrganizationTagResponse.parse(tag));
+
+function Editor({ kind }: { kind: 'tab' | 'solution' }) {
+    const [open, setOpen] = useState(false);
+    const onClose = () => setOpen(false);
+    const onSuccess = async () => setOpen(false);
+    const base = `/api/v1/organizations/${membership.organization.id}`;
+
+    return (
+        <>
+            <button onClick={() => setOpen(true)}>Open editor</button>
+            {open &&
+                (kind === 'tab' ? (
+                    <TagForm base={base} tag={null} onSuccess={onSuccess} onClose={onClose} />
+                ) : (
+                    <SolutionTags
+                        base={base}
+                        tags={tags}
+                        solution={{ id: '00000000-0000-4000-8000-000000000004', name: 'Purchases', tag_ids: [] }}
+                        onSuccess={onSuccess}
+                        onClose={onClose}
+                    />
+                ))}
+        </>
+    );
+}
+
+it.each(['tab', 'solution'] as const)('closes the %s editor through Cancel and Escape', async (kind) => {
+    // Arrange
+    const events = userEvent.setup();
+    await withMounted(<Editor kind={kind} />, async (output) => {
+        const trigger = output.querySelector('button');
+        if (!trigger) throw new Error('Expected the editor trigger');
+
+        // Act
+        await act(async () => events.click(trigger));
+        const dialog = document.querySelector('[role="dialog"]');
+        const cancel = [...(dialog?.querySelectorAll('button') ?? [])].find(
+            (button) => button.textContent === 'Cancel'
+        );
+        if (!cancel) throw new Error('Expected the Cancel action');
+        await act(async () => events.click(cancel));
+
+        // Assert
+        expect(document.querySelector('[role="dialog"]')).toBeNull();
+
+        // Act
+        await act(async () => events.click(trigger));
+        expect(document.querySelector('[role="dialog"]')).not.toBeNull();
+        await act(async () => events.keyboard('{Escape}'));
+
+        // Assert
+        expect(document.querySelector('[role="dialog"]')).toBeNull();
+    });
+});
 
 /** Connects the section to the same shared query refreshed by tab moves. */
 function SharedTabs({ base }: { base: string }) {
@@ -160,7 +214,7 @@ it.each(['create', 'edit'] as const)(
                     base={`/api/v1/organizations/${membership.organization.id}`}
                     tag={tag}
                     onSuccess={completed}
-                    onOpenChange={() => undefined}
+                    onClose={() => undefined}
                 />,
                 async () => {
                     const dialog = document.querySelector('[role="dialog"]');
@@ -254,7 +308,7 @@ it.each(['unchanged', 'cleared', 'unknown'] as const)('submits only explicit tag
                     onSuccess={async () => {
                         completed();
                     }}
-                    onOpenChange={() => undefined}
+                    onClose={() => undefined}
                 />
             </>,
             async () => {

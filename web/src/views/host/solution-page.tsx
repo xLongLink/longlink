@@ -154,7 +154,7 @@ export function SolutionPage({
     return (
         <Platform
             action={
-                manifest?.development && manifest.development_users?.length && developmentAction
+                manifest?.development_users?.length && developmentAction
                     ? developmentAction(manifest.development_users)
                     : action
             }

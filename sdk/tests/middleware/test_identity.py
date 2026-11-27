@@ -10,7 +10,7 @@ from collections.abc import Iterator
 from longlink.database import audit
 from fastapi.testclient import TestClient
 from starlette.websockets import WebSocketDisconnect
-from longlink.database.base import Database
+from longlink.database.base import LOCAL_USER_ID, Database
 from longlink.utils.settings import Envs
 from longlink.middleware.identity import IdentityMiddleware
 
@@ -32,8 +32,8 @@ def identity_headers(user_id: UUID) -> dict[str, str]:
 @pytest.mark.parametrize(
     ("secret", "identity_header", "actor_id"),
     [
-        (IDENTITY_SECRET, "invalid-token", str(UUID(int=1))),
-        ("", None, str(UUID(int=1))),
+        (IDENTITY_SECRET, "invalid-token", str(LOCAL_USER_ID)),
+        ("", None, str(LOCAL_USER_ID)),
         (IDENTITY_SECRET, identity.create_identity_token(None, IDENTITY_SECRET, permissions.Access(catalog="a" * 64, endpoints=[])), None),
     ],
 )
@@ -44,7 +44,7 @@ def test_context_middleware_distinguishes_signed_guests_from_untrusted_identity(
 
     # Install the real context middleware around the shared anonymous probe route.
     app = FastAPI()
-    app.add_middleware(IdentityMiddleware, identity_secret=secret, mode="testing", local_user_id=UUID(int=1))
+    app.add_middleware(IdentityMiddleware, identity_secret=secret, mode="testing")
 
     @app.get("/", response_model=dict[str, str | None])
     async def get_identity() -> dict[str, str | None]:
@@ -75,7 +75,7 @@ def production_client() -> Iterator[TestClient]:
     app = FastAPI()
     database = Database(Envs(ENV="testing"))
     app.state.longlink = SimpleNamespace(database=database)
-    app.add_middleware(IdentityMiddleware, identity_secret=IDENTITY_SECRET, mode="production", local_user_id=None)
+    app.add_middleware(IdentityMiddleware, identity_secret=IDENTITY_SECRET, mode="production")
 
     @app.get("/views.json", response_model=dict[str, bool])
     async def views() -> dict[str, bool]:
@@ -205,7 +205,7 @@ async def test_context_middleware_isolates_concurrent_audit_identities() -> None
     app = FastAPI()
     database = Database(Envs(ENV="testing"))
     app.state.longlink = SimpleNamespace(database=database)
-    app.add_middleware(IdentityMiddleware, identity_secret=IDENTITY_SECRET, mode="testing", local_user_id=None)
+    app.add_middleware(IdentityMiddleware, identity_secret=IDENTITY_SECRET, mode="testing")
 
     @app.get("/", response_model=dict[str, str | None])
     async def current_user(background_tasks: BackgroundTasks) -> dict[str, str | None]:
