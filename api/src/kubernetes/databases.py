@@ -29,7 +29,7 @@ def _allocation(storage_bytes: int, cpu_millicores: int, ram_bytes: int) -> tupl
         "limits.memory": str(ram_bytes * 3),
     }
     resources = {
-        "requests": {"cpu": f"{cpu_millicores}m", "memory": str(min(ram_bytes, 256 * 1024**2))},
+        "requests": {"cpu": f"{min(cpu_millicores, 50)}m", "memory": str(min(ram_bytes, 256 * 1024**2))},
         "limits": {"cpu": f"{cpu_millicores}m", "memory": str(ram_bytes)},
     }
     return quota, resources
