@@ -103,7 +103,13 @@ export default function OrganizationSettings() {
                         {groups.map((group) => (
                             <Collapsible key={group.label} defaultOpen>
                                 <CollapsibleTrigger
-                                    render={<Button variant="ghost" size="sm" className="w-full justify-start" />}
+                                    render={
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="w-full justify-start aria-expanded:bg-transparent"
+                                        />
+                                    }
                                 >
                                     <group.icon aria-hidden="true" />
                                     {group.label}
