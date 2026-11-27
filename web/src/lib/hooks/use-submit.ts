@@ -1,6 +1,7 @@
 import { ApiErrorContext } from '@/lib/errors';
 import { ReportedError } from '@/lib/reported';
-import { useCallback, useContext, useRef } from 'react';
+import { useCallback, useContext } from 'react';
+import { useSingleFlight } from '@/lib/hooks/use-single-flight';
 
 export type SubmitOptions = { onError?: (error: Error) => void | Promise<void> };
 
@@ -10,33 +11,23 @@ export function useSubmit<T>(
     options?: SubmitOptions
 ): (data: T) => Promise<void> {
     const reportError = useContext(ApiErrorContext);
-    const pending = useRef<Promise<void> | null>(null);
     const onError = options?.onError;
 
-    // React Hook Form owns pending UI; the synchronous guard also covers rapid repeated submits.
-    return useCallback(
-        (data: T) => {
-            if (pending.current) return pending.current;
+    const submit = useCallback(
+        async (data: T) => {
+            try {
+                await action(data);
+            } catch (cause) {
+                const error = cause instanceof Error ? cause : new Error('Submission failed', { cause });
 
-            const submission = Promise.resolve().then(async () => {
-                try {
-                    await action(data);
-                } catch (cause) {
-                    const error = cause instanceof Error ? cause : new Error('Submission failed', { cause });
+                if (!(error instanceof ReportedError)) reportError?.(error);
 
-                    if (!(error instanceof ReportedError)) reportError?.(error);
-
-                    if (!onError) throw error;
-                    await onError(error);
-                } finally {
-                    pending.current = null;
-                }
-            });
-
-            pending.current = submission;
-
-            return submission;
+                if (!onError) throw error;
+                await onError(error);
+            }
         },
         [action, onError, reportError]
     );
+
+    return useSingleFlight(submit);
 }

@@ -1,6 +1,7 @@
 import asyncio
 import secrets
 from pwdlib import PasswordHash
+from typing import cast
 from datetime import UTC, datetime
 from sqlmodel import col
 from sqlalchemy import or_, func, select, update
@@ -10,6 +11,7 @@ from sqlalchemy.orm import load_only
 from collections.abc import Sequence
 from src.utils.oauth import OAuthProvider
 from src.environments import env
+from sqlalchemy.engine import CursorResult
 from src.database.types import attr
 from src.models.pagination import Pagination
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -76,16 +78,15 @@ async def replace_password(session: AsyncSession, user: User, password: str) -> 
     # Keep expensive credential hashing outside the request event loop.
     hashed_password = await asyncio.to_thread(PASSWORD_HASH.hash, password)
 
-    # Preserve ORM autoflush while using the transaction's connection for a portable affected-row count.
-    if session.autoflush:
-        await session.flush()
-    connection = await session.connection()
-
     # Consume proof atomically and preserve audit fields that bulk updates do not populate.
-    result = await connection.execute(
-        update(User)
-        .where(col(User.id) == user.id, col(User.password) == user.password, col(User.deleted_at).is_(None))
-        .values(password=hashed_password, updated_at=datetime.now(UTC), updated_id=user.id)
+    result = cast(
+        CursorResult[tuple[object, ...]],
+        await session.execute(
+            update(User)
+            .where(col(User.id) == user.id, col(User.password) == user.password, col(User.deleted_at).is_(None))
+            .values(password=hashed_password, updated_at=datetime.now(UTC), updated_id=user.id)
+            .execution_options(synchronize_session=False)
+        ),
     )
     return result.rowcount == 1
 

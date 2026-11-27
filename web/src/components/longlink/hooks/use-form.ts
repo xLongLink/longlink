@@ -7,6 +7,7 @@ import { ReportedError } from '@/lib/reported';
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { ViewData } from '@/lib/view-capabilities';
 import { RequestContext } from '@/lib/view-capabilities';
+import { useSingleFlight } from '@/lib/hooks/use-single-flight';
 
 export type FormOptions<T extends forms.FieldValues = forms.FieldValues, U extends forms.FieldValues = T> = {
     schema?: z.ZodType<U, T>;
@@ -58,7 +59,6 @@ export function useForm<T extends forms.FieldValues = forms.FieldValues, U exten
 } {
     const request = useContext(RequestContext);
     const reportError = useContext(ApiErrorContext);
-    const pending = useRef<Promise<void> | null>(null);
     const supplied = useRef<T | FormData | undefined>(undefined);
     const schema = options?.schema;
     const resolver: forms.Resolver<T, unknown, U> = async (values, context, resolverOptions) => {
@@ -105,24 +105,18 @@ export function useForm<T extends forms.FieldValues = forms.FieldValues, U exten
         }
     };
 
-    const submit = (data?: T | FormData): Promise<void> => {
-        if (pending.current) return pending.current;
+    const submit = useSingleFlight(async (data?: T | FormData): Promise<void> => {
         supplied.current = data;
-        const operation = Promise.resolve().then(async () => {
-            try {
-                let invalid = false;
-                await form.handleSubmit(send, (errors) => {
-                    invalid = errors.root?.type !== 'submission';
-                })();
-                if (invalid) throw new Error('Form validation failed');
-            } finally {
-                supplied.current = undefined;
-                pending.current = null;
-            }
-        });
-        pending.current = operation;
-        return operation;
-    };
+        try {
+            let invalid = false;
+            await form.handleSubmit(send, (errors) => {
+                invalid = errors.root?.type !== 'submission';
+            })();
+            if (invalid) throw new Error('Form validation failed');
+        } finally {
+            supplied.current = undefined;
+        }
+    });
 
     const onSubmit = async (event?: FormEvent<HTMLFormElement>): Promise<void> => {
         event?.preventDefault();

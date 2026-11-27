@@ -83,7 +83,7 @@ class IdentityMiddleware:
         if (
             signed_access is not None
             and user is None
-            and (request.method not in {"GET", "HEAD", "OPTIONS"} or request.url.path.strip("/").split("/", 1)[0] == "mcp")
+            and (request.method not in permissions.READ_ONLY_METHODS or request.url.path.strip("/").split("/", 1)[0] == "mcp")
         ):
             response = JSONResponse({"detail": "Public MCP access is unavailable"}, status_code=403)
             await response(scope, receive, send)

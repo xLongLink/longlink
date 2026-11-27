@@ -11,6 +11,7 @@ from starlette.responses import JSONResponse
 Method = Literal["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"]
 
 METHODS = frozenset(get_args(Method))
+READ_ONLY_METHODS = frozenset({"GET", "HEAD", "OPTIONS"})
 ROLE_PATTERN = re.compile(r"[a-z][a-z0-9_-]{0,63}")
 
 
@@ -110,7 +111,7 @@ def discover(routes: Sequence[RouteContext]) -> Catalog:
         for method in sorted(route.methods or set()):
             if method not in METHODS:
                 raise ValueError(f"Unsupported permission method: {method}")
-            defaults = ["read", "write"] if method in {"GET", "HEAD", "OPTIONS"} else ["write"]
+            defaults = ["read", "write"] if method in READ_ONLY_METHODS else ["write"]
             endpoint = Endpoint.model_validate(
                 {"path": route.path, "method": method, "roles": declared if declared is not None else defaults}
             )

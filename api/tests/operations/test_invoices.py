@@ -460,16 +460,18 @@ async def test_issue_rejects_recovered_invoice_with_wrong_customer_or_currency(
         assert persisted.issued_at is None
 
 
-async def test_issue_rejects_resource_line_owned_by_another_invoice(monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.mark.parametrize("pricing_version", [1, 2, 3])
+async def test_issue_rejects_resource_line_owned_by_another_invoice(monkeypatch: pytest.MonkeyPatch, pricing_version: int) -> None:
     """Matching resource amounts and quantities cannot authorize a foreign invoice line."""
 
     # Arrange
     invoice = Invoice(
-        pricing_version=1,
+        pricing_version=pricing_version,
         customer_id="cus_recovered",
         stripe_invoice_id="in_recovered",
         period_end=datetime.now(UTC).replace(day=1, hour=0, minute=0, second=0, microsecond=0),
         users=7,
+        cpu_millicores=7000,
         database_bytes=0,
         storage_bytes=0,
     )
@@ -484,7 +486,7 @@ async def test_issue_rejects_resource_line_owned_by_another_invoice(monkeypatch:
     async def request(
         _self: stripe.HTTPXClient, method: str, url: str, _headers: object, _post_data: str | None = None
     ) -> tuple[bytes, int, dict[str, str]]:
-        """Expose the foreign users line without allowing provider mutations."""
+        """Expose the foreign resource line without allowing provider mutations."""
 
         path = urlsplit(url).path
         requests.append((method, path))
@@ -510,9 +512,12 @@ async def test_issue_rejects_resource_line_owned_by_another_invoice(monkeypatch:
                         "id": "ii_foreign",
                         "object": "invoiceitem",
                         "amount": 7000,
-                        "quantity": 7,
-                        "unit_amount_decimal": "1000",
-                        "metadata": {"resource": "users", "longlink_invoice_id": "00000000-0000-0000-0000-000000000001"},
+                        "quantity": 7 if pricing_version == 1 else 1,
+                        "unit_amount_decimal": "1000" if pricing_version == 1 else "7000",
+                        "metadata": {
+                            "resource": "users" if pricing_version == 1 else "cpu",
+                            "longlink_invoice_id": "00000000-0000-0000-0000-000000000001",
+                        },
                     }
                 ],
             }

@@ -9,6 +9,64 @@ from src.models.pagination import Pagination
 from src.database.models.users import User
 
 
+async def test_replace_password_preserves_snapshot_and_caller_transaction(users: tuple[User, User, User]) -> None:
+    """Flush pending changes without mutating credential proof or committing the password replacement."""
+
+    # Arrange
+    original = users[1]
+    password_hash = PasswordHash.recommended()
+    async with session_scope() as session:
+        user = await session.get(User, original.id)
+        assert user is not None
+        user.name = "Pending rename"
+
+        # Act
+        replaced = await user_service.replace_password(session, user, "replacement-password")
+        repeated = await user_service.replace_password(session, user, "replayed-password")
+        result = await session.execute(select(User.password, User.name, User.updated_at, User.updated_id).where(col(User.id) == user.id))
+        persisted = result.one()
+
+        # Assert
+        assert replaced
+        assert not repeated
+        assert user.password == original.password
+        assert password_hash.verify("replacement-password", persisted.password)
+        assert persisted.name == "Pending rename"
+        assert persisted.updated_id == original.id
+        assert persisted.updated_at.replace(tzinfo=UTC) > original.updated_at.replace(tzinfo=UTC)
+        await session.rollback()
+
+    # Assert rollback discards both password replacement and pending metadata.
+    async with session_scope() as session:
+        unchanged = await session.get(User, original.id)
+        assert unchanged is not None
+        assert unchanged.password == original.password
+        assert unchanged.name == original.name
+
+
+async def test_replace_password_rejects_pending_account_deletion(users: tuple[User, User, User]) -> None:
+    """Flush a pending deletion before checking whether password proof can still be consumed."""
+
+    # Arrange
+    original = users[1]
+    async with session_scope() as session:
+        user = await session.get(User, original.id)
+        assert user is not None
+        user.deleted_at = datetime.now(UTC)
+
+        # Act
+        replaced = await user_service.replace_password(session, user, "replacement-password")
+        await session.commit()
+
+    # Assert
+    async with session_scope() as session:
+        deleted = await session.get(User, original.id)
+        assert deleted is not None
+        assert not replaced
+        assert deleted.deleted_at is not None
+        assert deleted.password == original.password
+
+
 async def test_ensure_administrator_creates_absent_configured_user() -> None:
     """Create the configured administrator and preserve its ID and credential hash on repeated reconciliation."""
 

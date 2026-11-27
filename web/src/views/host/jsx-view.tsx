@@ -11,7 +11,7 @@ import { useScrollLock } from '@base-ui/utils/useScrollLock';
 import { PageError, PageLoading } from '@/components/ui/utils';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { requestUrl, resolveExternalUrl, resolveScopedNavigationUrl } from '@/lib/url';
-import { commandSchema, parametersSchema, iconDataSchema, moduleRequestSchema, type ViewData } from '@/views/protocol';
+import { commandSchema, iconDataSchema, moduleRequestSchema, type ViewData } from '@/views/protocol';
 
 const BOOTSTRAP_TIMEOUT_MS = 10_000;
 
@@ -156,7 +156,7 @@ export function JsxView({
                     {
                         session,
                         source,
-                        params: parametersSchema.parse(JSON.parse(parameters)),
+                        params: JSON.parse(parameters) as unknown,
                         navigationBaseUrl: new URL(navigationBaseUrl, window.location.origin).href,
                         appearance: currentAppearance.current
                     },
