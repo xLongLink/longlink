@@ -52,9 +52,7 @@ async def _inspect_update(
 
 
 @router.patch("/solutions/{solution_id}/visibility", response_model=SolutionVisibility)
-async def update_visibility(
-    solution_id: UUID, payload: SolutionVisibility, session: auth.Session, user: auth.CurrentUser
-) -> dict[str, bool]:
+async def update_visibility(solution_id: UUID, payload: SolutionVisibility, session: auth.Session, user: auth.CurrentUser) -> Solution:
     """Publish or unpublish a Solution with current maintenance authority."""
 
     # Serialize visibility changes with membership revocation and Solution lifecycle commands.
@@ -62,7 +60,7 @@ async def update_visibility(
     solution.public = payload.public
     solution.updated_id = user.id
     await session.commit()
-    return {"public": payload.public}
+    return solution
 
 
 @router.get("/solutions/{solution_id}/update", response_model=SolutionUpdateCheck)

@@ -7,6 +7,7 @@ import { membership } from '../../render';
 import { withMounted } from '../../../render';
 import { ApiBoundary } from '@/components/api';
 import { ApiErrorContext } from '@/lib/errors';
+import userEvent from '@testing-library/user-event';
 import Management from '@/platform/routes/user/organization-management';
 
 const invitation = {
@@ -164,6 +165,7 @@ it.each([
     // Arrange
     const requests: string[] = [];
     const errors: unknown[] = [];
+    const user = userEvent.setup();
     let attempted = false;
     let finishRefresh: (response: Response) => void = () => undefined;
     const refresh = new Promise<Response>((resolve) => {
@@ -214,6 +216,20 @@ it.each([
                 expect(errors).toEqual([]);
                 expect(confirm.disabled).toBe(true);
 
+                if (action === 'Decline') {
+                    // Act
+                    const cancel = Array.from(
+                        document.querySelectorAll<HTMLButtonElement>('[role="alertdialog"] button')
+                    ).find((button) => button.textContent === 'Cancel');
+                    if (!cancel) throw new Error('Expected the cancellation action');
+                    await act(async () => user.click(cancel));
+                    await act(async () => user.keyboard('{Escape}'));
+
+                    // Assert
+                    expect(cancel.disabled).toBe(true);
+                    expect(document.querySelector('[role="alertdialog"]')).not.toBeNull();
+                }
+
                 // Act
                 await act(async () => finishRefresh(Response.json([])));
 
@@ -235,6 +251,64 @@ it.each([
         );
     } finally {
         finishRefresh(Response.json([]));
+        transport.mockRestore();
+    }
+});
+
+it.each(['Cancel', 'Escape'])('discards a creation draft on %s and opens a fresh form', async (dismissal) => {
+    // Arrange
+    const user = userEvent.setup();
+    const writes: string[] = [];
+    const transport = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, options) => {
+        const request = input instanceof Request ? input : new Request(input, options);
+        const path = new URL(request.url).pathname;
+        if (request.method !== 'GET') writes.push(request.method);
+        if (path === '/api/v1/me/organizations') return Response.json([membership]);
+        if (path === '/api/v1/me/invitations') return Response.json([]);
+        throw new Error(`Unexpected request: ${request.method} ${path}`);
+    });
+
+    try {
+        await withMounted(
+            <ApiErrorContext value={() => undefined}>
+                <ApiBoundary>
+                    <Management presentation="settings" />
+                </ApiBoundary>
+            </ApiErrorContext>,
+            async (output) => {
+                await vi.waitFor(() => expect(output.querySelector('table')?.textContent).toContain('Acme'));
+                const create = Array.from(output.querySelectorAll('button')).find(
+                    (button) => button.textContent === 'Create Organization'
+                );
+                if (!create) throw new Error('Expected the creation action');
+
+                // Act
+                await act(async () => user.click(create));
+                const input = document.querySelector<HTMLInputElement>('[role="dialog"] input[name="name"]');
+                if (!input) throw new Error('Expected the organization name');
+                await act(async () => user.type(input, 'Discarded draft'));
+                if (dismissal === 'Escape') {
+                    await act(async () => user.keyboard('{Escape}'));
+                } else {
+                    const cancel = Array.from(
+                        document.querySelectorAll<HTMLButtonElement>('[role="dialog"] button')
+                    ).find((link) => link.textContent === 'Cancel');
+                    if (!cancel) throw new Error('Expected the cancellation action');
+                    await act(async () => user.click(cancel));
+                }
+
+                // Assert
+                await vi.waitFor(() => expect(document.querySelector('[role="dialog"]')).toBeNull());
+
+                // Act
+                await act(async () => user.click(create));
+
+                // Assert
+                expect(document.querySelector<HTMLInputElement>('[role="dialog"] input[name="name"]')?.value).toBe('');
+                expect(writes).toEqual([]);
+            }
+        );
+    } finally {
         transport.mockRestore();
     }
 });

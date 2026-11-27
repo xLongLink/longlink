@@ -16,14 +16,14 @@ export function MembershipConfirmation({
     description,
     actionLabel,
     destructive,
-    onOpenChange,
+    onClose,
     onConfirm
 }: {
     title: string;
     description: string;
     actionLabel: string;
     destructive: boolean;
-    onOpenChange: (open: boolean) => void;
+    onClose: () => void;
     onConfirm: () => Promise<void>;
 }) {
     const reportError = useApiError();
@@ -31,12 +31,7 @@ export function MembershipConfirmation({
 
     const footer = (
         <>
-            <Button
-                type="button"
-                variant="outline"
-                disabled={pending && destructive}
-                onClick={() => onOpenChange(false)}
-            >
+            <Button type="button" variant="outline" disabled={pending && destructive} onClick={onClose}>
                 Cancel
             </Button>
             <Button
@@ -67,7 +62,7 @@ export function MembershipConfirmation({
             <AlertDialog
                 open
                 onOpenChange={(nextOpen) => {
-                    if (!pending && !inFlight.current) onOpenChange(nextOpen);
+                    if (!nextOpen && !pending && !inFlight.current) onClose();
                 }}
             >
                 <AlertDialogContent>
@@ -81,5 +76,15 @@ export function MembershipConfirmation({
         );
     }
 
-    return <Dialog open onOpenChange={onOpenChange} title={title} description={description} footer={footer} />;
+    return (
+        <Dialog
+            open
+            onOpenChange={(nextOpen) => {
+                if (!nextOpen) onClose();
+            }}
+            title={title}
+            description={description}
+            footer={footer}
+        />
+    );
 }

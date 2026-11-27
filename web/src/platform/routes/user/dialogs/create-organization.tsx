@@ -20,9 +20,9 @@ const organizationSchema = zOrganizationCreate.extend({
 /** Notifies the parent after a successful organization creation request. */
 export default function CreateOrganization({
     onSuccess,
-    onOpenChange
+    onClose
 }: {
-    onOpenChange: (open: boolean) => void;
+    onClose: () => void;
     onSuccess: () => Promise<void>;
 }) {
     const form = useForm({ resolver: zodResolver(organizationSchema), defaultValues: { name: '' } });
@@ -39,7 +39,15 @@ export default function CreateOrganization({
     });
 
     return (
-        <Dialog open showHeader={false} bodyPadding={false} onOpenChange={onOpenChange} title="New organization">
+        <Dialog
+            open
+            showHeader={false}
+            bodyPadding={false}
+            onOpenChange={(nextOpen) => {
+                if (!nextOpen) onClose();
+            }}
+            title="New organization"
+        >
             <IllustratedForm
                 image={{ src: '/images/new-organization.png', width: 768, height: 768 }}
                 onSubmit={form.handleSubmit(submit)}
@@ -64,7 +72,7 @@ export default function CreateOrganization({
                     </Field>
                     <FieldError errors={[form.formState.errors.root]} />
                     <Stack direction="horizontal" wrap="wrap" align="center" justify="between" gap={2}>
-                        <Link disabled={form.formState.isSubmitting} onClick={() => onOpenChange(false)}>
+                        <Link disabled={form.formState.isSubmitting} onClick={onClose}>
                             Cancel
                         </Link>
                         <Button type="submit" disabled={form.formState.isSubmitting}>

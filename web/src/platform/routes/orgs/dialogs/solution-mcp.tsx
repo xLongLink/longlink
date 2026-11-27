@@ -11,19 +11,19 @@ import { Dialog } from '@/components/longlink/layout/dialog';
 import { useConfirmAction } from '@/lib/hooks/use-confirm-action';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 
-export function SolutionMcpDialog({
-    solutionId,
-    onOpenChange
-}: {
-    onOpenChange: (open: boolean) => void;
-    solutionId: string;
-}) {
+export function SolutionMcpDialog({ solutionId, onClose }: { solutionId: string; onClose: () => void }) {
     return (
-        <Dialog open onOpenChange={onOpenChange} title="Model Context Protocol">
+        <Dialog
+            open
+            onOpenChange={(open) => {
+                if (!open) onClose();
+            }}
+            title="Model Context Protocol"
+        >
             <Stack gap={4}>
                 <Plug className="size-20 self-center text-muted-foreground" aria-hidden="true" />
                 <ApiBoundary key={solutionId}>
-                    <SolutionMcpUrl solutionId={solutionId} onClose={() => onOpenChange(false)} />
+                    <SolutionMcpUrl solutionId={solutionId} onClose={onClose} />
                 </ApiBoundary>
                 <Link variant="primary" fullWidth download href={`/api/v1/solutions/${solutionId}/plugin`}>
                     <OpenAI className="size-5 scale-125" aria-hidden="true" focusable="false" />

@@ -17,10 +17,10 @@ import { Field, FieldError, FieldLabel } from '@/components/shadcn/field';
 export default function CreateSolution({
     organizationId,
     onSuccess,
-    onOpenChange
+    onClose
 }: {
     organizationId: string;
-    onOpenChange: (open: boolean) => void;
+    onClose: () => void;
     onSuccess: () => void | Promise<void>;
 }) {
     const [stage, setStage] = useState<'image' | 'configure'>('image');
@@ -113,7 +113,15 @@ export default function CreateSolution({
     const pending = inspecting || form.formState.isSubmitting;
 
     return (
-        <Dialog open onOpenChange={onOpenChange} title="Create solution" showHeader={false} bodyPadding={false}>
+        <Dialog
+            open
+            onOpenChange={(open) => {
+                if (!open) onClose();
+            }}
+            title="Create solution"
+            showHeader={false}
+            bodyPadding={false}
+        >
             <IllustratedForm
                 image={{
                     src: stage === 'image' ? '/images/solution.png' : '/images/nametag.png',
@@ -197,7 +205,7 @@ export default function CreateSolution({
                     )}
                     <FieldError errors={[form.formState.errors.root]} />
                     <Stack direction="horizontal" align="center" justify="between" gap={2}>
-                        <Button type="button" variant="link" disabled={pending} onClick={() => onOpenChange(false)}>
+                        <Button type="button" variant="link" disabled={pending} onClick={onClose}>
                             Cancel
                         </Button>
                         <Stack direction="horizontal" align="center" gap={2}>

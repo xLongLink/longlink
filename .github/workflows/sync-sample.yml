@@ -62,11 +62,11 @@ jobs:
                   sdk_version="${SAMPLE_VERSION#v}"
                   SDK_VERSION="$sdk_version" perl -0pi -e 's/"longlink"/"longlink==$ENV{SDK_VERSION}"/' "$RUNNER_TEMP/sample/pyproject.toml"
 
-                  for attempt in 1 2 3 4 5; do
+                  for attempt in {1..31}; do
                       if uv lock --project "$RUNNER_TEMP/sample" --refresh-package longlink; then
                           break
                       fi
-                      if [ "$attempt" = 5 ]; then
+                      if [ "$attempt" = 31 ]; then
                           exit 1
                       fi
                       sleep 10

@@ -299,6 +299,7 @@ jobs:
 
     # The web package uses Vite+ and Bun, so run its checks separately.
     web-tests:
+        needs: sdk-assets
         runs-on: ubuntu-24.04
         timeout-minutes: 20
 
@@ -315,9 +316,11 @@ jobs:
                       args: ['--frozen-lockfile']
                   working-directory: web
 
-            - name: Build SDK web bundle
-              working-directory: web
-              run: vp run build:sdk:bundle --logLevel warn
+            - name: Download SDK browser assets
+              uses: actions/download-artifact@v8.0.2
+              with:
+                  name: sdk-assets
+                  path: sdk/longlink/.static
 
             - name: Check web formatting
               working-directory: web

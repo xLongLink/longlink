@@ -87,10 +87,10 @@ class Consent(BaseModel):
     """Describe the actual client callback and selected Solution to the user."""
 
     # Approval context
+    expires_in: int
     client_name: str
     redirect_uri: str
     solution_name: str
-    expires_in: int = 30 * 24 * 60 * 60
 
 
 class AuthorizationRedirect(BaseModel):

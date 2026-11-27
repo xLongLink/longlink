@@ -187,7 +187,7 @@ export default function OrganizationManagement({ presentation }: { presentation:
             </Stack>
             {selected?.type === 'create' && (
                 <CreateOrganization
-                    onOpenChange={closeSelected}
+                    onClose={closeSelected}
                     onSuccess={async () => {
                         // Refresh memberships before closing only this creation attempt.
                         await invalidateMemberships();
@@ -205,7 +205,7 @@ export default function OrganizationManagement({ presentation }: { presentation:
                             : `Decline the invitation to ${selected.name}? You will need a new invitation to join.`
                     }
                     actionLabel={selected.type === 'accept' ? 'Accept' : 'Decline'}
-                    onOpenChange={closeSelected}
+                    onClose={closeSelected}
                     onConfirm={async () => {
                         // Apply only the confirmed invitation action.
                         try {

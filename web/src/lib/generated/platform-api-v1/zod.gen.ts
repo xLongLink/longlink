@@ -130,10 +130,10 @@ export const zComputeRegistryResponse = z.object({
  * Describe the actual client callback and selected Solution to the user.
  */
 export const zConsent = z.object({
+    expires_in: z.int(),
     client_name: z.string(),
     redirect_uri: z.string(),
-    solution_name: z.string(),
-    expires_in: z.int().optional().default(2592000)
+    solution_name: z.string()
 });
 
 /**

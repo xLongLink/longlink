@@ -1,11 +1,66 @@
 // @vitest-environment happy-dom
 // @vitest-environment-options {"url":"http://localhost"}
-import { act, Suspense } from 'react';
 import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../../render';
 import { ApiErrorContext } from '@/lib/errors';
+import { act, Suspense, useState } from 'react';
 import userEvent from '@testing-library/user-event';
-import SolutionPermissions from '@/platform/routes/orgs/dialogs/solution-permissions';
+import SolutionPermissions, { SolutionPermissionsDialog } from '@/platform/routes/orgs/dialogs/solution-permissions';
+
+function PermissionsHost() {
+    const [open, setOpen] = useState(true);
+
+    return open ? (
+        <SolutionPermissionsDialog organizationId="acme" solutionId="orders" onClose={() => setOpen(false)} />
+    ) : null;
+}
+
+it.each(['Cancel', 'Escape', 'Close'])('dismisses the permissions dialog with %s', async (dismissal) => {
+    // Arrange
+    const reportError = vi.fn();
+    const user = userEvent.setup();
+    const transport = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, options) => {
+        const request = input instanceof Request ? input : new Request(input, options);
+        const path = new URL(request.url).pathname;
+        if (request.method === 'GET' && path === '/api/v1/solutions/orders/permissions') {
+            return Response.json({ roles: ['read'], revision_id: '00000000-0000-4000-8000-000000000001' });
+        }
+        if (request.method === 'GET' && path === '/api/v1/organizations/acme/members') {
+            return Response.json([]);
+        }
+        throw new Error(`Unexpected request: ${request.method} ${path}`);
+    });
+
+    try {
+        await withMounted(
+            <ApiErrorContext value={reportError}>
+                <PermissionsHost />
+            </ApiErrorContext>,
+            async () => {
+                await act(async () => vi.waitFor(() => expect(document.body.textContent).toContain('Cancel')));
+                expect(document.querySelector('[role="dialog"]')).not.toBeNull();
+
+                // Act
+                await act(async () => {
+                    if (dismissal === 'Escape') {
+                        await user.keyboard('{Escape}');
+                        return;
+                    }
+                    const control = [...document.querySelectorAll('button')].find(
+                        (item) => item.textContent === dismissal
+                    );
+                    if (!control) throw new Error(`Expected ${dismissal} control`);
+                    await user.click(control);
+                });
+
+                // Assert
+                expect(document.querySelector('[role="dialog"]')).toBeNull();
+            }
+        );
+    } finally {
+        transport.mockRestore();
+    }
+});
 
 it.each(['read', null])('discards a reverted role draft when the saved role is %s', async (savedRole) => {
     // Arrange
