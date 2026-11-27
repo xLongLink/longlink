@@ -13,7 +13,6 @@ import { Separator } from '@/components/shadcn/separator';
 import { Stack } from '@/components/longlink/layout/stack';
 import { Button } from '@/components/longlink/action/button';
 import { useVerification } from '@/lib/hooks/use-verification';
-import { useFragmentToken } from '@/lib/hooks/use-fragment-token';
 
 const PASSWORD_RESET_TOKEN_KEY = 'longlink.password-reset.token';
 
@@ -28,8 +27,6 @@ function isBadTokenError(cause: unknown): boolean {
 
 /** Accepts a password reset token and saves a new password. */
 export default function ResetPassword() {
-    const token = useFragmentToken(PASSWORD_RESET_TOKEN_KEY);
-
     const form = useForm<ResetPasswordValues>({
         defaultValues: { password: '' },
         resolver: zodResolver(resetPasswordSchema)
@@ -37,7 +34,7 @@ export default function ResetPassword() {
 
     const confirmation = 'Your password has been reset. You can now sign in.';
 
-    const { verification } = useVerification(token, PASSWORD_RESET_TOKEN_KEY, async ({ signal, token: resetToken }) => {
+    const { verification } = useVerification(PASSWORD_RESET_TOKEN_KEY, async ({ signal, token: resetToken }) => {
         if (resetToken) {
             await api('/api/v1/auth/reset-password/verify', { json: { token: resetToken }, method: 'POST', signal });
         } else {

@@ -7,6 +7,20 @@ from longlink import User, identity, permissions
 IDENTITY_SECRET = "test-identity-secret-01234567890"
 
 
+@pytest.mark.parametrize("role", ["read", "reviewer-1_local", "a" * 64])
+def test_development_identity_preserves_valid_role_names(role: str) -> None:
+    """Accept the permission grammar without transforming local role names."""
+
+    # Arrange
+    user = User(id=UUID(int=1), name="Test User", email="test@example.com")
+
+    # Act
+    profile = identity.DevelopmentIdentity(role=role, user=user)
+
+    # Assert
+    assert profile.role == role
+
+
 def mint_identity_token(
     secret: str = IDENTITY_SECRET,
     claims: dict[str, object] | None = None,

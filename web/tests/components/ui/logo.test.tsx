@@ -264,3 +264,62 @@ it.each(['denied', 'non-image', 'missing'] as const)(
         );
     }
 );
+
+it('trims sources, ignores stale scoped responses, and only releases owned URLs', async () => {
+    // Arrange
+    const complete = vi.spyOn(HTMLImageElement.prototype, 'complete', 'get').mockReturnValue(false);
+    const pending = new Map<string, (body: Blob) => void>();
+    const request = vi.fn((path: string) => new Promise<Blob>((resolve) => pending.set(path, resolve)));
+    const create = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:owned-logo');
+    const revoke = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => undefined);
+
+    function Supplier() {
+        const [src, setSrc] = useState(' /logo ');
+        return (
+            <RequestContext value={request}>
+                <button type="button" onClick={() => setSrc('/pending')}>
+                    Pending
+                </button>
+                <button type="button" onClick={() => setSrc(' blob:caller-logo ')}>
+                    Replace
+                </button>
+                <Logo src={src} alt="Supplier" />
+            </RequestContext>
+        );
+    }
+
+    try {
+        await withMounted(<Supplier />, async (output) => {
+            // Act
+            await act(async () => pending.get('/logo')?.(new Blob(['logo'], { type: 'image/svg+xml' })));
+            await vi.waitFor(async () => {
+                await act(async () => {});
+                expect(output.querySelector('img')?.getAttribute('src')).toBe('blob:owned-logo');
+            });
+            await act(async () => output.querySelectorAll('button')[0]?.click());
+
+            // Assert
+            expect(output.querySelector('img')).toBeNull();
+            expect(revoke).toHaveBeenCalledExactlyOnceWith('blob:owned-logo');
+
+            // Act
+            await act(async () => output.querySelectorAll('button')[1]?.click());
+            await act(async () => pending.get('/pending')?.(new Blob(['stale'], { type: 'image/svg+xml' })));
+            const image = output.querySelector('img');
+            if (!image) throw new Error('Missing caller logo');
+            await act(async () => image.dispatchEvent(new Event('load')));
+
+            // Assert
+            expect(image.getAttribute('src')).toBe('blob:caller-logo');
+            expect(image.classList.contains('invisible')).toBe(false);
+            expect(output.querySelector('[role="status"]')).toBeNull();
+            expect(request.mock.calls.map(([path]) => path)).toEqual(['/logo', '/pending']);
+            expect(create).toHaveBeenCalledTimes(1);
+        });
+        expect(revoke).toHaveBeenCalledExactlyOnceWith('blob:owned-logo');
+    } finally {
+        complete.mockRestore();
+        create.mockRestore();
+        revoke.mockRestore();
+    }
+});

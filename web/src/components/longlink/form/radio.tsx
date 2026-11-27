@@ -1,6 +1,6 @@
 import { useId } from 'react';
-import * as fields from './fields';
 import { FieldFrame } from './field';
+import type * as fields from './fields';
 import { FieldLabel } from '@/components/shadcn/field';
 import * as radio from '@/components/shadcn/radio-group';
 import type { RadioGroup as RadioGroupPrimitive } from '@base-ui/react/radio-group';
@@ -18,43 +18,36 @@ export function RadioGroup({
         options: readonly fields.FormOption[];
         ref?: RadioGroupPrimitive.Props<string>['inputRef'];
     }) {
-    const field = fields.useField({ ...props, label, description, error });
     const optionId = useId();
 
     return (
-        <FieldFrame
-            id={field.id}
-            label={label}
-            description={description}
-            error={error}
-            disabled={props.disabled}
-            form={props.form}
-            group
-        >
-            <radio.RadioGroup
-                {...props}
-                {...field}
-                inputRef={ref}
-                className={undefined}
-                style={undefined}
-                render={undefined}
-            >
-                {options.map((option, index) => (
-                    <FieldLabel
-                        key={option.value}
-                        htmlFor={`${optionId}-${index}`}
-                        className="cursor-pointer has-data-disabled:cursor-not-allowed"
-                    >
-                        <radio.RadioGroupItem
-                            id={`${optionId}-${index}`}
-                            value={option.value}
-                            disabled={option.disabled}
-                            aria-invalid={field['aria-invalid']}
-                        />
-                        {option.label}
-                    </FieldLabel>
-                ))}
-            </radio.RadioGroup>
+        <FieldFrame field={{ ...props, label, description, error }} disabled={props.disabled} form={props.form} group>
+            {(field) => (
+                <radio.RadioGroup
+                    {...props}
+                    {...field}
+                    inputRef={ref}
+                    className={undefined}
+                    style={undefined}
+                    render={undefined}
+                >
+                    {options.map((option, index) => (
+                        <FieldLabel
+                            key={option.value}
+                            htmlFor={`${optionId}-${index}`}
+                            className="cursor-pointer has-data-disabled:cursor-not-allowed"
+                        >
+                            <radio.RadioGroupItem
+                                id={`${optionId}-${index}`}
+                                value={option.value}
+                                disabled={option.disabled}
+                                aria-invalid={field['aria-invalid']}
+                            />
+                            {option.label}
+                        </FieldLabel>
+                    ))}
+                </radio.RadioGroup>
+            )}
         </FieldFrame>
     );
 }

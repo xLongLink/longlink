@@ -1,5 +1,5 @@
-import * as fields from './fields';
 import { FieldFrame } from './field';
+import type * as fields from './fields';
 import type { ComponentProps } from 'react';
 import * as toggle from '@/components/shadcn/switch';
 
@@ -12,26 +12,23 @@ export function Switch({
     ...props
 }: Omit<ComponentProps<typeof toggle.Switch>, 'children' | 'className' | 'style' | 'render' | 'size'> &
     fields.FieldProps & { size?: 'sm' | 'md' }) {
-    const field = fields.useField({ ...props, label, description, error });
-
     return (
         <FieldFrame
-            id={field.id}
-            label={label}
-            description={description}
-            error={error}
+            field={{ ...props, label, description, error }}
             disabled={props.disabled}
             form={props.form}
             horizontal
         >
-            <toggle.Switch
-                {...props}
-                {...field}
-                size={size === 'md' ? 'default' : size}
-                className={undefined}
-                style={undefined}
-                render={undefined}
-            />
+            {(field) => (
+                <toggle.Switch
+                    {...props}
+                    {...field}
+                    size={size === 'md' ? 'default' : size}
+                    className={undefined}
+                    style={undefined}
+                    render={undefined}
+                />
+            )}
         </FieldFrame>
     );
 }

@@ -1,5 +1,5 @@
-import * as fields from './fields';
 import { FieldLayout } from './field';
+import type * as fields from './fields';
 import type { ComponentProps } from 'react';
 import * as input from '@/components/shadcn/input';
 
@@ -10,11 +10,9 @@ export function Input({
     error,
     ...props
 }: Omit<ComponentProps<typeof input.Input>, 'children' | 'className' | 'style'> & fields.FieldProps) {
-    const field = fields.useField({ ...props, label, description, error });
-
     return (
-        <FieldLayout id={field.id} label={label} description={description} error={error} disabled={props.disabled}>
-            <input.Input {...props} {...field} className={undefined} style={undefined} />
+        <FieldLayout field={{ ...props, label, description, error }} disabled={props.disabled}>
+            {(field) => <input.Input {...props} {...field} className={undefined} style={undefined} />}
         </FieldLayout>
     );
 }

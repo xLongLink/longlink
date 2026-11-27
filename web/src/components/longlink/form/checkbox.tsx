@@ -1,5 +1,5 @@
-import * as fields from './fields';
 import { FieldFrame } from './field';
+import type * as fields from './fields';
 import type { ComponentProps } from 'react';
 import * as checkbox from '@/components/shadcn/checkbox';
 
@@ -10,19 +10,16 @@ export function Checkbox({
     error,
     ...props
 }: Omit<ComponentProps<typeof checkbox.Checkbox>, 'children' | 'className' | 'style' | 'render'> & fields.FieldProps) {
-    const field = fields.useField({ ...props, label, description, error });
-
     return (
         <FieldFrame
-            id={field.id}
-            label={label}
-            description={description}
-            error={error}
+            field={{ ...props, label, description, error }}
             disabled={props.disabled}
             form={props.form}
             horizontal
         >
-            <checkbox.Checkbox {...props} {...field} className={undefined} style={undefined} render={undefined} />
+            {(field) => (
+                <checkbox.Checkbox {...props} {...field} className={undefined} style={undefined} render={undefined} />
+            )}
         </FieldFrame>
     );
 }

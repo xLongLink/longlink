@@ -1,5 +1,5 @@
-import * as fields from './fields';
 import { FieldLayout } from './field';
+import type * as fields from './fields';
 import type { ComponentProps } from 'react';
 import * as textarea from '@/components/shadcn/textarea';
 
@@ -10,11 +10,9 @@ export function Textarea({
     error,
     ...props
 }: Omit<ComponentProps<typeof textarea.Textarea>, 'children' | 'className' | 'style'> & fields.FieldProps) {
-    const field = fields.useField({ ...props, label, description, error });
-
     return (
-        <FieldLayout id={field.id} label={label} description={description} error={error} disabled={props.disabled}>
-            <textarea.Textarea {...props} {...field} className={undefined} style={undefined} />
+        <FieldLayout field={{ ...props, label, description, error }} disabled={props.disabled}>
+            {(field) => <textarea.Textarea {...props} {...field} className={undefined} style={undefined} />}
         </FieldLayout>
     );
 }

@@ -1,7 +1,7 @@
 import { ImageOff } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Spinner } from '@/components/shadcn/spinner';
-import { useBinaryQuery } from '@/lib/hooks/use-binary-query';
+import { useImageBody, useImageResource } from './use-image-resource';
 
 /** Displays contained artwork in a fixed frame with a missing-image fallback. */
 export function Logo({
@@ -34,11 +34,8 @@ export function Logo({
 }
 
 function ScopedLogo({ src, alt, detail, padded }: { src: string; alt: string; detail: boolean; padded: boolean }) {
-    const { data, isError } = useBinaryQuery(src);
-    const body = data?.type.startsWith('image/') ? data : undefined;
-    return (
-        <LogoContent alt={alt} detail={detail} padded={padded} body={body} unavailable={isError || !!(data && !body)} />
-    );
+    const resource = useImageResource(src);
+    return <LogoContent alt={alt} detail={detail} padded={padded} {...resource} />;
 }
 
 function LogoContent({
@@ -56,28 +53,19 @@ function LogoContent({
     body?: Blob;
     unavailable?: boolean;
 }) {
-    const image = useRef<HTMLImageElement>(null);
+    const image = useImageBody(body);
     const [broken, setBroken] = useState<Blob | string>();
     const [loaded, setLoaded] = useState<Blob | string>();
 
     useEffect(() => {
         const element = image.current;
-        if (!element) return;
-        if (!body) {
-            if (src && element.complete) {
-                if (element.naturalWidth === 0) setBroken(src);
-                else setLoaded(src);
-            }
-            return;
+        if (!element || body || !src || !element.complete) return;
+        if (element.naturalWidth === 0) {
+            setBroken(src);
+        } else {
+            setLoaded(src);
         }
-        const url = URL.createObjectURL(body);
-        element.src = url;
-
-        return () => {
-            element.removeAttribute('src');
-            URL.revokeObjectURL(url);
-        };
-    }, [body, src]);
+    }, [body, src, image]);
 
     if (unavailable || (broken !== undefined && broken === (body ?? src))) {
         return (

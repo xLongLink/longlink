@@ -1,6 +1,6 @@
 /* oxlint-disable react/no-array-index-key -- Thumb identity must survive changes to its value. */
-import * as fields from './fields';
 import { FieldFrame } from './field';
+import type * as fields from './fields';
 import type { ComponentProps } from 'react';
 import * as slider from '@/components/shadcn/slider';
 import type { Slider as SliderPrimitive } from '@base-ui/react/slider';
@@ -25,53 +25,46 @@ export function Slider<Value extends number | readonly number[] = number>({
     Pick<ComponentProps<typeof slider.SliderThumb>, 'onBlur' | 'onFocus'> & {
         ref?: ComponentProps<typeof slider.SliderThumb>['inputRef'];
     }) {
-    const field = fields.useField({ ...props, label, description, error });
     const values = value ?? defaultValue ?? min;
     const thumbs = Array.isArray(values) ? values : [values];
 
     return (
-        <FieldFrame
-            id={field.id}
-            label={label}
-            description={description}
-            error={error}
-            disabled={props.disabled}
-            form={props.form}
-            group
-        >
-            <slider.Slider<Value>
-                {...props}
-                {...field}
-                min={min}
-                value={value}
-                defaultValue={defaultValue}
-                className={undefined}
-                style={undefined}
-                render={undefined}
-            >
-                <slider.SliderControl>
-                    <slider.SliderTrack>
-                        <slider.SliderRange />
-                    </slider.SliderTrack>
-                    {thumbs.map((_, index) => (
-                        <slider.SliderThumb
-                            key={`${field.id}-${index}`}
-                            index={index}
-                            inputRef={index === 0 ? ref : undefined}
-                            onBlur={onBlur}
-                            onFocus={onFocus}
-                            aria-label={
-                                thumbs.length > 1
-                                    ? `${props['aria-label'] ?? label ?? 'Value'} ${index + 1}`
-                                    : field['aria-label']
-                            }
-                            aria-labelledby={thumbs.length > 1 ? undefined : field['aria-labelledby']}
-                            aria-describedby={field['aria-describedby']}
-                            aria-invalid={field['aria-invalid']}
-                        />
-                    ))}
-                </slider.SliderControl>
-            </slider.Slider>
+        <FieldFrame field={{ ...props, label, description, error }} disabled={props.disabled} form={props.form} group>
+            {(field) => (
+                <slider.Slider<Value>
+                    {...props}
+                    {...field}
+                    min={min}
+                    value={value}
+                    defaultValue={defaultValue}
+                    className={undefined}
+                    style={undefined}
+                    render={undefined}
+                >
+                    <slider.SliderControl>
+                        <slider.SliderTrack>
+                            <slider.SliderRange />
+                        </slider.SliderTrack>
+                        {thumbs.map((_, index) => (
+                            <slider.SliderThumb
+                                key={`${field.id}-${index}`}
+                                index={index}
+                                inputRef={index === 0 ? ref : undefined}
+                                onBlur={onBlur}
+                                onFocus={onFocus}
+                                aria-label={
+                                    thumbs.length > 1
+                                        ? `${props['aria-label'] ?? label ?? 'Value'} ${index + 1}`
+                                        : field['aria-label']
+                                }
+                                aria-labelledby={thumbs.length > 1 ? undefined : field['aria-labelledby']}
+                                aria-describedby={field['aria-describedby']}
+                                aria-invalid={field['aria-invalid']}
+                            />
+                        ))}
+                    </slider.SliderControl>
+                </slider.Slider>
+            )}
         </FieldFrame>
     );
 }

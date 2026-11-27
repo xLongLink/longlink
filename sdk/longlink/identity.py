@@ -3,7 +3,7 @@ from uuid import UUID, NAMESPACE_URL, uuid5
 from typing import Annotated
 from datetime import UTC, datetime, timedelta
 from longlink import permissions
-from pydantic import Field, BaseModel, ConfigDict, BeforeValidator, ValidationError
+from pydantic import BaseModel, ConfigDict, BeforeValidator, ValidationError, field_validator
 from longlink.database.users import User
 
 IDENTITY_TOKEN_ALGORITHM = "HS256"
@@ -17,8 +17,15 @@ class DevelopmentIdentity(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     # Local profile and Solution role.
-    role: str = Field(pattern=r"^[a-z][a-z0-9_-]{0,63}$")
+    role: str
     user: Annotated[User, BeforeValidator(User.model_validate)]
+
+    @field_validator("role", mode="before")
+    @classmethod
+    def validate_role(cls, role: object) -> str:
+        """Apply the shared permission role contract to local identities."""
+
+        return permissions.validate_roles([role])[0]
 
 
 def development_users(catalog: permissions.Catalog) -> list[DevelopmentIdentity]:
