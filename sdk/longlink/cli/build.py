@@ -65,21 +65,10 @@ def _inspect(root: Path, script: str, arguments: Sequence[str]) -> bytes:
     # Let the child own Solution imports and discard its metadata after reading it.
     with tempfile.TemporaryDirectory(prefix=f"longlink-{script}-") as directory:
         result_path = Path(directory) / "result.json"
-        result = subprocess.run(
+        subprocess.run(
             [sys.executable, "-P", str(Path(__file__).with_name(f"{script}.py")), str(root.resolve()), *arguments, str(result_path)],
-            capture_output=True,
-            text=True,
-            check=False,
+            check=True,
         )
-
-        # Forward import-time output even when the inspector fails.
-        if result.stdout:
-            print(result.stdout, end="")
-        if result.stderr:
-            print(result.stderr, end="", file=sys.stderr)
-
-        # A successful exit must precede reading the metadata response.
-        result.check_returncode()
         return result_path.read_bytes()
 
 

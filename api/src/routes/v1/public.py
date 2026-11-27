@@ -5,7 +5,7 @@ from contextlib import AsyncExitStack
 from collections.abc import Sequence
 from src.models.statuses import Status
 from src.routes.v1.proxy import forward, runtime_scope
-from longlink.permissions import METHODS
+from longlink.permissions import METHODS, READ_ONLY_METHODS
 from src.models.solutions import PublicSolution
 from src.database.services import public, permissions
 from src.models.pagination import Page, Pagination
@@ -43,7 +43,7 @@ async def proxy_solution(
     """Admit public viewers as anonymous principals with only catalog read grants."""
 
     # Publication never grants mutation methods, even when a custom role labels them read.
-    if request.method not in {"GET", "HEAD", "OPTIONS"}:
+    if request.method not in READ_ONLY_METHODS:
         raise HTTPException(status_code=403, detail="Public Solutions are read-only")
 
     # MCP transports can multiplex mutations and are never available to public viewers.
@@ -59,7 +59,7 @@ async def proxy_solution(
     if definition is None:
         raise HTTPException(status_code=403, detail="Solution read access unavailable")
     access = definition.access("read")
-    access.endpoints = [index for index in access.endpoints if definition.endpoints[index].method in {"GET", "HEAD", "OPTIONS"}]
+    access.endpoints = [index for index in access.endpoints if definition.endpoints[index].method in READ_ONLY_METHODS]
     await session.commit()
 
     # The runtime's matched-route guards enforce catalog grants, including custom read declarations.

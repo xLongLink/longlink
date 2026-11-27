@@ -113,10 +113,7 @@ export default function DeploymentReview({ item, onSuccess, onOpenChange }: Depl
         }
         if (candidate.metadata.image === candidate.current_image && edits.length === 0) return;
         await api.post(path, {
-            json: schemas.zSolutionPatch.parse({
-                envs: Object.fromEntries(edits),
-                expected_revision_id: candidate.revision_id
-            })
+            json: { envs: Object.fromEntries(edits), expected_revision_id: candidate.revision_id }
         });
         await onSuccess();
     }

@@ -1027,7 +1027,7 @@ async def test_organization_database_usage_rejects_nonmembers_and_unavailable_st
 
         raise AssertionError("database usage reached a provider")
 
-    monkeypatch.setattr(organizations, "Kubernetes", unexpected_provider)
+    monkeypatch.setattr("src.routes.v1.organization.organizations.Kubernetes", unexpected_provider)
 
     # Act
     denied = await clients[1].get(f"/api/v1/organizations/{organization.id}/database")

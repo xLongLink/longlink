@@ -67,15 +67,12 @@ def docker_commands(monkeypatch: pytest.MonkeyPatch) -> Callable[[tuple[str, int
         # Record only Docker commands; Solution inspection still runs in a real child.
         capture = DockerCapture(commands=[], dockerfiles=[])
 
-        def run_docker(
-            command: list[str], check: bool, capture_output: bool = False, text: bool = False
-        ) -> subprocess.CompletedProcess[str] | None:
+        def run_docker(command: list[str], check: bool) -> subprocess.CompletedProcess[bytes] | None:
             """Inspect the live context and simulate the selected Docker outcome."""
 
             # Forward environment inspection without replacing its behavior.
             if command[0] != "/usr/bin/docker":
-                assert text is True
-                return run_process(command, check=check, capture_output=capture_output, text=True)
+                return run_process(command, check=check)
 
             # Check artifacts before the CLI releases its temporary directory.
             assert check is True
@@ -284,9 +281,7 @@ def test_read_env_spec_rejects_invalid_environment_model_configuration(
 
 
 @pytest.mark.parametrize("fails", [False, True], ids=["success", "import-error"])
-def test_read_env_spec_isolates_solution_state_and_preserves_output(
-    tmp_path: Path, capsys: pytest.CaptureFixture[str], fails: bool
-) -> None:
+def test_read_env_spec_isolates_solution_state_and_preserves_output(tmp_path: Path, capfd: pytest.CaptureFixture[str], fails: bool) -> None:
     """Keep Solution import state out of the CLI while forwarding both output streams."""
 
     # Arrange
@@ -322,7 +317,7 @@ def test_read_env_spec_isolates_solution_state_and_preserves_output(
         assert [environment.model_dump(exclude_none=True) for environment in metadata] == [{"name": "TOKEN", "required": True}]
 
     # Assert
-    output = capsys.readouterr()
+    output = capfd.readouterr()
     assert output.out == "model stdout\n"
     assert output.err == "model stderr\n"
     assert sys.modules["longlink"] is cached_package
@@ -367,11 +362,11 @@ def test_read_env_spec_rejects_malformed_child_response(build_project: Path, mon
     """Reject corrupted subprocess responses rather than using them as image labels."""
 
     # Arrange
-    def run_child(command: list[str], *, capture_output: bool, text: bool, check: bool) -> subprocess.CompletedProcess[str]:
+    def run_child(command: list[str], *, check: bool) -> subprocess.CompletedProcess[bytes]:
         """Emulate an inspector that exits successfully but returns malformed metadata."""
 
         Path(command[-1]).write_bytes(response)
-        return subprocess.CompletedProcess(command, 0, stdout="", stderr="")
+        return subprocess.CompletedProcess(command, 0)
 
     monkeypatch.setattr(build.subprocess, "run", run_child)
     config = build.read_pyproject(build_project)

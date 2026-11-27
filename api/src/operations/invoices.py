@@ -124,6 +124,18 @@ async def issue(session: AsyncSession, invoice_id: UUID) -> None:
                     ("storage", "File storage (MiB)", invoice.storage_bytes, pricing.FREE_STORAGE_BYTES, pricing.STORAGE_MIB_MONTHLY_PRICE),
                 )
 
+                # Preserve historical MiB ceilings and independently rounded gross and net amounts.
+                charges: list[tuple[str, str, int, Decimal, int]] = []
+                for resource, description, used, included, unit_price in resources:
+                    quantity = storage_quantity(used) if resource != "users" else used
+                    excess = max(0, used - included)
+                    billable = storage_quantity(excess) if resource != "users" else excess
+                    gross = int((quantity * unit_price).quantize(Decimal("1"), rounding=ROUND_HALF_UP))
+                    net = int((billable * unit_price).quantize(Decimal("1"), rounding=ROUND_HALF_UP))
+                    discount += gross - net
+                    total += net
+                    charges.append((resource, description, quantity, unit_price, gross))
+
             # Paid allocation invoices charge totals without free allowances or double-counting database allocations.
             elif invoice.pricing_version in {2, 3}:
                 byte_unit = pricing.GB_BYTES if invoice.pricing_version == 2 else pricing.GIB_BYTES
@@ -131,47 +143,37 @@ async def issue(session: AsyncSession, invoice_id: UUID) -> None:
                 cpu_amount, ram_amount, storage_amount = pricing.allocation_amounts(
                     invoice.cpu_millicores, invoice.ram_bytes, invoice.storage_bytes, byte_unit=byte_unit
                 )
-                resources = (
+                charges = [
                     (
                         "cpu",
                         f"CPU: {Decimal(invoice.cpu_millicores) / 1000:f} vCPU × CHF {pricing.CPU_MONTHLY_PRICE / 100:f}/vCPU",
                         1,
-                        0,
                         cpu_amount,
+                        int(cpu_amount),
                     ),
                     (
                         "ram",
                         f"RAM: {Decimal(invoice.ram_bytes) / byte_unit:f} {unit_name} "
                         f"× CHF {pricing.RAM_GIB_MONTHLY_PRICE / 100:f}/{unit_name}",
                         1,
-                        0,
                         ram_amount,
+                        int(ram_amount),
                     ),
                     (
                         "storage",
                         f"Storage: {Decimal(invoice.storage_bytes) / byte_unit:f} {unit_name} "
                         f"× CHF {pricing.STORAGE_GIB_MONTHLY_PRICE / 100:f}/{unit_name}",
                         1,
-                        0,
                         storage_amount,
+                        int(storage_amount),
                     ),
-                )
+                ]
+                total = int(cpu_amount) + int(ram_amount) + int(storage_amount)
             else:
                 raise HTTPException(status_code=409, detail="Invoice pricing version requires administrator review")
 
-            # Calculate exact Decimal amounts before rounding each line to CHF centimes.
-            for resource, description, used, included, unit_price in resources:
-                legacy_storage = invoice.pricing_version == 1 and resource != "users"
-                quantity = storage_quantity(used) if legacy_storage else used
-                excess = max(0, used - included)
-
-                # Only historical usage invoices deduct their historical free allowances.
-                billable = storage_quantity(excess) if legacy_storage else excess
-                gross = (quantity * unit_price).quantize(Decimal("1"), rounding=ROUND_HALF_UP)
-                net = (billable * unit_price).quantize(Decimal("1"), rounding=ROUND_HALF_UP)
-                discount += int(gross - net)
-                total += int(net)
-
+            # Issue and recover concrete resource charges identically for every pricing version.
+            for resource, description, quantity, unit_price, gross in charges:
                 # Recover each resource line independently to avoid duplicate charges.
                 matched = [item for item in existing_items if (item.to_dict().get("metadata") or {}).get("resource") == resource]
 
@@ -180,7 +182,7 @@ async def issue(session: AsyncSession, invoice_id: UUID) -> None:
                     # Refuse ambiguous or modified invoice items instead of charging again.
                     if (
                         len(matched) != 1
-                        or matched[0].amount != int(gross)
+                        or matched[0].amount != gross
                         or matched[0].quantity != quantity
                         # Resource matches must still belong to this exact measured invoice.
                         or (matched[0].to_dict().get("metadata") or {}).get("longlink_invoice_id") != str(invoice.id)

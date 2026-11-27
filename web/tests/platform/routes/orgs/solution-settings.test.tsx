@@ -8,6 +8,7 @@ import { act, Suspense, useState } from 'react';
 import userEvent from '@testing-library/user-event';
 import SolutionSettings from '@/platform/routes/orgs/solution-settings';
 import type { OrganizationContext } from '@/platform/layouts/organization';
+import { SolutionOverview } from '@/platform/routes/orgs/solution-overview';
 import { SolutionLogsDialog } from '@/platform/routes/orgs/dialogs/solution-logs';
 
 const solution = {
@@ -20,6 +21,82 @@ const solution = {
 };
 
 const mcpResource = `https://solutions.example/api/v1/solutions/${solution.id}/proxy/mcp`;
+
+it.each([
+    { section: 'overview', Component: SolutionOverview },
+    { section: 'settings', Component: SolutionSettings }
+])('keeps $section creation open until the solution list refresh completes', async ({ Component }) => {
+    // Arrange
+    const events = userEvent.setup();
+    const base = `/api/v1/organizations/${membership.organization.id}`;
+    let requests = 0;
+    let finishRefresh: ((response: Response) => void) | undefined;
+    const refresh = new Promise<Response>((resolve) => {
+        finishRefresh = resolve;
+    });
+    const transport = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, options) => {
+        const request = input instanceof Request ? input : new Request(input, options);
+        const path = new URL(request.url).pathname;
+
+        if (request.method === 'GET' && path === `${base}/solutions`) {
+            requests++;
+            return requests === 1 ? Response.json([solution]) : refresh;
+        }
+        if (request.method === 'GET' && path === `${base}/image`) {
+            return Response.json({ image: 'ghcr.io/xlonglink/sample:latest' });
+        }
+        if (request.method === 'POST' && path === `${base}/solutions`) {
+            return new Response(null, { status: 204 });
+        }
+        throw new Error(`Unexpected request: ${request.method} ${path}`);
+    });
+
+    try {
+        await withMounted(
+            <ApiProvider platformSession>
+                <Suspense fallback={<p>Loading solutions</p>}>
+                    <Component membership={{ ...membership, tags: [], activeTag: undefined }} />
+                </Suspense>
+            </ApiProvider>,
+            async (output) => {
+                await vi.waitFor(() => expect(output.textContent).toContain('New Solution'));
+                const open = Array.from(output.querySelectorAll('button')).find(
+                    (button) => button.textContent === 'New Solution'
+                );
+                if (!open) throw new Error('Missing creation action');
+
+                // Act
+                await act(async () => events.click(open));
+                const image = document.querySelector<HTMLInputElement>('input[name="image"]');
+                const inspect = document.querySelector<HTMLButtonElement>('[role="dialog"] button[type="submit"]');
+                if (!image || !inspect) throw new Error('Missing image inspection controls');
+                await act(async () => events.type(image, 'ghcr.io/xlonglink/sample:latest'));
+                await act(async () => events.click(inspect));
+                await vi.waitFor(() => expect(document.querySelector('input[name="name"]')).not.toBeNull());
+                const name = document.querySelector<HTMLInputElement>('input[name="name"]');
+                const create = document.querySelector<HTMLButtonElement>('[role="dialog"] button[type="submit"]');
+                if (!name || !create) throw new Error('Missing creation controls');
+                await act(async () => events.type(name, 'New solution'));
+                await act(async () => events.click(create));
+
+                // Assert
+                await vi.waitFor(() => expect(requests).toBe(2));
+                expect(document.querySelector('[role="dialog"]')).not.toBeNull();
+                expect(name.value).toBe('New solution');
+                expect(create.disabled).toBe(true);
+
+                // Act
+                await act(async () => finishRefresh?.(Response.json([solution])));
+
+                // Assert
+                await vi.waitFor(() => expect(document.querySelector('[role="dialog"]')).toBeNull());
+            }
+        );
+    } finally {
+        finishRefresh?.(Response.json([solution]));
+        transport.mockRestore();
+    }
+});
 
 it.each([
     { status: 'creating', deployment_pending: false },
