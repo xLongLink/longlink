@@ -21,7 +21,7 @@ from longlink.constants import ROOT
 from longlink.middleware import FrontendMiddleware
 from fastapi.openapi.utils import get_openapi
 from starlette.staticfiles import StaticFiles
-from longlink.database.base import LOCAL_USER_ID, Database
+from longlink.database.base import Database
 from longlink.utils.settings import Envs
 from fastmcp.server.dependencies import get_http_headers
 from longlink.middleware.identity import IdentityMiddleware
@@ -79,9 +79,7 @@ class LongLink(RouteDecorators, FastAPI):
         view_definitions = [definition for definition, _ in discovered_views]
 
         # Declare the pinned runtime once for the complete Solution catalog.
-        view_manifest = views.ViewManifest(
-            views=view_definitions, runtime=view_runtime, development=True if settings.ENV == "development" else None
-        )
+        view_manifest = views.ViewManifest(views=view_definitions, runtime=view_runtime)
 
         # Initialize Solution storage and database connections.
         storage = create_storage(settings)
@@ -107,12 +105,7 @@ class LongLink(RouteDecorators, FastAPI):
         self.include_router(runtime_router)
 
         # Only production requests with a valid Platform identity may reach Solution routes.
-        self.add_middleware(
-            IdentityMiddleware,
-            identity_secret=settings.IDENTITY_SECRET,
-            mode=settings.ENV,
-            local_user_id=LOCAL_USER_ID if settings.ENV != "production" else None,
-        )
+        self.add_middleware(IdentityMiddleware, identity_secret=settings.IDENTITY_SECRET, mode=settings.ENV)
 
         self.state.longlink = runtime
 

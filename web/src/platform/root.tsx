@@ -3,8 +3,7 @@ import { PageLoading } from '@/components/ui/utils';
 import { AccountProvider } from '@/platform/account';
 import { appearanceBootstrap } from '@/lib/appearance';
 import { ApiBoundary, ApiProvider } from '@/components/api';
-import { AppearanceContext } from '@/lib/hooks/use-appearance';
-import { useDocumentAppearance } from '@/lib/hooks/use-document-appearance';
+import { AppearanceProvider } from '@/components/appearance';
 import { Links, Meta, Outlet, Scripts, ScrollRestoration, useLocation } from 'react-router';
 import '@/index.css';
 
@@ -18,11 +17,12 @@ export function HydrateFallback() {
 export default function PlatformRoot() {
     const { pathname } = useLocation();
     const isHome = pathname === '/';
-    useDocumentAppearance(isHome ? 'dark' : undefined);
 
     // The public landing page has no account queries or personal appearance synchronization.
-    const content = isHome ? (
-        <Outlet />
+    return isHome ? (
+        <AppearanceProvider preference={{ theme: 'dark' }}>
+            <Outlet />
+        </AppearanceProvider>
     ) : (
         <ApiProvider platformSession>
             <AccountProvider>
@@ -32,8 +32,6 @@ export default function PlatformRoot() {
             </AccountProvider>
         </ApiProvider>
     );
-
-    return isHome ? <AppearanceContext value={{ theme: 'dark' }}>{content}</AppearanceContext> : content;
 }
 
 /** Adds website analytics only to production Platform documents. */

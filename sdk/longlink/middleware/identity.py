@@ -1,5 +1,4 @@
 import jwt
-from uuid import UUID
 from typing import Literal
 from longlink import identity, permissions
 from pydantic import ValidationError
@@ -8,25 +7,18 @@ from starlette.types import Send, Scope, ASGIApp, Receive
 from longlink.database import audit
 from starlette.requests import Request
 from starlette.responses import JSONResponse
+from longlink.database.base import LOCAL_USER_ID
 
 
 class IdentityMiddleware:
     """Bind Platform identity and enforce supported request transports."""
 
-    def __init__(
-        self,
-        app: ASGIApp,
-        *,
-        identity_secret: str | None,
-        mode: Literal["development", "testing", "production"],
-        local_user_id: UUID | None,
-    ) -> None:
+    def __init__(self, app: ASGIApp, *, identity_secret: str | None, mode: Literal["development", "testing", "production"]) -> None:
         """Store the application's identity admission policy."""
 
         self.app = app
         self.identity_secret = identity_secret
         self.mode = mode
-        self.local_user_id = local_user_id
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         """Keep request identity bound until the downstream application finishes."""
@@ -96,6 +88,6 @@ class IdentityMiddleware:
         # Reset audit identity after response streaming, background work, or failure.
         actor_id = user.id if user is not None else None
         if signed_access is None and self.mode != "production" and user is None:
-            actor_id = self.local_user_id
+            actor_id = LOCAL_USER_ID
         with audit.actor(actor_id):
             await self.app(scope, receive, send)

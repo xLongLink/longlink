@@ -29,9 +29,9 @@ export function TagForm({
     base,
     tag,
     onSuccess,
-    onOpenChange
+    onClose
 }: {
-    onOpenChange: (open: boolean) => void;
+    onClose: () => void;
     base: string;
     tag: z.output<typeof schemas.zOrganizationTagResponse> | null;
     onSuccess: () => Promise<void>;
@@ -58,7 +58,9 @@ export function TagForm({
     return (
         <Dialog
             open
-            onOpenChange={onOpenChange}
+            onOpenChange={(open) => {
+                if (!open) onClose();
+            }}
             title={tag ? 'Edit tab' : 'New tab'}
             showHeader={false}
             bodyPadding={false}
@@ -126,12 +128,7 @@ export function TagForm({
                     />
                     <FieldError errors={[form.formState.errors.root]} />
                     <Stack direction="horizontal" align="center" justify="between" gap={2}>
-                        <Button
-                            type="button"
-                            variant="link"
-                            disabled={form.formState.isSubmitting}
-                            onClick={() => onOpenChange(false)}
-                        >
+                        <Button type="button" variant="link" disabled={form.formState.isSubmitting} onClick={onClose}>
                             Cancel
                         </Button>
                         <Button type="submit" disabled={form.formState.isSubmitting}>

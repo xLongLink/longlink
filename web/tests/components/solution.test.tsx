@@ -109,7 +109,7 @@ describe('SolutionPage', () => {
         await vi.waitFor(() => expect(output.querySelector('iframe')?.srcdoc).toContain('Content-Security-Policy'));
     });
 
-    it.each([true, false])('exposes manifest users only in development mode (%s)', async (development) => {
+    it.each(['available', 'empty', 'absent'])('exposes development profiles only when users are %s', async (users) => {
         // Arrange
         const user = { role: 'reviewer', user: { id: 'reviewer-1', name: 'Reviewer', email: 'review@example.com' } };
         stubFetch((url) => {
@@ -118,8 +118,7 @@ describe('SolutionPage', () => {
             return Response.json({
                 views: [{ path: 'home.jsx', route: '/home' }],
                 runtime: { version: createHash('sha256').update('\n').digest('hex') },
-                development,
-                development_users: [user]
+                development_users: users === 'available' ? [user] : users === 'empty' ? [] : undefined
             });
         });
 
@@ -129,8 +128,8 @@ describe('SolutionPage', () => {
             await vi.waitFor(() => expect(output.querySelector('iframe')?.srcdoc).toContain('Content-Security-Policy'));
 
             // Assert
-            expect(output.querySelector('[aria-label="Reviewer"]') !== null).toBe(development);
-            expect(document.cookie.includes(developmentCookie)).toBe(development);
+            expect(output.querySelector('[aria-label="Reviewer"]') !== null).toBe(users === 'available');
+            expect(document.cookie.includes(developmentCookie)).toBe(users === 'available');
         } finally {
             document.cookie = `${developmentCookie}=; Path=/; Max-Age=0`;
         }
