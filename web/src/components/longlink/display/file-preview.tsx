@@ -6,7 +6,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { PDFDocumentProxy, PDFDocumentLoadingTask, RenderTask } from 'pdfjs-dist';
 
 /** Displays admitted media and inert document content without nested frames. */
-export function FilePreview({ body, title }: { body: Blob; title: string }) {
+export function FilePreview({ body, title, fit = 'width' }: { body: Blob; title: string; fit?: 'width' | 'page' }) {
     const container = useRef<HTMLDivElement>(null);
     const [content, setContent] = useState({ body, key: 0 });
     const media = body.type.split(';', 1)[0].toLowerCase();
@@ -45,7 +45,7 @@ export function FilePreview({ body, title }: { body: Blob; title: string }) {
             ) : kind === 'video' ? (
                 <video controls preload="metadata" aria-label={title} className="size-full" />
             ) : (
-                <PdfFile key={content.key} body={body} title={title} />
+                <PdfFile key={content.key} body={body} title={title} fit={fit} />
             )}
         </div>
     );
@@ -78,7 +78,7 @@ function TextFile({ body, title }: { body: Blob; title: string }) {
     return <pre className="size-full overflow-auto p-3 text-sm whitespace-pre-wrap wrap-anywhere">{text}</pre>;
 }
 
-function PdfFile({ body, title }: { body: Blob; title: string }) {
+function PdfFile({ body, title, fit }: { body: Blob; title: string; fit: 'width' | 'page' }) {
     const [document, setDocument] = useState<PDFDocumentProxy | Error>();
 
     useEffect(() => {
@@ -137,10 +137,10 @@ function PdfFile({ body, title }: { body: Blob; title: string }) {
     if (document instanceof Error) return <span role="status">{document.message}</span>;
     if (!document) return <Spinner role="progressbar" aria-label={`Loading ${title}`} />;
 
-    return <PdfDocument document={document} title={title} />;
+    return <PdfDocument document={document} title={title} fit={fit} />;
 }
 
-function PdfDocument({ document, title }: { document: PDFDocumentProxy; title: string }) {
+function PdfDocument({ document, title, fit }: { document: PDFDocumentProxy; title: string; fit: 'width' | 'page' }) {
     const [page, setPage] = useState(1);
 
     return (
@@ -172,29 +172,46 @@ function PdfDocument({ document, title }: { document: PDFDocumentProxy; title: s
                     </Button>
                 </div>
             )}
-            <PdfPage key={page} document={document} page={page} title={title} />
+            <PdfPage key={page} document={document} page={page} title={title} fit={fit} />
         </div>
     );
 }
 
-function PdfPage({ document, page, title }: { document: PDFDocumentProxy; page: number; title: string }) {
+function PdfPage({
+    document,
+    page,
+    title,
+    fit
+}: {
+    document: PDFDocumentProxy;
+    page: number;
+    title: string;
+    fit: 'width' | 'page';
+}) {
     const container = useRef<HTMLDivElement>(null);
     const canvas = useRef<HTMLCanvasElement>(null);
-    const [width, setWidth] = useState(0);
+    const [size, setSize] = useState({ width: 0, height: 0 });
+    const { width, height } = size;
     const [text, setText] = useState('');
     const [failed, setFailed] = useState(false);
 
     useEffect(() => {
         const element = container.current;
         if (!element) return;
-        const observer = new ResizeObserver(([entry]) => setWidth(Math.floor(entry.contentRect.width)));
+        const observer = new ResizeObserver(([entry]) => {
+            const width = Math.floor(entry.contentRect.width);
+            const height = Math.floor(entry.contentRect.height);
+            setSize((previous) =>
+                previous.width === width && previous.height === height ? previous : { width, height }
+            );
+        });
         observer.observe(element);
         return () => observer.disconnect();
     }, []);
 
     useEffect(() => {
         const element = canvas.current;
-        if (!element || !width) return;
+        if (!element || !width || (fit === 'page' && !height)) return;
         let cancelled = false;
         let task: RenderTask | undefined;
 
@@ -204,9 +221,15 @@ function PdfPage({ document, page, title }: { document: PDFDocumentProxy; page: 
                 if (cancelled) return;
                 const original = loaded.getViewport({ scale: 1 });
                 const ratio = Math.min(window.devicePixelRatio || 1, 2);
-                const viewport = loaded.getViewport({ scale: width / original.width });
+                const scale =
+                    fit === 'page'
+                        ? Math.min(width / original.width, height / original.height)
+                        : width / original.width;
+                const viewport = loaded.getViewport({ scale });
                 element.width = Math.ceil(viewport.width * ratio);
                 element.height = Math.ceil(viewport.height * ratio);
+                element.style.width = `${viewport.width}px`;
+                element.style.height = `${viewport.height}px`;
                 task = loaded.render({
                     canvas: element,
                     viewport,
@@ -229,7 +252,7 @@ function PdfPage({ document, page, title }: { document: PDFDocumentProxy; page: 
             cancelled = true;
             task?.cancel();
         };
-    }, [document, page, width]);
+    }, [document, page, width, height, fit]);
 
     return (
         <div
@@ -239,7 +262,7 @@ function PdfPage({ document, page, title }: { document: PDFDocumentProxy; page: 
             aria-label={`${title}, page ${page}`}
         >
             {failed && <span role="status">Unable to display this page.</span>}
-            <canvas ref={canvas} className="block h-auto w-full" aria-hidden="true" hidden={failed} />
+            <canvas ref={canvas} className="mx-auto block" aria-hidden="true" hidden={failed} />
             <p className="sr-only">{text}</p>
         </div>
     );
