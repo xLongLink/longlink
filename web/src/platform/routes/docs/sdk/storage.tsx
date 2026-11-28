@@ -109,7 +109,9 @@ async def report(
                     the file. No backend download headers or separate endpoint are required.
                 </p>
                 <CodeBlock
-                    code={`<FileViewer src="/reports/latest" title="report.pdf" />
+                    code={`<Box height={384}>
+  <FileViewer src="/reports/latest" title="report.pdf" />
+</Box>
 <Link onClick={() => download("/reports/latest", "report.pdf")}>Download report</Link>`}
                     language="jsx"
                 >

@@ -1,6 +1,6 @@
 import ViewLayout from './view-layout';
-import { FileViewer } from '@/components/longlink';
 import { RequestContext } from '@/lib/view-capabilities';
+import { Box, Button, Dialog, FileViewer } from '@/components/longlink';
 
 /** Documents inline file previews through the scoped Solution API. */
 export default function FileViewerPage() {
@@ -12,7 +12,13 @@ export default function FileViewerPage() {
                 title: 'FileViewer',
                 preview: <FileViewerExample />,
                 code: `function Example() {
-  return <FileViewer src="/api/reports/latest" title="report.pdf" />;
+  return (
+    <Dialog title="Report" fullscreen trigger={<Button>Open report</Button>}>
+      <Box width="100%" height="100%">
+        <FileViewer src="/api/reports/latest" title="report.pdf" fit="page" />
+      </Box>
+    </Dialog>
+  );
 }`
             }}
         />
@@ -34,7 +40,11 @@ function FileViewerExample() {
     // Scope the sample request capability to this example.
     return (
         <RequestContext value={requestPreviewFile}>
-            <FileViewer src="/api/reports/latest" title="report.pdf" />
+            <Dialog title="Report" fullscreen trigger={<Button>Open report</Button>}>
+                <Box width="100%" height="100%">
+                    <FileViewer src="/api/reports/latest" title="report.pdf" fit="page" />
+                </Box>
+            </Dialog>
         </RequestContext>
     );
 }

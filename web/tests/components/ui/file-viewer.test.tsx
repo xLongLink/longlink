@@ -8,7 +8,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { RequestContext } from '@/lib/view-capabilities';
 import { Image } from '@/components/longlink/display/image';
 import { FileViewer } from '@/components/longlink/display/file-viewer';
-import type { PDFDocumentProxy, PDFDocumentLoadingTask } from 'pdfjs-dist';
+import type { PDFDocumentProxy, PDFDocumentLoadingTask, PDFPageProxy } from 'pdfjs-dist';
 
 vi.mock('pdfjs-dist', () => ({
     getDocument: vi.fn(() => {
@@ -45,6 +45,127 @@ function deferred<T>() {
     });
     return { promise, resolve };
 }
+
+it.each([undefined, 'page'] as const)(
+    'fits PDF pages with fit=%s after resize and orientation changes',
+    async (fit) => {
+        // Arrange
+        const observers: Array<{ callback: ResizeObserverCallback; disconnect: ReturnType<typeof vi.fn> }> = [];
+        vi.stubGlobal(
+            'ResizeObserver',
+            class {
+                disconnect = vi.fn();
+                observe = vi.fn();
+                constructor(callback: ResizeObserverCallback) {
+                    observers.push({ callback, disconnect: this.disconnect });
+                }
+            }
+        );
+        vi.stubGlobal(
+            'Worker',
+            class {
+                addEventListener = vi.fn();
+                terminate = vi.fn();
+            }
+        );
+        const renders: Array<{ width: number; height: number }> = [];
+        const getPage = vi.fn(
+            async (page: number) =>
+                ({
+                    getViewport: ({ scale }: { scale: number }) => ({
+                        width: (page === 1 ? 600 : 800) * scale,
+                        height: (page === 1 ? 800 : 600) * scale
+                    }),
+                    render: ({ viewport }: { viewport: { width: number; height: number } }) => {
+                        renders.push(viewport);
+                        return { promise: Promise.resolve(), cancel: vi.fn() };
+                    },
+                    getTextContent: async () => ({ items: [{ str: `Page ${page}` }] })
+                }) as unknown as PDFPageProxy
+        );
+        vi.mocked(PDFWorker.create).mockReturnValueOnce({ destroy: vi.fn() } as unknown as ReturnType<
+            typeof PDFWorker.create
+        >);
+        vi.mocked(getDocument).mockReturnValueOnce({
+            promise: Promise.resolve({ numPages: 2, getPage } as unknown as PDFDocumentProxy),
+            destroy: vi.fn()
+        } as unknown as PDFDocumentLoadingTask);
+
+        async function resize(width: number, height: number) {
+            const observer = observers.at(-1);
+            if (!observer) throw new Error('Missing PDF page observer');
+            await act(async () =>
+                observer.callback([{ contentRect: { width, height } } as ResizeObserverEntry], {} as ResizeObserver)
+            );
+        }
+
+        try {
+            await withMounted(
+                <RequestContext value={async () => new Blob(['pdf'], { type: 'application/pdf' })}>
+                    <FileViewer src="/api/report" title="Report" fit={fit} />
+                </RequestContext>,
+                async (output) => {
+                    await vi.waitFor(async () => {
+                        await act(async () => {});
+                        expect(output.querySelector('[role="group"]')).not.toBeNull();
+                    });
+
+                    // Act
+                    await resize(600, 320);
+
+                    // Assert
+                    await vi.waitFor(() =>
+                        expect(renders.at(-1)).toMatchObject(
+                            fit === 'page' ? { width: 240, height: 320 } : { width: 600, height: 800 }
+                        )
+                    );
+                    const canvas = output.querySelector('canvas');
+                    expect(canvas?.style.width).toBe(fit === 'page' ? '240px' : '600px');
+                    expect(canvas?.style.height).toBe(fit === 'page' ? '320px' : '800px');
+                    expect(output.querySelector('[role="group"]')?.contains(canvas)).toBe(true);
+
+                    // Act
+                    await resize(300, 200);
+
+                    // Assert
+                    await vi.waitFor(() =>
+                        expect(renders.at(-1)).toMatchObject(
+                            fit === 'page' ? { width: 150, height: 200 } : { width: 300, height: 400 }
+                        )
+                    );
+
+                    // Act
+                    await resize(300, 160);
+
+                    // Assert
+                    await vi.waitFor(() =>
+                        expect(renders.at(-1)).toMatchObject(
+                            fit === 'page' ? { width: 120, height: 160 } : { width: 300, height: 400 }
+                        )
+                    );
+
+                    // Act
+                    await act(async () => output.querySelector<HTMLButtonElement>('[aria-label="Next page"]')?.click());
+                    await resize(300, 160);
+
+                    // Assert
+                    await vi.waitFor(() =>
+                        expect(renders.at(-1)).toMatchObject(
+                            fit === 'page' ? { width: (160 * 800) / 600, height: 160 } : { width: 300, height: 225 }
+                        )
+                    );
+                    expect(getPage).toHaveBeenLastCalledWith(2);
+                    expect(observers[0].disconnect).toHaveBeenCalledTimes(1);
+                }
+            );
+            expect(observers.at(-1)?.disconnect).toHaveBeenCalledTimes(1);
+        } finally {
+            vi.unstubAllGlobals();
+            vi.mocked(getDocument).mockClear();
+            vi.mocked(PDFWorker.create).mockReset();
+        }
+    }
+);
 
 it.each(['missing', 'rejected'] as const)('reports a %s file capability without remaining pending', async (result) => {
     // Arrange
